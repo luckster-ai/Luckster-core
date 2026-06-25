@@ -1,4 +1,7 @@
 import homepage from './data/homepage'
+import teacher from './data/teacher'
+import courses from './data/courses'
+
 import './App.css'
 
 function App() {
@@ -38,30 +41,37 @@ function App() {
       </section>
 
       <section className="about">
-        <h2>關於 JOTI</h2>
+        <h2>{teacher.name}</h2>
 
         <p>
-          透過簡單、有系統的 ABC 學習法，
-          幫助更多人認識昆達里尼瑜伽，
-          建立穩定、覺察與充滿能量的人生。
+          {teacher.description}
+        </p>
+
+        <p>
+          {teacher.mission}
         </p>
       </section>
 
       <section className="practice">
-        <h2>免費練習</h2>
+        <h2>推薦課程</h2>
 
         <div className="cards">
-          <div className="card">
-            呼吸法
-          </div>
 
-          <div className="card">
-            冥想
-          </div>
+          {courses.map((course) => (
+            <div
+              key={course.id}
+              className="card"
+            >
+              <h3>{course.title}</h3>
 
-          <div className="card">
-            奎亞
-          </div>
+              <p>{course.level}</p>
+
+              <p>{course.duration}</p>
+
+              <p>{course.description}</p>
+            </div>
+          ))}
+
         </div>
       </section>
 
