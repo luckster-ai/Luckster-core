@@ -1,6 +1,7 @@
 import homepage from './data/homepage'
 import teacher from './data/teacher'
 import courses from './data/courses'
+import videos from './data/videos'
 
 import './App.css'
 
@@ -69,6 +70,26 @@ function App() {
               <p>{course.duration}</p>
 
               <p>{course.description}</p>
+            </div>
+          ))}
+
+        </div>
+      </section>
+
+      <section className="videos">
+        <h2>最新影片</h2>
+
+        <div className="cards">
+
+          {videos.map((video) => (
+            <div
+              key={video.id}
+              className="card"
+            >
+              <h3>{video.title}</h3>
+
+              <p>{video.platform}</p>
+              
             </div>
           ))}
 
