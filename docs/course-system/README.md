@@ -17,7 +17,15 @@ JOTI Course System 是 JOTI 昆達里尼 ABC 瑜伽的核心教學架構。
 
 ---
 
-# Learning Philosophy
+## Mission
+
+JOTI 希望透過清晰、有系統且容易開始的昆達里尼 ABC 學習方式，陪伴更多人建立穩定的練習習慣，重新連結自己的身體、呼吸與內在力量。
+
+課程的目的不是完成觀看，而是透過持續的 Practice，讓瑜伽逐漸成為生活的一部分。
+
+---
+
+## Learning Philosophy
 
 JOTI 並不是一個以「完成所有課程」為目標的線上學習平台。
 
@@ -44,7 +52,7 @@ JOTI 尊重這項傳統，也尊重每位學員目前的練習狀態。
 
 ---
 
-# Course Architecture
+## Course Architecture
 
 JOTI 課程系統由三個主要層級組成：
 
@@ -55,6 +63,9 @@ Module
 ↓
 
 Practice
+↓
+
+Learning Journey
 
 Foundation 建立學員的基本能力。
 
@@ -62,17 +73,71 @@ Module 為組成課程的基本元件。
 
 Practice 則是學員實際進行的一堂完整練習。
 
+Practice 並不是終點。
+
+真正終點是：
+
+Learning Journey。
+
 ---
 
-# AI Philosophy
+## Foundation
 
-Luckster AI 的角色並不是取代老師。
+Foundation 提供正式 Practice 前所需建立的知識、技能與練習準備。
+
+See foundation-library.md
+
+---
+
+## Module
+
+Module 是組成 Practice 的基本元件。
+
+每個 Module 可以重複使用，
+並依照課程規則自由組合。
+
+---
+
+## Practice
+
+Practice 是學員主要進行的完整練習。
+
+每堂 Practice 都是由多個 Module 所組成。
+
+---
+
+## AI Assisted Learning
+
+Luckster AI 的角色並不是取代老師，而是成為學員長期練習旅程中的陪伴者。
 
 AI 的任務包括：
 
-* 協助學員找到適合自己的練習。
-* 根據課程規則協助組成完整 Practice。
-* 避免模組重複或不合理搭配。
-* 協助建立穩定而長期的練習習慣。
+推薦適合的 Foundation 與 Practice。
+根據課程規則協助組成完整的 Practice。
+避免 Module 重複或不合理搭配。
+提供 AI 客製化組課建議。
+練習提醒與陪伴。
+練習紀錄與學習分析。
+練習日曆與長期習慣追蹤。
+陪伴學員完成 40、90、120、1000 天等長期練習目標。
 
-最終，希望讓每位學員都能依照自己的身心狀態，持續、安全且自在地練習昆達里尼瑜伽。
+Luckster AI 的設計目標，是依照每位學員的身心狀態、時間安排與練習歷程，提供個人化且安全的陪伴，協助建立穩定而長期的昆達里尼瑜伽練習習慣。
+
+---
+
+## Future Vision
+
+JOTI 將持續發展成一個陪伴長期練習的平台，而不只是提供課程內容。
+
+未來的學習體驗將包含：
+
+* Foundation 與 Practice 課程系統
+* AI 個人化陪伴
+* 自由組課
+* 練習日曆
+* 練習紀錄
+* 練習心得筆記
+* 社群交流與分享
+* 長期練習挑戰（40 / 90 / 120 / 1000 天）
+
+希望讓每位學員都能依照自己的步調，建立屬於自己的昆達里尼瑜伽生活方式。
