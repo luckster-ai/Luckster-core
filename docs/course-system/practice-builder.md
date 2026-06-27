@@ -1,330 +1,121 @@
-# JOTI Practice Builder
+# Practice Builder
 
-## 課程結構
+## Purpose
 
-每堂完整昆達里尼 ABC 瑜伽課皆包含：
+Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 
-1. Tuning In（調頻）
-2. Warm Up（熱身）
-3. Kriya（動作序列）
-4. Relaxation（放鬆）
-5. Meditation（冥想）
-6. Ending（結束祈禱）
+本規格同時適用於：
 
----
+* 官方建立課程
+* Luckster AI 自動組課
+* 學員自由組課
 
-# 1. Tuning In Library
-
-## 黃金鏈接與保護咒
-
-影片：
-
-YouTube #30
-
-時間：
-
-3 分鐘
-
-類型：
-
-Tuning In
-
-適合：
-
-所有程度
-
-目的：
-
-* 建立黃金鏈接
-* 進入練習狀態
-* 保護與專注
+所有 Practice 均應遵循相同的組課原則。
 
 ---
 
-# 2. Warm Up Library
+# Builder Workflow
 
-## 深長呼吸
+建立一堂 Practice 時，依照以下流程：
 
-影片：
-
-YouTube #1
-
-時間：
-
-5 分鐘
-
-類型：
-
-Breath
-
-程度：
-
-Beginner
-
-效益：
-
-* 放鬆身心
-* 提升專注
-* 建立呼吸覺察
-
-標籤：
-
-#初學者 #減壓 #呼吸
+1. 確認練習目標
+2. 選擇 Practice Type
+3. 檢查 Foundation
+4. 選擇 Module
+5. 驗證課程規則
+6. 完成 Practice
 
 ---
 
-## 火呼吸
+# Step 1
 
-影片：
+確認練習目的。
 
-YouTube #21
+例如：
 
-時間：
-
-11 分鐘
-
-類型：
-
-Breath
-
-程度：
-
-Beginner-Intermediate
-
-效益：
-
-* 提升能量
-* 強化臍輪
-* 增加行動力
-
-標籤：
-
-#能量提升 #專注力 #臍輪
+* 晨間能量
+* 睡前放鬆
+* 壓力釋放
+* 專注提升
+* 呼吸練習
 
 ---
 
-## 交替鼻孔呼吸
+# Step 2
 
-影片：
+選擇 Practice Type。
 
-YouTube #12
+目前支援：
 
-時間：
-
-3 分鐘
-
-類型：
-
-Breath
-
-程度：
-
-Beginner
-
-效益：
-
-* 平衡左右腦
-* 穩定情緒
-* 改善焦慮
-
-標籤：
-
-#睡眠 #焦慮 #平衡
+* Full Practice
+* Meditation Practice
 
 ---
 
-# 3. Kriya Library
+# Step 3
 
-## 提升的奎亞
+檢查 Foundation。
 
-影片：
+確認學員是否具備：
 
-YouTube #27
+* Required Foundations
+* Recommended Foundations
 
-時間：
+若尚未完成，
 
-20 分鐘
+系統可：
 
-程度：
-
-Beginner
-
-效益：
-
-* 活化脊椎
-* 平衡脈輪
-* 提升生命力
-
-標籤：
-
-#脊椎 #能量 #初學者
+* 提醒先完成 Foundation
+* 或由學員自行確認已具備能力。
 
 ---
 
-## Sat Kriya
+# Step 4
 
-影片：
+建立 Module Sequence。
 
-YouTube #29
+依照 Practice Type：
 
-時間：
+加入：
 
-11 分鐘
-
-程度：
-
-Beginner
-
-效益：
-
-* 活化昆達里尼能量
-* 強化神經系統
-* 改善消化
-
-標籤：
-
-#核心 #性能量 #神經系統
+* 調頻
+* 熱身
+* 身體動作序列（依需要）
+* 放鬆（依需要）
+* 冥想
+* 結尾
 
 ---
 
-# 4. Relaxation Library
+# Step 5
 
-## 深度放鬆
+Rule Validation。
 
-影片：
+例如：
 
-YouTube #32
-
-時間：
-
-10 分鐘
-
-效益：
-
-* 神經系統整合
-* 身心恢復
-* 準備進入冥想
-
-標籤：
-
-#放鬆 #休息 #恢復
+* 是否缺少調頻？
+* 是否缺少結尾？
+* 是否有重複 Module？
+* 是否符合 Practice Type？
 
 ---
 
-# 5. Meditation Library
+# Step 6
 
-## 生命力冥想
+產生完整 Practice。
 
-影片：
+包含：
 
-YouTube #13
+* Module 順序
+* 對應影片
+* 課程時間
+* Foundation Requirements
+* Practice Metadata
 
-時間：
+完成後即可提供給：
 
-11 分鐘
-
-類型：
-
-Breath Meditation
-
-效益：
-
-* 提升專注
-* 增強持久力
-* 穩定神經系統
-
-標籤：
-
-#專注 #成就 #生命力
-
----
-
-## Kirtan Kriya
-
-影片：
-
-YouTube #24
-
-時間：
-
-12 分鐘
-
-類型：
-
-Chant Meditation
-
-效益：
-
-* 平衡心智
-* 提升洞察力
-* 穩定情緒
-
-標籤：
-
-#唱誦 #覺察 #冥想
-
----
-
-# 6. Ending Library
-
-## 永恆的陽光
-
-影片：
-
-YouTube #31
-
-時間：
-
-2 分鐘
-
-目的：
-
-* 感恩
-* 整合練習成果
-* 完成課程
-
----
-
-# AI 推薦規則（未來 Luckster 使用）
-
-如果學員需求：
-
-焦慮
-
-推薦：
-
-交替鼻孔呼吸
-+
-深度放鬆
-+
-生命力冥想
-
----
-
-如果學員需求：
-
-能量不足
-
-推薦：
-
-火呼吸
-+
-Sat Kriya
-+
-生命力冥想
-
----
-
-如果學員需求：
-
-睡眠品質改善
-
-推薦：
-
-交替鼻孔呼吸
-+
-深度放鬆
-+
-Kirtan Kriya
+* 官方課程
+* AI 推薦
+* 學員自由組課
 
 
