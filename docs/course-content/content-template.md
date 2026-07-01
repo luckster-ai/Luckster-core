@@ -12,6 +12,23 @@
 
 ---
 
+## Content Philosophy
+
+JOTI 的課程內容以影片為主要教學媒介。
+
+文字內容並不是課程本身，而是提供課程的結構、說明與系統資訊。
+
+所有 Course Content 都應保持：
+
+- 簡潔
+- 一致
+- 易於維護
+- 可供網站、AI 與未來平台共同使用
+
+避免在不同地方重複維護相同資訊。
+
+---
+
 # Standard Structure
 
 每一份 Course Content 建議包含以下章節：
@@ -42,7 +59,7 @@
 
 ---
 
-## 3. Learning Objectives
+## 3. Learning Outcomes
 
 完成本課程後，學員應能：
 
@@ -50,7 +67,7 @@
 * …
 * …
 
-Learning Objectives 著重於學習成果，而不是課程內容。
+Learning Outcomes 著重於學員完成後實際具備的能力，而非課程目標。
 
 ---
 
@@ -68,66 +85,24 @@ Learning Objectives 著重於學習成果，而不是課程內容。
 
 ---
 
-## 5. What You Will Learn
+## 5. Related Content（Optional）
 
-本課程將包含哪些內容。
+如果本內容有特別相關的 Foundation、Module 或 Practice，可在此建立關聯。
 
-例如：
+若無明確關聯，可省略本章節。
 
-* 呼吸方法
-* 示範
-* 常見錯誤
-* Practice 中的應用
+此資訊主要提供網站推薦與 Luckster AI 使用。
 
 ---
 
-## 6. Completion Criteria
-
-判定學員是否完成本課程。
-
-例如：
-
-* 已觀看完整影片
-* 已理解主要概念
-* 已完成基本練習
-
-未來網站可依此紀錄完成狀態。
-
----
-
-## 7. Related Content
-
-相關內容。
-
-例如：
-
-Next Foundation
-
-Related Module
-
-Related Practice
-
-方便網站推薦與 AI 延伸學習。
-
----
-
-## 8. Sources
-
-### Video
-
-YouTube：
-
-### Transcript
-
-（未來 AI 自動建立）
-
-### Resources
+## 6. Resources（Optional）
 
 PDF：
 
 Audio：
 
 Downloads：
+
 ---
 
 # Design Principles
@@ -144,6 +119,17 @@ JOTI Course Content 並不是一般文章。
 * 影片為主要教學媒介
 * Luckster AI 負責理解、推薦與引導，而不是重新撰寫課程內容
 
+影片是主要內容。
+
+文字內容主要提供：
+
+- 網站資訊
+- AI 理解
+- 搜尋
+- 未來資料結構使用
+
+並不取代影片本身。
+
 ---
 
 # Future Integration
@@ -152,6 +138,7 @@ JOTI Course Content 並不是一般文章。
 
 * JOTI Website
 * Luckster AI
+* AI Agent
 * Mobile App
 * TV App
 * Learning Progress
