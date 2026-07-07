@@ -60,7 +60,8 @@ button {
 
 .about,
 .practice,
-.videos {
+.videos,
+.modules {
   padding: 80px 24px;
   text-align: center;
 }

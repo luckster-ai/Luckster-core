@@ -1,7 +1,4 @@
-import homepage from './data/homepage'
-import teacher from './data/teacher'
-import courses from './data/courses'
-import videos from './data/videos'
+import AppRouter from './router/AppRouter'
 
 import './App.css'
 
@@ -14,90 +11,20 @@ function App() {
         </div>
 
         <nav>
-          <a href="#">首頁</a>
+          <a href="/">首頁</a>
           <a href="#">免費課程</a>
           <a href="#">YouTube</a>
           <a href="#">關於我</a>
         </nav>
       </header>
 
-      <section className="hero">
-        <h1>{homepage.hero.title}</h1>
-
-        <p>{homepage.brand.taglineEn}</p>
-
-        <p className="subtitle">
-          {homepage.hero.subtitle}
-        </p>
-
-        <div className="buttons">
-          <button>
-            {homepage.hero.primaryButton}
-          </button>
-
-          <button className="secondary">
-            {homepage.hero.secondaryButton}
-          </button>
-        </div>
-      </section>
-
-      <section className="about">
-        <h2>{teacher.name}</h2>
-
-        <p>
-          {teacher.description}
-        </p>
-
-        <p>
-          {teacher.mission}
-        </p>
-      </section>
-
-      <section className="practice">
-        <h2>推薦課程</h2>
-
-        <div className="cards">
-
-          {courses.map((course) => (
-            <div
-              key={course.id}
-              className="card"
-            >
-              <h3>{course.title}</h3>
-
-              <p>{course.level}</p>
-
-              <p>{course.duration}</p>
-
-              <p>{course.description}</p>
-            </div>
-          ))}
-
-        </div>
-      </section>
-
-      <section className="videos">
-        <h2>最新影片</h2>
-
-        <div className="cards">
-
-          {videos.map((video) => (
-            <div
-              key={video.id}
-              className="card"
-            >
-              <h3>{video.title}</h3>
-
-              <p>{video.platform}</p>
-              
-            </div>
-          ))}
-
-        </div>
-      </section>
+      <main>
+        <AppRouter />
+      </main>
 
       <footer>
-        © JOTI Kundalini ABC Yoga
+        © JOTI Kundalini Yoga
+        <p>Practice • Grow • Transform</p>
       </footer>
     </div>
   )

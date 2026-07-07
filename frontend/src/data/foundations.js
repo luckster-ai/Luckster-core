@@ -1,29 +1,36 @@
 export const foundations = [
   {
-    id: "deep-long-breath",
-    title: "Deep Long Breathing",
-    level: "Beginner",
-    duration: "8 min",
-    summary: "Learn to regulate breath and calm the nervous system.",
-    youtubeUrl: "https://youtube.com/xxx",
-    isFree: true
+    id: 1,
+    title: '深長呼吸',
+    slug: 'deep-long-breath',
+    level: 'Beginner',
+    duration: '10 分鐘',
+    summary: '學習昆達里尼瑜伽最基本的呼吸技巧。',
+    youtube: '',
+    completed: false
   },
+
   {
-    id: "fire-breath",
-    title: "Breath of Fire",
-    level: "Beginner",
-    duration: "10 min",
-    summary: "Build internal heat and energy flow.",
-    youtubeUrl: "https://youtube.com/xxx",
-    isFree: true
+    id: 2,
+    title: '火呼吸',
+    slug: 'breath-of-fire',
+    level: 'Beginner',
+    duration: '8 分鐘',
+    summary: '建立火呼吸的節奏與基礎。',
+    youtube: '',
+    completed: false
   },
+
   {
-    id: "body-locks",
-    title: "Body Locks (Bandhas)",
-    level: "Beginner",
-    duration: "12 min",
-    summary: "Activate internal energy control system.",
-    youtubeUrl: "https://youtube.com/xxx",
-    isFree: true
+    id: 3,
+    title: '身體鎖',
+    slug: 'body-locks',
+    level: 'Beginner',
+    duration: '12 分鐘',
+    summary: '認識三大身體鎖及其應用。',
+    youtube: '',
+    completed: false
   }
-];
+]
+
+export default foundations
