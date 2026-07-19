@@ -4,13 +4,11 @@
 
 Module 是組成 Practice 的基本單位（Building Block）。
 
-每一堂 Practice 都是由一個或多個 Module 所組成。
+每一堂 Practice 都是由多個 Module 所組成。
 
-每個 Module 都有明確的目的、類型與規則，可由官方建立，也可作為 AI 組課與學員自由組課的基礎元件。
+每個 Module 都有明確的目的、類型與規則，由官方建立，也可作為 AI 組課與學員自由組課的基礎元件。
 
-Module 並不等於一支影片。
-
-一個 Module 可以對應一支或多支影片，而影片則是 Module 的內容載體。
+一個 Module 對應一支影片，而影片也是 Module 的內容載體。
 
 ---
 
@@ -18,7 +16,7 @@ Module 並不等於一支影片。
 
 目前 JOTI 將 Module 分為六大類：
 
-## 1. 調頻（Tuning In）
+## 1. Tuning In 調頻
 
 Purpose：
 
@@ -33,7 +31,7 @@ Purpose：
 
 ---
 
-## 2. 熱身（Warm Up）
+## 2. Warm Up 熱身
 
 Purpose：
 
@@ -51,7 +49,7 @@ Purpose：
 
 ---
 
-## 3. 身體動作序列（Physical Sequence）
+## 3. Asana 身體序列動作 （Physical Kriya 身體奎亞）
 
 Purpose：
 
@@ -68,7 +66,7 @@ Purpose：
 
 ---
 
-## 4. 放鬆（Relaxation）
+## 4. Relaxation 放鬆休息
 
 Purpose：
 
@@ -83,7 +81,7 @@ Purpose：
 
 ---
 
-## 5. 冥想（Meditation）
+## 5. Meditation 冥想
 
 Purpose：
 
@@ -101,7 +99,7 @@ Purpose：
 
 ---
 
-## 6. 結尾（Closing）
+## 6. Ending 結尾
 
 Purpose：
 
@@ -112,7 +110,7 @@ Purpose：
 * Long Time Sun
 * Sat Nam
 
-每堂 Practice 必須包含一個 Closing Module。
+每堂 Practice 必須包含一個 Ending Module。
 
 ---
 
@@ -130,10 +128,10 @@ JOTI 目前將 Practice 分為兩種主要形式。
 
 1. 調頻（Tuning In）
 2. 熱身（Warm Up，可依需要）
-3. 身體動作序列（Physical Sequence，可依課程需要）
-4. 放鬆（Relaxation）
+3. 身體序列動作（Asana，可依課程需要）
+4. 放鬆休息（Relaxation）
 5. 冥想（Meditation）
-6. 結尾（Closing）
+6. 結尾（Ending）
 
 ### 規則
 
@@ -156,7 +154,7 @@ JOTI 目前將 Practice 分為兩種主要形式。
 1. 調頻（Tuning In）
 2. 熱身（Warm Up）
 3. 冥想（Meditation）
-4. 結尾（Closing）
+4. 結尾（Ending）
 
 ### 規則
 
@@ -190,14 +188,22 @@ AI 建立 Practice 或學員自由組課時，皆應依照以上規則安排 Mod
 
 每個 Module 建議具備以下資訊：
 
+* ID
 * Title（名稱）
+* Chinese Title 
+* Type
 * Category（分類）
-* Purpose（目的）
+* Subcategory
+* Difficulty（適合程度）
+* Duration（時間）
 * Description（簡介）
-* Duration（建議時間）
-* Level（適合程度）
+* Prerequisites
+* Learning Outcome
+* Sources
 * Video Reference（對應影片）
 * Tags（標籤）
+* Transcript
+* Resources
 
 ---
 

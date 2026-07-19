@@ -72,7 +72,7 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 
 # Step 4
 
-建立 Module Sequence。
+建立 Practice Structure（Practice 結構）。
 
 依照 Practice Type：
 
@@ -96,6 +96,7 @@ Rule Validation。
 * 是否缺少調頻？
 * 是否缺少結尾？
 * 是否有重複 Module？
+* 是否符合 Module Prerequisites？
 * 是否符合 Practice Type？
 
 ---
@@ -107,7 +108,6 @@ Rule Validation。
 包含：
 
 * Module 順序
-* 對應影片
 * 課程時間
 * Foundation Requirements
 * Practice Metadata
@@ -118,4 +118,28 @@ Rule Validation。
 * AI 推薦
 * 學員自由組課
 
+---
 
+# Design Principles
+
+Practice Builder 的目標，
+
+並非自動產生越多 Practice 越好，
+
+而是依照 JOTI 的課程理念，
+
+建立安全、
+
+流暢、
+
+具有完整練習體驗的 Practice。
+
+Luckster AI 在組課時，
+
+應優先遵循課程規則，
+
+其次才考量學員時間、
+
+程度、
+
+偏好與練習紀錄。

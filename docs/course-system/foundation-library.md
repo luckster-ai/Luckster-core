@@ -31,7 +31,7 @@ Self Verified 提供已有昆達里尼瑜伽經驗的學員使用。
 
 目前 Foundation 分為以下類別：
 
-## 基礎知識
+## Knowledge
 
 * 昆達里尼瑜伽介紹
 * JOTI 學習方式
@@ -39,7 +39,7 @@ Self Verified 提供已有昆達里尼瑜伽經驗的學員使用。
 
 ---
 
-## 呼吸基礎
+## Breath
 
 * 深長呼吸
 * 火呼吸
@@ -47,14 +47,14 @@ Self Verified 提供已有昆達里尼瑜伽經驗的學員使用。
 
 ---
 
-## 調頻與結尾
+## Chant
 
 * 開始調頻（Tuning In）
 * 結尾唱誦
 
 ---
 
-## 身體基礎
+## Asana
 
 * 身體鎖
 * 手印
@@ -62,7 +62,7 @@ Self Verified 提供已有昆達里尼瑜伽經驗的學員使用。
 
 ---
 
-## 練習準備
+## Preparation
 
 * 練習環境
 * 練習裝備
@@ -72,13 +72,20 @@ Self Verified 提供已有昆達里尼瑜伽經驗的學員使用。
 
 # Foundation Rules
 
-Foundation 本身通常不需要任何 Prerequisites。
+完成 Foundation 後，
 
-完成 Foundation 後，將成為 Practice 的先備能力（Prerequisites）。
+將成為相關 Module 的 Prerequisites。
+
+Practice 則會依據其包含的 Module，
+
+自動繼承所需 Foundation。
 
 網站與 AI 可以依據完成狀態：
 
-* 推薦適合的 Practice
-* 提醒尚未完成的重要 Foundation
+* 檢查 Module 所需 Prerequisites
+* 檢查 Practice 是否具備必要 Foundation
+* 推薦目前適合的 Practice
+* 提醒缺少的重要 Foundation
+* 記錄學員能力建立歷程
 * 協助建立學習計畫
 * 記錄長期練習歷程

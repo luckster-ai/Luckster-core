@@ -82,9 +82,9 @@ Practice 由多個 Module 組合而成。
 
 當學員逐漸熟悉課程後，可以依照自己的需求選擇不同方式：
 
-* 官方推薦課程
-* AI 協助組課
-* 自由組合 Module
+* 官方推薦 Practice
+* AI 協助建立 Practice
+* 自由組合 Module 建立 Practice
 
 JOTI 尊重每位學員不同的生活節奏與身心需求，鼓勵建立屬於自己的練習方式。
 
@@ -114,7 +114,7 @@ Luckster AI 是陪伴者，而不是老師的替代者。
 AI 可以：
 
 * 根據學員需求推薦 Practice
-* 協助組合完整課程
+* 協助建立完整 Practice
 * 避免 Module 重複
 * 提醒持續練習
 * 記錄學習歷程
