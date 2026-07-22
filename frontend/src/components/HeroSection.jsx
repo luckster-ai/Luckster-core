@@ -9,6 +9,8 @@ function HeroSection({ homepage }) {
         {homepage.hero.subtitle}
       </p>
 
+      <p>{homepage.hero.description}</p>
+
       <div className="buttons">
         <button>
           {homepage.hero.primaryButton}

@@ -1,35 +1,38 @@
-export const foundations = [
+const foundations = [
   {
-    id: 1,
-    title: '深長呼吸',
+    id: 'FD001',
     slug: 'deep-long-breath',
-    level: 'Beginner',
-    duration: '10 分鐘',
-    summary: '學習昆達里尼瑜伽最基本的呼吸技巧。',
-    youtube: '',
-    completed: false
+    title: 'Deep Long Breath',
+    chineseTitle: '深長呼吸',
+    category: 'Breathing',
+    difficulty: 'Beginner',
+    duration: 600,
+    description: '學習昆達里尼瑜伽最基本的深長呼吸技巧。',
+    videoReference: ''
   },
 
   {
-    id: 2,
-    title: '火呼吸',
-    slug: 'breath-of-fire',
-    level: 'Beginner',
-    duration: '8 分鐘',
-    summary: '建立火呼吸的節奏與基礎。',
-    youtube: '',
-    completed: false
+    id: 'FD002',
+    slug: 'fire-breath',
+    title: 'Breath of Fire',
+    chineseTitle: '火呼吸',
+    category: 'Breathing',
+    difficulty: 'Beginner',
+    duration: 480,
+    description: '建立火呼吸的節奏與基礎。',
+    videoReference: ''
   },
 
   {
-    id: 3,
-    title: '身體鎖',
+    id: 'FD003',
     slug: 'body-locks',
-    level: 'Beginner',
-    duration: '12 分鐘',
-    summary: '認識三大身體鎖及其應用。',
-    youtube: '',
-    completed: false
+    title: 'Body Locks',
+    chineseTitle: '身體鎖',
+    category: 'Body Basics',
+    difficulty: 'Beginner',
+    duration: 720,
+    description: '認識三大身體鎖及其應用。',
+    videoReference: ''
   }
 ]
 

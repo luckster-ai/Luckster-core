@@ -55,7 +55,7 @@ Purpose：
 
 透過身體姿勢、呼吸與節奏的結合，完成主要練習內容。
 
-此類 Module 對應昆達里尼瑜伽中的 Physical Kriya。
+在 JOTI ABC 系統中，Asana 指的是以身體動作為主的 Module 類型；實際內容是一套 Physical Kriya，由多個 Asana 所組成。
 
 例如：
 
@@ -158,7 +158,7 @@ JOTI 目前將 Practice 分為兩種主要形式。
 
 ### 規則
 
-* 不包含身體動作序列（Physical Sequence）。
+* 不包含身體序列動作（Asana Module）。
 * 通常不安排放鬆（Relaxation）。
 * 熱身以短時間的脊椎活動、呼吸準備與身體喚醒為主，協助學員穩定坐姿並進入冥想狀態。
 * 適合午間、夜間或日常維持練習。
@@ -191,19 +191,27 @@ AI 建立 Practice 或學員自由組課時，皆應依照以上規則安排 Mod
 * ID
 * Title（名稱）
 * Chinese Title 
+
 * Type
 * Category（分類）
 * Subcategory
+
 * Difficulty（適合程度）
 * Duration（時間）
+
 * Description（簡介）
+* Learning Outcomes
 * Prerequisites
-* Learning Outcome
+
 * Sources
+
 * Video Reference（對應影片）
-* Tags（標籤）
+
 * Transcript
+
 * Resources
+
+* Tags（標籤）
 
 ---
 
@@ -213,6 +221,8 @@ Foundation 建立基本能力。
 
 Module 是組成 Practice 的基本元件。
 
-Practice 則由一個或多個 Module 所組成，並透過影片提供實際教學與練習內容。
+Practice 由多個 Module 所組成。
+
+每個 Module 對應一支影片，學員依照 Module 順序觀看與完成整堂 Practice。
 
 

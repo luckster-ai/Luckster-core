@@ -1,13 +1,13 @@
 import homepage from '../data/homepage'
 import teacher from '../data/teacher'
-import courses from '../data/courses'
+import foundations from '../data/foundations'
+import practices from '../data/practices'
 import videos from '../data/videos'
-import { foundations } from '../data/foundations'
 
 import HeroSection from '../components/HeroSection'
 import AboutSection from '../components/AboutSection'
 import FoundationSection from '../components/FoundationSection'
-import CourseCard from '../components/CourseCard'
+import PracticeCard from '../components/PracticeCard'
 import VideoCard from '../components/VideoCard'
 
 function HomePage() {
@@ -25,10 +25,10 @@ function HomePage() {
         <p>完整的每日練習流程（會員內容）</p>
 
         <div className="cards">
-          {courses.map((course) => (
-            <CourseCard
-              key={course.id}
-              course={course}
+          {practices.map((practice) => (
+            <PracticeCard
+              key={practice.id}
+              practice={practice}
             />
           ))}
         </div>
