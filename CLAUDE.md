@@ -1,447 +1,201 @@
 # CLAUDE.md
 
-# Luckster Core Engineering Guide
+# JOTI Platform - Claude Code Guide
 
-This document defines how Claude Code should work within the Luckster Core repository.
+This document provides a quick overview for AI-assisted development.
 
----
+For complete engineering standards, always refer to:
 
-# Project Overview
-
-Project Name:
-
-Luckster Core
-
-Brand:
-
-JOTI – Kundalini ABC Yoga
-
-Purpose:
-
-Luckster is a content-first learning platform for Kundalini Yoga.
-
-The repository is designed to support:
-
-- Website
-- Course platform
-- AI assistant (Luckster)
-- Subscription service
-- Knowledge base
-
-The long-term goal is to build a scalable learning platform rather than a simple marketing website.
+> `docs/development/engineering-guide.md`
 
 ---
 
-# Core Philosophy
+# Project Summary
 
-Always remember:
+JOTI is a responsive web application designed to make Kundalini Yoga simple, accessible, and enjoyable.
 
-Documentation comes first.
+The current goal is to build a stable MVP before expanding to additional features.
 
-The documentation defines the product.
+Current priorities include:
 
-The frontend is a presentation layer.
+- Responsive Web App
+- Foundation modules
+- Module Library
+- Membership system
+- PWA-ready architecture
 
-AI assists development but should never replace documentation.
-
-Every architectural decision should prioritize:
-
-- maintainability
-- readability
-- scalability
-- consistency
+Always prioritize stability, simplicity, and maintainability.
 
 ---
 
 # Repository Structure
 
-Repository:
+Main directories:
 
-Luckster-core/
-
-Structure:
-
+```text
 docs/
-Project documentation
-
 frontend/
-React + Vite application
-
-apps/
-Future applications
 
 README.md
-Project overview
-
 CLAUDE.md
-Claude Code instructions
+```
+
+Documentation:
+
+```text
+docs/
+
+├── ai/
+├── brand/
+├── course-content/
+├── course-system/
+├── development/
+└── website/
+```
+
+Implementation:
+
+```text
+frontend/
+
+components/
+pages/
+router/
+data/
+assets/
+```
+
+For repository organization, refer to the Engineering Guide.
 
 ---
 
-# Documentation
+# AI Workflow
 
-The docs folder is the project's knowledge base.
+Before making changes:
 
-Examples:
+1. Understand the task.
+2. Review the existing implementation.
+3. Follow the existing architecture.
+4. Reuse existing components whenever possible.
 
-docs/brand/
+Development workflow:
 
-Brand identity
-
-docs/course-system/
-
-Course architecture
-
-docs/course-content/
-
-Markdown course content
-
-docs/website/
-
-Website planning
-
-docs/agents/
-
-AI documents
-
-Claude should always read documentation before making assumptions.
-
-Documentation has higher priority than code.
-
----
-
-# Single Source of Truth
-
-Avoid duplicated information.
-
-If duplicate content exists:
-
-Identify it.
-
-Explain it.
-
-Ask before removing it.
-
-Never silently delete duplicated content.
-
----
-
-# Frontend
-
-Framework:
-
-React 19
-
-Build Tool:
-
-Vite
-
-Routing:
-
-React Router
-
-Goal:
-
-Small reusable components.
-
-Avoid large components.
-
-Prefer composition over duplication.
-
----
-
-# React Guidelines
-
-Prefer functional components.
-
-Keep components focused.
-
-Avoid unnecessary abstraction.
-
-Pass data through props.
-
-Avoid hardcoded values whenever possible.
-
-Prefer reusable UI.
-
----
-
-# Routing
-
-Keep routing simple.
-
-Every page should have a clear responsibility.
-
-Current pages include:
-
-Home
-
-Foundation
-
-Module
-
-Practice
-
-Future routes should follow the same convention.
-
----
-
-# Course System
-
-Course hierarchy:
-
-Foundation
+```text
+Understand
 
 ↓
 
-Module
+Plan
 
 ↓
 
-Practice
+Implement
 
 ↓
 
-Video
+Review
 
-Definitions:
+↓
 
-Foundation
+Document
 
-Fundamental knowledge required before practice.
+↓
 
-Module
+Commit
+```
 
-Reusable learning units.
+Avoid making unrelated changes.
 
-Practice
-
-A complete practice built from multiple modules.
-
-Video
-
-The smallest learning resource.
-
-Do not introduce alternative course models without discussion.
+Keep each task focused.
 
 ---
 
-# Markdown
+# Coding Principles
 
-Markdown is the preferred content format.
+Always write code that is:
 
-Markdown should eventually become the content source for the frontend.
-
-Avoid hardcoding educational content in React components.
-
----
-
-# Naming Convention
-
-Respect existing naming conventions.
-
-Slugs should remain stable.
-
-Never rename slugs unless explicitly requested.
-
-Avoid breaking URLs.
-
----
-
-# Components
+- Readable
+- Consistent
+- Maintainable
+- Simple
 
 Prefer:
 
-Small
-
-Reusable
-
-Independent
+- Small components
+- Reusable code
+- Clear naming
+- Incremental improvements
 
 Avoid:
 
-Massive components
+- Over-engineering
+- Unnecessary abstractions
+- Large unrelated refactors
 
-Duplicated UI
-
-Business logic inside presentation components
-
----
-
-# Styling
-
-Maintain consistent spacing.
-
-Keep layouts responsive.
-
-Desktop
-
-Tablet
-
-Mobile
-
-Avoid inline styles unless necessary.
+For complete coding standards, refer to the Engineering Guide.
 
 ---
 
 # Git Workflow
 
-Before making changes:
+Each commit should represent one logical improvement.
 
-Understand the problem.
+Typical workflow:
 
-Read related files.
+```bash
+git status
 
-Explain the intended solution.
+git add .
 
-Only then modify code.
+git commit -m "Describe the primary change"
 
-After modifications:
+git push origin main
+```
 
-Review the changes.
+Commit frequently.
 
-Check for consistency.
-
-Do not create unnecessary files.
-
----
-
-# Safe Editing Rules
-
-Never:
-
-Delete documentation.
-
-Delete markdown.
-
-Rename folders.
-
-Move files.
-
-Rewrite large sections of the project.
-
-Without confirmation.
-
-Always ask before making structural changes.
+Keep commit messages clear and concise.
 
 ---
 
-# Existing Architecture
+# Documentation
 
-Current architecture should be respected.
+Documentation is part of the project.
 
-Do not replace working systems with completely different approaches.
+Whenever architecture or important behavior changes:
 
-Prefer incremental improvements.
+- Update related documentation.
+- Keep documentation consistent with implementation.
 
----
+Engineering Guide is the primary engineering reference.
 
-# AI Behavior
+README provides the project overview.
 
-Claude should behave like a senior software engineer.
-
-Responsibilities:
-
-Analyze
-
-Explain
-
-Implement
-
-Review
-
-Do not rush into coding.
-
-Think before editing.
-
-Explain architectural impacts.
+CLAUDE.md is the quick reference for AI development.
 
 ---
 
-# Communication Style
+# Working Principles
 
-Be concise.
+When solving problems:
 
-Be technical.
+- Prefer the simplest solution.
+- Respect the existing architecture.
+- Keep changes focused.
+- Preserve project consistency.
+- Do not introduce unnecessary complexity.
 
-Explain reasoning.
-
-When multiple solutions exist:
-
-Present pros and cons.
-
-Recommend one.
+If multiple solutions are possible, choose the one that best fits the existing project.
 
 ---
 
-# Long-Term Vision
+# Final Reminder
 
-Luckster is evolving toward:
+Before implementing new features:
 
-Subscription platform
+- Read the relevant documentation.
+- Understand the existing code.
+- Follow the Engineering Guide.
+- Make one logical improvement at a time.
 
-Learning management system
-
-AI coaching
-
-Knowledge management
-
-Content automation
-
-Community platform
-
-Future code should support long-term scalability.
-
----
-
-# Development Priority
-
-Current priority:
-
-1. Stable architecture
-
-2. Documentation
-
-3. Frontend
-
-4. Content system
-
-5. AI integration
-
-6. Backend
-
-7. Subscription
-
-8. Community
-
----
-
-# Working Principle
-
-Before editing:
-
-Analyze.
-
-During editing:
-
-Keep changes minimal.
-
-After editing:
-
-Review.
-
-Summarize.
-
-Verify nothing unrelated was changed.
-
----
-
-# Final Rule
-
-Always optimize for long-term maintainability rather than short-term convenience.
-
-When uncertain:
-
-Ask before changing.
-
-Never assume.
+The goal is to build a stable, maintainable, and consistent platform.
