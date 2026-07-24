@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom'
+import formatDuration from '../utils/formatDuration'
 
 function FoundationCard({ foundation }) {
   return (
     <div className="card">
       <h3>{foundation.title}</h3>
 
-      <p>{foundation.level}</p>
+      <p>{foundation.difficulty}</p>
 
-      <p>{foundation.duration}</p>
+      <p>{formatDuration(foundation.duration)}</p>
 
-      <p>{foundation.summary}</p>
+      <p>{foundation.description}</p>
 
       <Link
         to={`/foundations/${foundation.slug}`}

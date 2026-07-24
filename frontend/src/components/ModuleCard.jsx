@@ -1,3 +1,5 @@
+import formatDuration from '../utils/formatDuration'
+
 function ModuleCard({ module }) {
   return (
     <div className="card">
@@ -9,7 +11,7 @@ function ModuleCard({ module }) {
       </p>
 
       <p>
-        時長：{module.duration} 分鐘
+        時長：{formatDuration(module.duration)}
       </p>
 
     </div>

@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import foundations from '../data/foundations'
+import formatDuration from '../utils/formatDuration'
 
 const markdownModules = import.meta.glob(
   '../content/foundations/*.md',
@@ -35,19 +36,19 @@ function FoundationPage() {
       <h1>{foundation.title}</h1>
 
       <p>
-        <strong>Level：</strong> {foundation.level}
+        <strong>Level：</strong> {foundation.difficulty}
       </p>
 
       <p>
-        <strong>Duration：</strong> {foundation.duration}
+        <strong>Duration：</strong> {formatDuration(foundation.duration)}
       </p>
 
-      <p>{foundation.summary}</p>
+      <p>{foundation.description}</p>
 
-      {foundation.youtube && (
+      {foundation.videoReference && (
         <p>
           <a
-            href={foundation.youtube}
+            href={foundation.videoReference}
             target="_blank"
             rel="noreferrer"
           >
@@ -55,11 +56,6 @@ function FoundationPage() {
           </a>
         </p>
       )}
-
-      <p>
-        <strong>完成狀態：</strong>{' '}
-        {foundation.completed ? '✅ 已完成' : '⬜ 尚未完成'}
-      </p>
 
       <hr />
 
