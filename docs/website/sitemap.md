@@ -1,5 +1,11 @@
 # JOTI 官網 Sitemap
 
+> **狀態：早期規劃草案（Historical Reference）**
+>
+> 本文件為網站早期整體規劃草案，目前保留作為歷史參考，並非目前 MVP 階段的網站結構。
+>
+> 目前 MVP 階段的網站結構，請參考 `docs/development/engineering-guide.md`（Part 3 — Website Structure）。
+
 ## 首頁 Home
 
 目的：

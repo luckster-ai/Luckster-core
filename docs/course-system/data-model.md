@@ -2,15 +2,13 @@
 
 本文件定義 JOTI Kundalini ABC Yoga 的核心內容架構。
 
-JOTI 採用四層內容模型：
+JOTI 採用三層內容模型：
 
 Foundation
         ↓
 Module
         ↓
 Practice
-        ↓
-Video
 
 其中：
 
@@ -23,7 +21,6 @@ Video
 
 但 Module 的主要用途是組成不同的 Practice，而非單獨完成一次完整練習。
 - Practice：一次完整的瑜伽練習，是平台最主要的內容單位。
-- Video：實際播放的影片媒體。
 
 ---
 
@@ -39,10 +36,6 @@ Module
         ├── Composed Into
         ▼
 Practice
-        │
-        ├── Plays
-        ▼
-Video
 ```
 
 ---
@@ -122,9 +115,9 @@ Practice 是 JOTI 平台最主要的內容單位。
 
 ---
 
-# Video
+# Video（Module 的媒體形式）
 
-Video 是實際播放的影片。
+Video 並非獨立的內容層級，而是 Module 所對應的 Learning Asset 的一種媒體形式。
 
 目前每個 Module 對應一支主要影片。
 
