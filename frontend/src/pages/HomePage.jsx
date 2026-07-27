@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import homepage from '../data/homepage'
 import teacher from '../data/teacher'
 import foundations from '../data/foundations'
@@ -26,10 +28,13 @@ function HomePage() {
 
         <div className="cards">
           {practices.map((practice) => (
-            <PracticeCard
+            <Link
               key={practice.id}
-              practice={practice}
-            />
+              to={`/practices/${practice.slug}`}
+              className="card-link"
+            >
+              <PracticeCard practice={practice} />
+            </Link>
           ))}
         </div>
       </section>
