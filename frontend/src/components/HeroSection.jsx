@@ -12,13 +12,9 @@ function HeroSection({ homepage }) {
       <p>{homepage.hero.description}</p>
 
       <div className="buttons">
-        <button>
+        <a href="#courses" className="button">
           {homepage.hero.primaryButton}
-        </button>
-
-        <button className="secondary">
-          {homepage.hero.secondaryButton}
-        </button>
+        </a>
       </div>
     </section>
   )
