@@ -1,6 +1,6 @@
 function AboutSection({ teacher }) {
   return (
-    <section className="about">
+    <section id="about" className="about">
       <h2>{teacher.name}</h2>
 
       <p>{teacher.description}</p>

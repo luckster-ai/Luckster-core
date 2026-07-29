@@ -15,18 +15,16 @@ export default function PracticeCard({ practice }) {
       <p>{practice.title}</p>
 
       <p>
-        <strong>Difficulty：</strong>
+        <strong>難度：</strong>
         {practice.difficulty}
       </p>
 
       <p>
-        <strong>Duration：</strong>
+        <strong>時長：</strong>
         {formatDuration(totalDuration)}
       </p>
 
       <p>{practice.description}</p>
-
-      <button>開始練習</button>
     </div>
   )
 }

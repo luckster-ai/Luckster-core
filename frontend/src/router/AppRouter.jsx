@@ -5,6 +5,7 @@ import FoundationLibraryPage from '../pages/FoundationLibraryPage'
 import FoundationPage from '../pages/FoundationPage'
 import ModuleLibraryPage from '../pages/ModuleLibraryPage'
 import ModulePage from '../pages/ModulePage'
+import PracticeHubPage from '../pages/PracticeHubPage'
 import PracticePage from '../pages/PracticePage'
 
 function AppRouter() {
@@ -33,6 +34,11 @@ function AppRouter() {
       <Route
         path="/modules/:slug"
         element={<ModulePage />}
+      />
+
+      <Route
+        path="/practice"
+        element={<PracticeHubPage />}
       />
 
       <Route

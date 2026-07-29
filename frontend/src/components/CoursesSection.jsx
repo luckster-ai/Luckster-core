@@ -12,13 +12,11 @@ function CoursesSection() {
           <p>學習正式練習前需要具備的基礎知識與技巧。</p>
         </Link>
 
-        <div className="card course-card course-card-disabled">
+        <Link to="/practice" className="card course-card">
           <h3>Start Practice</h3>
 
           <p>開始今日的完整引導練習。</p>
-
-          <span className="badge">即將推出 Coming Soon</span>
-        </div>
+        </Link>
       </div>
     </section>
   )
