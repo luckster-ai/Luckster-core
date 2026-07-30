@@ -635,6 +635,27 @@ Keep components focused and easy to understand.
 
 ---
 
+## Responsive Readiness
+
+At the current stage, desktop implementation is intentionally prioritized to maximize development efficiency.
+
+However, every new frontend component should be built so that responsive layouts can be added later without major rewrites.
+
+Responsive Design itself will be implemented in a later development phase. The goal today is not to fully optimize every page for every device — it is to keep every component Responsive Ready.
+
+Guidelines include:
+
+- Prefer Flexbox or CSS Grid for layout.
+- Avoid unnecessary fixed widths and fixed heights whenever possible.
+- Images and videos should scale naturally with their containers.
+- Avoid assuming a fixed viewport size.
+- Keep layout responsibilities separate from component logic whenever practical.
+- Avoid implementation decisions that would require significant rewrites when tablet and mobile layouts are added later.
+
+Build for Desktop today, but never in a way that blocks Responsive Design tomorrow.
+
+---
+
 ## Code Organization
 
 Organize code into logical directories.
