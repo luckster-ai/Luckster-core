@@ -2,9 +2,14 @@
 
 > **狀態：早期規劃草案（Historical Reference）**
 >
-> 本文件為網站早期整體規劃草案，目前保留作為歷史參考，並非目前 MVP 階段的網站結構。
+> 本文件為網站早期整體規劃草案，目前保留作為歷史參考，並非目前的產品規劃或網站結構。
 >
-> 目前 MVP 階段的網站結構，請參考 `docs/development/engineering-guide.md`（Part 3 — Website Structure）。
+> 目前的網站架構與學習體驗，請參考：
+>
+> - `docs/website/website-sitemap.md`
+> - `docs/website/product-design-principles.md`
+> - `docs/website/user-journey.md`
+> - `docs/website/navigation.md`
 
 ## 首頁 Home
 
