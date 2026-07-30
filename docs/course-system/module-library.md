@@ -27,8 +27,6 @@ Purpose：
 * 調頻（Adi Mantra）
 * 調頻（Adi Mantra + 保護咒）
 
-每堂 Practice 必須包含一個調頻 Module。
-
 ---
 
 ## 2. Warm Up 熱身
@@ -95,8 +93,6 @@ Purpose：
 
 此類 Module 對應昆達里尼瑜伽中的 Meditation Kriya。
 
-大多數 Practice 建議包含至少一個 Meditation Module。
-
 ---
 
 ## 6. Ending 結尾
@@ -110,77 +106,11 @@ Purpose：
 * Long Time Sun
 * Sat Nam
 
-每堂 Practice 必須包含一個 Ending Module。
-
 ---
 
-# Module Rules
+# Practice Composition
 
-JOTI 目前將 Practice 分為兩種主要形式。
-
----
-
-## Type A：完整 Practice（Full Practice）
-
-完整 Practice 為 JOTI 最主要的課程形式。
-
-一般包含：
-
-1. 調頻（Tuning In）
-2. 熱身（Warm Up，可依需要）
-3. 身體序列動作（Asana，可依課程需要）
-4. 放鬆休息（Relaxation）
-5. 冥想（Meditation）
-6. 結尾（Ending）
-
-### 規則
-
-* 每堂課必須包含調頻與結尾。
-* 冥想為整合整堂課的重要環節，建議保留。
-* 若包含身體動作序列，應安排放鬆，協助身體吸收練習效果。
-* 若沒有身體動作序列，可依課程設計決定是否安排放鬆。
-* 熱身可獨立安排，也可已包含於身體動作序列中。
-
----
-
-## Type B：Meditation Practice（冥想 Practice）
-
-主要作為午間、夜間或短時間練習。
-
-課程時間通常為 30 分鐘以內。
-
-一般包含：
-
-1. 調頻（Tuning In）
-2. 熱身（Warm Up）
-3. 冥想（Meditation）
-4. 結尾（Ending）
-
-### 規則
-
-* 不包含身體序列動作（Asana Module）。
-* 通常不安排放鬆（Relaxation）。
-* 熱身以短時間的脊椎活動、呼吸準備與身體喚醒為主，協助學員穩定坐姿並進入冥想狀態。
-* 適合午間、夜間或日常維持練習。
-
-常見熱身包括：
-
-* 脊椎彎曲（Spinal Flex）
-* 頸部轉動（Neck Rolls）
-* 消除小我（Ego Eradicator）
-* 拜日式
-* 貓牛式
-* 脊椎扭轉
-* 生命神經伸展
-* 水瓶行軍
-* 起身前屈
-
-可依冥想內容與課程目的選擇適合的熱身 Module。
-
----
-
-AI 建立 Practice 或學員自由組課時，皆應依照以上規則安排 Module，以維持課程完整性與安全性。
-
+Module 在 Practice 中是否為必要、Practice 的結構分類（Full Practice / Meditation Practice），以及組課驗證規則（例如 Asana 數量限制），統一定義於 `practice-library.md` 的 Practice Structure 章節，此處不重複列出。
 
 ---
 
@@ -194,7 +124,7 @@ AI 建立 Practice 或學員自由組課時，皆應依照以上規則安排 Mod
 
 * Type
 * Category（分類）
-* Subcategory
+* Subcategory（選填；部分 Module 沒有 Subcategory 屬於正常情況，非文件缺漏）
 
 * Difficulty（適合程度）
 * Duration（時間）

@@ -62,16 +62,93 @@ Practice 可以由官方建立，也可以由 AI 或學員依照課程規則自�
 
 # Practice Structure
 
-一堂完整 Practice 通常由以下 Module 組成：
+JOTI 目前支援兩種 Practice 結構：Full Practice 與 Meditation Practice。
 
-1. 調頻 Tuning In（必要）
-2. 熱身 Warm Up（依需要）
-3. 身體動作序列 Asana（依需要）
-4. 放鬆 Relaxation（依需要）
-5. 冥想 Meditation（必要）
-6. 結尾 Ending（必要）
+兩種結構皆必須包含 Tuning In 與 Ending。是否包含 Asana Module 是判斷結構的依據：包含一個 Asana Module 即為 Full Practice；不包含 Asana Module 則為 Meditation Practice。
 
-部分短時間 Practice 可依設計省略部分 Module。
+Practice 所包含的 Module 數量並無固定限制，各結構的完整規則如下。
+
+## Full Practice
+
+完整 Practice 為 JOTI 最主要的課程形式。
+
+Definition：
+
+包含「恰好一個」Asana Module。
+
+Mandatory：
+
+* Tuning In
+* Asana Module（恰好一個）
+* Meditation
+* Ending
+
+Conditional Requirements：
+
+* Warm Up：一般為必要，但若所選 Asana Module 本身已包含熱身功能，則可省略。
+* Relaxation：一般為必要，但若所選 Asana Module 本身已包含放鬆功能，則可省略。
+
+Sequence Rule：
+
+Relaxation 必須發生在 Asana Module 之後。允許的順序範例：
+
+```
+Asana → Relaxation → Meditation
+```
+
+或
+
+```
+Asana → Meditation → Relaxation
+```
+
+Builder 應驗證 Relaxation 與 Asana 的相對順序，而非強制單一固定順序。
+
+---
+
+## Meditation Practice
+
+Definition：
+
+不包含 Asana Module。若納入 Asana Module，該 Practice 即成為 Full Practice。
+
+Meditation Practice 可依情境對應不同使用場景，例如：
+
+* Regular Meditation Practice（完整的呼吸／冥想課程）
+* Short Meditation Practice（因可用時間有限而縮短的練習）
+
+以上皆屬於同一種 Practice Structure；Short Meditation Practice 並非獨立的第三種 Practice Structure，而是 Meditation Practice 的一種使用情境。
+
+Mandatory：
+
+* Tuning In
+* Meditation Module（至少一個，可包含多個）
+* Ending
+
+Conditional Requirements：
+
+* Warm Up：一般為必要，但若第一個 Meditation Module 本身已包含熱身功能，則可省略。
+* Relaxation：一般為必要，但可於以下情況省略：
+  * 該 Practice 屬於 Short Meditation Practice 情境，或
+  * 所選 Meditation Module 本身已包含放鬆功能。
+
+常見熱身包括：
+
+* 脊椎彎曲（Spinal Flex）
+* 頸部轉動（Neck Rolls）
+* 消除小我（Ego Eradicator）
+* 拜日式
+* 貓牛式
+* 脊椎扭轉
+* 生命神經伸展
+* 水瓶行軍
+* 起身前屈
+
+可依冥想內容與課程目的選擇適合的熱身 Module。
+
+---
+
+AI 建立 Practice 或學員自由組課時，皆應依照以上規則安排 Module，以維持課程完整性與安全性。
 
 ---
 

@@ -19,7 +19,7 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 建立一堂 Practice 時，依照以下流程：
 
 1. 確認練習目標
-2. 選擇 Practice Type
+2. 選擇 Practice Structure
 3. 檢查 Foundation
 4. 選擇 Module
 5. 驗證課程規則
@@ -43,7 +43,7 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 
 # Step 2
 
-選擇 Practice Type。
+選擇 Practice Structure。
 
 目前支援：
 
@@ -72,18 +72,9 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 
 # Step 4
 
-建立 Practice Structure（Practice 結構）。
+依照 Step 2 選定的 Practice Structure，組裝 Practice 所需的 Module。
 
-依照 Practice Type：
-
-加入：
-
-* 調頻
-* 熱身
-* 身體動作序列（依需要）
-* 放鬆（依需要）
-* 冥想
-* 結尾
+實際應包含之 Module 與組課規則，統一定義於 `practice-library.md`「Practice Structure」章節，此處不重複列出。
 
 ---
 
@@ -91,13 +82,39 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 
 Rule Validation。
 
-例如：
+驗證依據為 `practice-library.md`「Practice Structure」章節所定義的組課規則，分為以下四類：
 
-* 是否缺少調頻？
-* 是否缺少結尾？
+## Composition Validation
+
+驗證 Practice 是否包含所有必要 Module：
+
+* 是否缺少 Tuning In？
+* 是否缺少 Ending？
+* Full Practice：是否包含恰好一個 Asana Module？
+* Meditation Practice：是否至少包含一個 Meditation Module？
 * 是否有重複 Module？
+
+## Capability Validation
+
+驗證 Warm Up / Relaxation 等可省略項目，是否已由所選 Asana 或 Meditation Module 本身涵蓋對應功能：
+
+* 若省略 Warm Up，所選 Module 是否已包含熱身功能？
+* 若省略 Relaxation，所選 Module 是否已包含放鬆功能？
+
+## Sequence Validation
+
+驗證 Module 之間的相對順序：
+
+* Full Practice：Relaxation 是否發生在 Asana Module 之後？
+
+## Structure Validation
+
+驗證 Practice 是否符合其所屬結構（Full Practice / Meditation Practice）的定義與規則：
+
+* 是否符合 Practice Structure 的判斷依據（是否包含 Asana Module）？
 * 是否符合 Module Prerequisites？
-* 是否符合 Practice Type？
+
+完整規則定義請參考 `practice-library.md`，此處不重複維護規則內容。
 
 ---
 

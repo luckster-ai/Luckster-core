@@ -86,7 +86,7 @@ Module 是一個可重複使用的課程組件。
 
 Practice 是一次完整的瑜伽練習。
 
-通常由多個 Module 依固定順序組成：
+典型的學習流程如下（僅為概念性說明，非驗證規則）：
 
 ```
 Tuning In
@@ -101,6 +101,8 @@ Meditation
     ↓
 Ending
 ```
+
+實際的組課規則（必要 / 可選 Module、Asana 數量限制等）請參考 `practice-library.md`。
 
 Practice 是 JOTI 平台最主要的內容單位。
 
