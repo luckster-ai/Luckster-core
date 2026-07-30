@@ -180,6 +180,36 @@ Not toward searching for content.
 
 ---
 
+## Continuous Practice
+
+In Kundalini Yoga, a Practice — Tuning In, Warm Up, Kriya, Relaxation, Meditation, Ending — is designed as one complete energetic experience.
+
+Interrupting a Practice breaks that continuity.
+
+A Practice should be completed in one uninterrupted session whenever reasonably possible.
+
+This reflects the integrity of a complete Practice.
+
+It is a teaching philosophy, not merely a technical preference.
+
+Real-life interruptions happen — a call, a lost connection, a closed browser.
+
+The platform should acknowledge this reality without treating interruption as the intended usage pattern.
+
+Completing a Practice continuously is the recommended learning experience.
+
+Interruptions are exceptions, not the intended flow.
+
+This principle should guide, without prescribing implementation today:
+
+- Playback should encourage completing an entire Practice in one sitting.
+- Progress tracking should not imply that resuming later is the preferred experience.
+- If Resume is ever introduced, it should encourage restarting the Practice rather than immediately continuing from the interruption point — a convenience, not the recommended method.
+- Future AI recommendations should encourage continuous Practice whenever appropriate.
+- Completion experiences and reminders should reinforce the value of one continuous flow, not normalize stopping partway.
+
+---
+
 ## Simplicity First
 
 Every page should answer one question:

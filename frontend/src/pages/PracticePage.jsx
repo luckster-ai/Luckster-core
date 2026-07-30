@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import practices from '../data/practices'
 import modules from '../data/modules'
@@ -52,6 +52,10 @@ function PracticePage() {
         </p>
 
         <p>{practice.description}</p>
+
+        <Link to={`/practices/${slug}/play`} className="button">
+          開始練習
+        </Link>
       </section>
 
       <section className="practice-sequence-section">

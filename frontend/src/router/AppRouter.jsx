@@ -7,6 +7,7 @@ import ModuleLibraryPage from '../pages/ModuleLibraryPage'
 import ModulePage from '../pages/ModulePage'
 import PracticeHubPage from '../pages/PracticeHubPage'
 import PracticePage from '../pages/PracticePage'
+import PracticePlayerPage from '../pages/PracticePlayerPage'
 
 function AppRouter() {
   return (
@@ -44,6 +45,11 @@ function AppRouter() {
       <Route
         path="/practices/:slug"
         element={<PracticePage />}
+      />
+
+      <Route
+        path="/practices/:slug/play"
+        element={<PracticePlayerPage />}
       />
     </Routes>
   )

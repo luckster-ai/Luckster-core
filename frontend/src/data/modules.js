@@ -9,7 +9,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 195,
     description: '以 Adi Mantra 開始正式進入練習狀態。',
-    videoReference: ''
+    videoReference: { provider: 'youtube', videoId: '' }
   },
 
   {
@@ -22,7 +22,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 268,
     description: '透過拜日式喚醒身體，準備進入主要練習。',
-    videoReference: ''
+    videoReference: { provider: 'youtube', videoId: '' }
   },
 
   {
@@ -35,7 +35,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 2280,
     description: '以身體姿勢與呼吸節奏完成完整的太陽奎亞練習。',
-    videoReference: ''
+    videoReference: { provider: 'youtube', videoId: '' }
   },
 
   {
@@ -48,7 +48,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 656,
     description: '透過引導語進入深度放鬆，協助身體吸收前段練習。',
-    videoReference: ''
+    videoReference: { provider: 'youtube', videoId: '' }
   },
 
   {
@@ -61,7 +61,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 1128,
     description: '透過唱誦、手印與專注完成 Kirtan Kriya 冥想。',
-    videoReference: ''
+    videoReference: { provider: 'youtube', videoId: '' }
   },
 
   {
@@ -74,7 +74,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 148,
     description: '以 Long Time Sun 與祝福語結束整堂 Practice。',
-    videoReference: ''
+    videoReference: { provider: 'youtube', videoId: '' }
   }
 ]
 

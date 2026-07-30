@@ -45,10 +45,10 @@ function ModulePage() {
 
       <p>{module.description}</p>
 
-      {module.videoReference && (
+      {module.videoReference?.videoId && (
         <p>
           <a
-            href={module.videoReference}
+            href={`https://www.youtube.com/watch?v=${module.videoReference.videoId}`}
             target="_blank"
             rel="noreferrer"
           >
