@@ -116,32 +116,7 @@ Module 在 Practice 中是否為必要、Practice 的結構分類（Full Practic
 
 # Module Attributes
 
-每個 Module 建議具備以下資訊：
-
-* ID
-* Title（名稱）
-* Chinese Title 
-
-* Type
-* Category（分類）
-* Subcategory（選填；部分 Module 沒有 Subcategory 屬於正常情況，非文件缺漏）
-
-* Difficulty（適合程度）
-* Duration（時間）
-
-* Description（簡介）
-* Learning Outcomes
-* Prerequisites
-
-* Sources
-
-* Video Reference（對應影片）
-
-* Transcript
-
-* Resources
-
-* Tags（標籤）
+完整的 Module 資料結構統一定義於 `module-metadata.md`，此處不重複列出。
 
 ---
 
