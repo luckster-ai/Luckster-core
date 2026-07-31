@@ -7,7 +7,7 @@ function PracticeStep({ module, order }) {
       <span className="practice-step-order">{order}</span>
 
       <Link to={`/modules/${module.slug}`}>
-        {module.title}
+        {module.chineseTitle}
       </Link>
 
       <p>{formatDuration(module.duration)}</p>

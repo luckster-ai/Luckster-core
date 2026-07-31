@@ -41,7 +41,9 @@ function PracticePage() {
   return (
     <div className="practice-page">
       <section className="practice-header">
-        <h1>{practice.title}</h1>
+        <h1>{practice.chineseTitle}</h1>
+
+        <p className="module-playback-subtitle">{practice.title}</p>
 
         <p>
           <strong>Level：</strong> {practice.difficulty}

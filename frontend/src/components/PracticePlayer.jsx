@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import ModuleRenderer from './ModuleRenderer'
 
 function PracticePlayer({ practice, modules }) {
@@ -14,10 +15,14 @@ function PracticePlayer({ practice, modules }) {
     setCurrentIndex((index) => Math.max(index - 1, 0))
   }
 
+  const restart = () => {
+    setCurrentIndex(0)
+  }
+
   return (
     <div className="practice-player">
       <section className="practice-player-header">
-        <h1>{practice.title}</h1>
+        <h1>{practice.chineseTitle}</h1>
 
         <p>{practice.description}</p>
       </section>
@@ -28,7 +33,7 @@ function PracticePlayer({ practice, modules }) {
         ) : (
           <p>
             目前進度：第 {currentIndex + 1} / {modules.length} 個 Module —{' '}
-            {modules[currentIndex].title}
+            {modules[currentIndex].chineseTitle}
           </p>
         )}
 
@@ -44,7 +49,7 @@ function PracticePlayer({ practice, modules }) {
                     : 'upcoming'
               }
             >
-              {module.title}
+              {module.chineseTitle}
             </li>
           ))}
         </ol>
@@ -52,9 +57,19 @@ function PracticePlayer({ practice, modules }) {
 
       {isComplete ? (
         <section className="practice-complete">
-          <h2>Practice Complete</h2>
+          <h2>練習完成 Practice Complete</h2>
 
           <p>你已完成整堂 Practice。</p>
+
+          <div className="practice-complete-actions">
+            <button onClick={restart}>
+              再練習一次
+            </button>
+
+            <Link to={`/practices/${practice.slug}`} className="button">
+              回到課程頁面
+            </Link>
+          </div>
         </section>
       ) : (
         <section className="practice-player-module">
@@ -68,11 +83,11 @@ function PracticePlayer({ practice, modules }) {
 
       <section className="practice-player-controls">
         <button onClick={goPrevious} disabled={currentIndex === 0}>
-          Previous Module
+          上一個 Module
         </button>
 
         <button onClick={goNext} disabled={isComplete}>
-          Next Module
+          下一個 Module
         </button>
       </section>
     </div>

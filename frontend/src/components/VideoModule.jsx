@@ -6,7 +6,9 @@ function VideoModule({ module, onEnded }) {
 
   return (
     <div className="module-playback">
-      <h3>{module.title}</h3>
+      <h3>{module.chineseTitle}</h3>
+
+      <p className="module-playback-subtitle">{module.title}</p>
 
       <VideoPlayer
         ref={playerRef}
@@ -16,11 +18,11 @@ function VideoModule({ module, onEnded }) {
 
       <div className="playback-controls">
         <button onClick={() => playerRef.current?.play()}>
-          Play
+          播放
         </button>
 
         <button onClick={() => playerRef.current?.pause()}>
-          Pause
+          暫停
         </button>
       </div>
     </div>
