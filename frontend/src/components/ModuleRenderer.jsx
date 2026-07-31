@@ -8,7 +8,13 @@ function ModuleRenderer({ module, onEnded }) {
     return <VideoModule module={module} onEnded={onEnded} />
   }
 
-  return <ModulePlaceholder module={module} onEnded={onEnded} />
+  return (
+    <ModulePlaceholder
+      key={module.slug}
+      module={module}
+      onEnded={onEnded}
+    />
+  )
 }
 
 export default ModuleRenderer

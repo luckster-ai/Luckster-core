@@ -81,7 +81,6 @@ function PracticePlayer({ practice, modules }) {
       ) : (
         <section className="practice-player-module">
           <ModuleRenderer
-            key={modules[currentIndex].slug}
             module={modules[currentIndex]}
             onEnded={goNext}
           />
