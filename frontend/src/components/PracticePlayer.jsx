@@ -22,6 +22,13 @@ function PracticePlayer({ practice, modules }) {
   return (
     <div className="practice-player">
       <section className="practice-player-header">
+        <Link
+          to={`/practices/${practice.slug}`}
+          className="practice-player-exit"
+        >
+          ✕ 離開練習
+        </Link>
+
         <h1>{practice.chineseTitle}</h1>
 
         <p>{practice.description}</p>

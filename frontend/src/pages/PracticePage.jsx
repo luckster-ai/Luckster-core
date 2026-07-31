@@ -46,11 +46,11 @@ function PracticePage() {
         <p className="module-playback-subtitle">{practice.title}</p>
 
         <p>
-          <strong>Level：</strong> {practice.difficulty}
+          <strong>難度：</strong> {practice.difficulty}
         </p>
 
         <p>
-          <strong>Duration：</strong> {formatDuration(totalDuration)}
+          <strong>時長：</strong> {formatDuration(totalDuration)}
         </p>
 
         <p>{practice.description}</p>

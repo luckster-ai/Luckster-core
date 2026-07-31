@@ -36,11 +36,11 @@ function ModulePage() {
       <h1>{module.title}</h1>
 
       <p>
-        <strong>Level：</strong> {module.difficulty}
+        <strong>難度：</strong> {module.difficulty}
       </p>
 
       <p>
-        <strong>Duration：</strong> {formatDuration(module.duration)}
+        <strong>時長：</strong> {formatDuration(module.duration)}
       </p>
 
       <p>{module.description}</p>

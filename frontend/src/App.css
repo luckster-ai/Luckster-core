@@ -112,6 +112,13 @@ footer {
   text-align: center;
 }
 
+.practice-player-exit {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #8a7b54;
+  text-decoration: none;
+}
+
 .practice-player-progress {
   margin: 24px 0;
 }
