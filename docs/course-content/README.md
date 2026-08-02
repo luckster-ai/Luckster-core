@@ -109,3 +109,17 @@ Course Content 分為三個主要類型：
 - Practice Notes
 
 未來可延伸至不同平台，而不需要重新建立內容。
+
+---
+
+## Structure vs. Content
+
+Course Content 儲存 Learning Asset 的實際內容（敘述性內容與 Markdown 檔案）。
+
+Learning Asset 的結構化欄位（ID、Title、Category、Difficulty、Duration、Video Reference 等）由 Course System 定義，詳見：
+
+- `docs/course-system/content-schema.md`（Foundation 與 Module 共用欄位）
+- `docs/course-system/module-metadata.md`（Module 專屬欄位）
+- `docs/course-system/foundation-library.md`（Foundation 專屬欄位）
+
+Course Content 不重複定義這些結構化欄位。

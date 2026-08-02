@@ -2,13 +2,15 @@
 
 ## Purpose
 
-本文件定義 JOTI Course Content 的標準格式。
+本文件定義 JOTI Course Content 的敘述性內容撰寫格式。
 
-所有 Foundation、Module 與 Practice 都應依照相同的資料結構建立，以確保內容能夠被網站、AI、手機 App、電視 App 與未來其他系統共同使用。
+本格式適用於 Foundation、Module 與 Practice 的 Markdown 內容。
 
 每支課程內容都是一個獨立單元（Content Unit）。
 
 除了提供給學員閱讀，也將作為 Luckster AI 的主要知識來源之一。
+
+本文件僅定義敘述性內容的撰寫格式。結構化欄位（ID、Title、Chinese Title、Type、Category、Difficulty、Duration、Video Reference）由 Course System 定義並儲存於對應的資料檔案，不在本文件範圍內（詳見 `docs/course-system/content-schema.md`、`module-metadata.md`、`foundation-library.md`）。
 
 ---
 
@@ -33,23 +35,7 @@ JOTI 的課程內容以影片為主要教學媒介。
 
 每一份 Course Content 建議包含以下章節：
 
-## 1. Basic Information
-
-課程基本資訊。
-
-包含：
-
-* ID（唯一識別碼）
-* Title（英文名稱）
-* Chinese Title（中文名稱）
-* Type（Foundation／Module／Practice）
-* Category
-* Difficulty
-* Estimated Duration
-
----
-
-## 2. Description
+## 1. Description
 
 簡短介紹本課程內容。
 
@@ -59,7 +45,7 @@ JOTI 的課程內容以影片為主要教學媒介。
 
 ---
 
-## 3. Learning Outcomes
+## 2. Learning Outcomes
 
 完成本課程後，學員應能：
 
@@ -71,7 +57,7 @@ Learning Outcomes 著重於學員完成後實際具備的能力，而非課程�
 
 ---
 
-## 4. Prerequisites
+## 3. Prerequisites
 
 開始本課程前建議具備的能力。
 
@@ -85,7 +71,7 @@ Learning Outcomes 著重於學員完成後實際具備的能力，而非課程�
 
 ---
 
-## 5. Related Content（Optional）
+## 4. Related Content（Optional）
 
 如果本內容有特別相關的 Foundation、Module 或 Practice，可在此建立關聯。
 
@@ -95,13 +81,21 @@ Learning Outcomes 著重於學員完成後實際具備的能力，而非課程�
 
 ---
 
-## 6. Resources（Optional）
+## 5. Resources（Optional）
 
 PDF：
 
 Audio：
 
 Downloads：
+
+---
+
+## 6. Transcript（Future）
+
+影片逐字稿，供未來 AI 理解與搜尋使用。
+
+目前尚未產出內容。
 
 ---
 
@@ -146,4 +140,3 @@ JOTI Course Content 並不是一般文章。
 * Practice Calendar
 * Community Features
 * Future Database Migration
-

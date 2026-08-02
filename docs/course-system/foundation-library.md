@@ -70,6 +70,17 @@ Self Verified 提供已有昆達里尼瑜伽經驗的學員使用。
 
 ---
 
+# Foundation Metadata
+
+Foundation 與 Module 共用的欄位（id、slug、title、chineseTitle、description、difficulty、duration、videoReference）由 `content-schema.md` 定義，本文件不重複列出。
+
+Foundation 專屬欄位：
+
+* **Completion Status** — 詳見上方「Completion Status」章節（Not Started / In Progress / Completed / Self Verified）。
+* **category** — 對應上方「Foundation Categories」章節（Knowledge / Breath / Chant / Asana / Preparation），與 Module 的 Category 為不同的分類體系，雖共用欄位名稱但列舉值不同。
+
+---
+
 # Foundation Rules
 
 完成 Foundation 後，

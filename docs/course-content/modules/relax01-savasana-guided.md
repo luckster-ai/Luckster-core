@@ -1,50 +1,8 @@
 # Guided Savasana Relaxation
 
-## Basic Information
-
-ID:
-
-MR001
-
-Title:
-
-Guided Savasana Relaxation
-
-Chinese Title:
-
-引導式攤屍式深度放鬆
-
-Type:
-
-Module
-
-Category:
-
-Relaxation
-
-Subcategory:
-
-Savasana
-
-Difficulty:
-
-Beginner
-
-Estimated Duration:
-
-11 minutes
-
----
-
 ## Description
 
 本 Module 採用攤屍式（Savasana）進行深度放鬆，透過溫和的口語引導，協助身體釋放緊張、平衡神經系統，並整合前一階段奎亞練習所帶來的效益。
-
----
-
-## Prerequisites
-
-- FD001 Long Deep Breathing
 
 ---
 
@@ -58,22 +16,22 @@ Estimated Duration:
 
 ---
 
-## Sources
+## Prerequisites
 
-### Video
+- FD001 Long Deep Breathing
 
-Primary Video：
+---
 
-YouTube：
-
-### Transcript
-
-（未來 AI 自動建立）
-
-### Resources
+## Resources
 
 PDF：
 
 Audio：
 
 Downloads：
+
+---
+
+## Transcript
+
+（未來 AI 自動建立）

@@ -117,11 +117,13 @@ Practice 是 JOTI 平台最主要的內容單位。
 
 ---
 
-# Video（Module 的媒體形式）
+# Video（Learning Asset 的媒體形式）
 
-Video 並非獨立的內容層級，而是 Module 所對應的 Learning Asset 的一種媒體形式。
+Video 並非獨立的內容層級，而是 Learning Asset 的一種媒體形式。
 
-目前每個 Module 對應一支主要影片。
+Foundation 與 Module 皆為 Learning Asset，共用相同的欄位結構，詳見 `content-schema.md`。
+
+目前每個 Foundation 與 Module 對應一支主要影片。
 
 未來可擴充為：
 
@@ -130,7 +132,7 @@ Video 並非獨立的內容層級，而是 Module 所對應的 Learning Asset �
 - 不同版本
 - 更新版本
 
-同一個 Module 可以對應多個 Video Variant。
+同一個 Foundation 或 Module 皆可對應多個 Video Variant。
 
 ---
 

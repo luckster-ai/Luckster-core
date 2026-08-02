@@ -1,29 +1,5 @@
 # Surya Kriya & Kirtan Kriya Practice
 
-## Basic Information
-
-ID:
-
-P001
-
-Title:
-
-Surya Kriya & Kirtan Kriya Practice
-
-Chinese Title:
-
-太陽奎亞與克爾坦奎亞練習
-
-Type:
-
-Practice
-
-Difficulty:
-
-Beginner
-
----
-
 ## Description
 
 本 Practice 結合調頻、拜日式熱身、太陽奎亞、深度放鬆、18 分鐘克爾坦奎亞與結束儀式，形成一套完整且平衡的晨間薩達那。

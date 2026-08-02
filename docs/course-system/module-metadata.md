@@ -2,13 +2,13 @@
 
 ## Purpose
 
-本文件定義 JOTI Module 的完整資料結構（Schema）。
+本文件定義 JOTI Module **專屬**的資料結構（Schema）。
 
-Module Metadata 是 Module 結構的唯一權威來源（Single Source of Truth）。
+Foundation 與 Module 共用的欄位由 `content-schema.md` 定義；本文件是 Module 專屬欄位的唯一權威來源（Single Source of Truth）。
 
 它回答以下問題：
 
-* 一個 Module 應包含哪些資訊？
+* Module 專屬有哪些額外資訊？
 * 哪些欄位為必要，哪些為選填？
 * 每個欄位存在的目的是什麼？
 * 哪些未來系統會依賴這些欄位？
@@ -27,10 +27,11 @@ Module Metadata 的目的，是讓所有依賴 Module 資料的系統（網站�
 
 ## Relationship to Other Documents
 
-本文件僅定義 Module 的**資料結構**。
+本文件僅定義 Module **專屬**的資料結構。
 
 以下概念由其他文件擁有，本文件僅引用，不重複定義：
 
+* Foundation 與 Module 共用欄位（id、slug、title、chineseTitle、description、difficulty、duration、videoReference）→ `content-schema.md`
 * Slug 命名規則 → `naming-convention.md`
 * Module 六大 Category 的用途與規則 → `module-library.md`
 * Video 作為 Learning Asset 的概念 → `data-model.md`
@@ -41,28 +42,16 @@ Module Metadata 的目的，是讓所有依賴 Module 資料的系統（網站�
 
 ## Module Schema
 
-### Core
+Module 的共用欄位（id、slug、title、chineseTitle、description、difficulty、duration、videoReference）由 `content-schema.md` 定義，本文件不重複列出，僅定義以下 Module 專屬欄位。
 
-* **id**（必要）— 系統內部識別碼（例如 `MA001`）。用於資料查詢與跨系統參照，與 Slug 用途不同（詳見 `naming-convention.md`）。
-* **slug**（必要）— Module 的永久識別名稱。命名規則由 `naming-convention.md` 定義，本文件不重複列出。
-* **title**（必要）— 英文名稱。
-* **chineseTitle**（必要）— 中文名稱，配合 Chinese-first 原則作為主要顯示名稱（詳見 `product-design-principles.md`）。
-* **description**（必要）— 簡短介紹本 Module 的內容，提供學員與 AI 理解 Module 用途的基本資訊。
-* **prerequisites**（選填；目前僅存在於內容中，尚未結構化）— 建議先具備的 Foundation 能力，對應 `data-model.md` 中 Foundation → Module 的先備關係。目前僅以文字形式存在於 Markdown 內容（見 `docs/course-content/template.md` 的 Prerequisites 章節），尚未成為 `data/modules.js` 中的結構化欄位；`practice-builder.md` 的 Foundation 檢查未來若需自動化，將依賴此欄位被結構化。
-
-### Media
-
-* **videoReference**（結構上必要，內容可為空）— Module 對應的 Learning Asset 參照，格式為 `{ provider, videoId }`（詳見 `data-model.md` 的 Video 定義）。目前為 Practice Player 讀取播放內容的唯一欄位。
-* **duration**（必要）— 影片時長（秒）。供 Practice 總時長計算與時長顯示使用。
-
-Learning Outcomes、Transcript、Resources 屬於 Module 的敘述性內容，由 `docs/course-content/template.md` 定義與擁有，非結構化資料欄位，故不列入本 Schema。
-
-### Classification
+### Module-Specific Fields
 
 * **type**（必要）— Module 類型代碼（`tuning` / `warmup` / `asana` / `relax` / `med` / `end`）。定義於 `naming-convention.md`，本文件不重複列出列舉值。
 * **category**（必要）— 對應六大 Module Category 的顯示名稱，用途與規則定義於 `module-library.md`。
 * **subcategory**（選填）— 部分 Module 可能沒有 Subcategory，屬於正常情況，非資料缺漏（此決策已於 Course System Specification v1.0 確認）。
-* **difficulty**（必要）— 適合程度（例如 `Beginner`）。註：現有資料與程式碼使用欄位名稱為 `difficulty`，而非 `level`；為避免與現有實作產生用詞分歧，本文件維持使用 `difficulty`。
+* **prerequisites**（選填；目前僅存在於內容中，尚未結構化）— 建議先具備的 Foundation 能力，對應 `data-model.md` 中 Foundation → Module 的先備關係。目前僅以文字形式存在於 Markdown 內容（見 `docs/course-content/template.md` 的 Prerequisites 章節），尚未成為 `data/modules.js` 中的結構化欄位；`practice-builder.md` 的 Foundation 檢查未來若需自動化，將依賴此欄位被結構化。
+
+Learning Outcomes、Transcript、Resources 屬於 Module 的敘述性內容，由 `docs/course-content/template.md` 定義與擁有，非結構化資料欄位，故不列入本 Schema。
 
 ### Metadata
 
