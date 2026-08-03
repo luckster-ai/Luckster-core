@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import formatDuration from '../utils/formatDuration'
+import { formatVideoDuration } from '../utils/formatDuration'
 
 function PracticeStep({ module, order }) {
   return (
@@ -10,7 +10,7 @@ function PracticeStep({ module, order }) {
         {module.chineseTitle}
       </Link>
 
-      <p>{formatDuration(module.duration)}</p>
+      <p>影片時長：{formatVideoDuration(module.duration)}</p>
     </li>
   )
 }

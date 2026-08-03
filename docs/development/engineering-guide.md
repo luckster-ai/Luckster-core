@@ -206,6 +206,16 @@ Continue improving the project through review, refactoring, and documentation as
 
 ---
 
+### 8. Learning Asset First Development
+
+Every Foundation and every Module is a Learning Asset with exactly one human-maintained source: its Markdown file in `frontend/src/content/`. Identity, classification, video reference, tags, and narrative content all belong there — never duplicated by hand elsewhere.
+
+Structured JavaScript data (`data/foundations.js`, `data/modules.js`) is Derived Runtime Data: it mirrors the Learning Asset for routing, rendering, and calculation, and is synchronized deliberately through AI-assisted review, not authored independently.
+
+See `docs/development/adr/0002-learning-asset-first-development.md` for the full decision record.
+
+---
+
 ## Repository Structure
 
 The repository is organized to separate documentation, source code, and engineering resources.

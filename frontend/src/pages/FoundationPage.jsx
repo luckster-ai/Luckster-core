@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import foundations from '../data/foundations'
-import formatDuration from '../utils/formatDuration'
+import { formatVideoDuration } from '../utils/formatDuration'
 
 const markdownModules = import.meta.glob(
   '../content/foundations/*.md',
@@ -40,15 +40,15 @@ function FoundationPage() {
       </p>
 
       <p>
-        <strong>Duration：</strong> {formatDuration(foundation.duration)}
+        <strong>影片時長：</strong> {formatVideoDuration(foundation.duration)}
       </p>
 
-      <p>{foundation.description}</p>
+      <p>{foundation.summary}</p>
 
-      {foundation.videoReference && (
+      {foundation.videoReference?.videoId && (
         <p>
           <a
-            href={foundation.videoReference}
+            href={`https://www.youtube.com/watch?v=${foundation.videoReference.videoId}`}
             target="_blank"
             rel="noreferrer"
           >

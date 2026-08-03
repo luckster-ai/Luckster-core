@@ -1,8 +1,22 @@
-# JOTI Course Content
+# JOTI Course Content (Superseded)
 
-## Purpose
+## Status
 
-Course Content 是 JOTI 所有課程內容的唯一來源（Single Source of Truth）。
+本資料夾的角色已由 Learning Asset First 架構取代。
+
+Foundation 與 Module 的 Learning Asset（結構化欄位＋敘述性內容）現在的唯一人工維護來源是：
+
+`frontend/src/content/{foundations,modules}/`
+
+詳見 `docs/course-system/content-schema.md` 的 Shared Relationships 章節，以及 `docs/development/adr/0002-learning-asset-first-development.md`。
+
+本資料夾保留供歷史參考，不再更新。以下內容描述本資料夾原先的設計，僅供背景理解。
+
+---
+
+## Purpose (Historical)
+
+Course Content 原為 JOTI 所有課程內容的唯一來源（Single Source of Truth）。
 
 本資料夾保存所有 Foundation、Module 與 Practice 的正式內容。
 
@@ -112,7 +126,9 @@ Course Content 分為三個主要類型：
 
 ---
 
-## Structure vs. Content
+## Structure vs. Content (Historical)
+
+此章節描述 Learning Asset First 架構之前的設計（結構與敘述性內容分離維護）。目前結構化欄位與敘述性內容已合併於同一份 Learning Asset 檔案，詳見本文件最上方的 Status 章節。
 
 Course Content 儲存 Learning Asset 的實際內容（敘述性內容與 Markdown 檔案）。
 

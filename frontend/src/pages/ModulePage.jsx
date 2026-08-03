@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import modules from '../data/modules'
-import formatDuration from '../utils/formatDuration'
+import { formatVideoDuration } from '../utils/formatDuration'
 
 const markdownModules = import.meta.glob(
   '../content/modules/*.md',
@@ -40,10 +40,10 @@ function ModulePage() {
       </p>
 
       <p>
-        <strong>時長：</strong> {formatDuration(module.duration)}
+        <strong>影片時長：</strong> {formatVideoDuration(module.duration)}
       </p>
 
-      <p>{module.description}</p>
+      <p>{module.summary}</p>
 
       {module.videoReference?.videoId && (
         <p>

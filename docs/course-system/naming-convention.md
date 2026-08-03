@@ -64,16 +64,15 @@ Markdown 檔名為 Slug 的唯一來源（Single Source of Truth）。
 
 # Foundation
 
-Foundation 的 Markdown 檔名（Slug）不使用流水號。
+Foundation 的 Markdown 檔名（Slug）由內容作者自行組織，可視需要加入流水號前綴，兩種形式皆為有效 Slug。
 
 例如：
 
 deep-long-breath
 fire-breath
-breath-retention
-mula-bandha
-mudras
-sitting-posture
+1-deep-long-breath
+
+Slug 一經建立，不應隨意修改（詳見上方 General Principles），Runtime Data 不另設轉換層，直接採用檔名作為 Slug。
 
 Foundation 的 ID 則使用獨立編號，例如：
 

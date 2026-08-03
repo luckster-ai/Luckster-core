@@ -26,7 +26,7 @@ function ModulePlaceholder({ module, onEnded }) {
 
       <p className="module-playback-subtitle">{module.title}</p>
 
-      <p>{module.description}</p>
+      <p>{module.summary}</p>
 
       <p className="module-placeholder-note">
         影片內容尚未上線，{secondsLeft} 秒後自動進入下一個 Module。

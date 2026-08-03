@@ -1,14 +1,14 @@
 const foundations = [
   {
     id: 'FD001',
-    slug: 'deep-long-breath',
-    title: 'Deep Long Breath',
+    slug: '1-deep-long-breath',
+    title: 'Long Deep Breathing',
     chineseTitle: '深長呼吸',
-    category: 'Breathing',
+    category: 'Breath',
     difficulty: 'Beginner',
-    duration: 600,
-    description: '學習昆達里尼瑜伽最基本的深長呼吸技巧。',
-    videoReference: ''
+    duration: 301,
+    summary: '',
+    videoReference: { provider: 'youtube', videoId: 'f07tEDlzB5c' }
   },
 
   {
@@ -19,7 +19,7 @@ const foundations = [
     category: 'Breathing',
     difficulty: 'Beginner',
     duration: 480,
-    description: '建立火呼吸的節奏與基礎。',
+    summary: '建立火呼吸的節奏與基礎。',
     videoReference: ''
   },
 
@@ -31,7 +31,7 @@ const foundations = [
     category: 'Body Basics',
     difficulty: 'Beginner',
     duration: 720,
-    description: '認識三大身體鎖及其應用。',
+    summary: '認識三大身體鎖及其應用。',
     videoReference: ''
   }
 ]

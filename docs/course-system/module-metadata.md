@@ -31,7 +31,7 @@ Module Metadata 的目的，是讓所有依賴 Module 資料的系統（網站�
 
 以下概念由其他文件擁有，本文件僅引用，不重複定義：
 
-* Foundation 與 Module 共用欄位（id、slug、title、chineseTitle、description、difficulty、duration、videoReference）→ `content-schema.md`
+* Foundation 與 Module 共用欄位（id、slug、title、chineseTitle、summary、difficulty、duration、videoReference、tags）→ `content-schema.md`
 * Slug 命名規則 → `naming-convention.md`
 * Module 六大 Category 的用途與規則 → `module-library.md`
 * Video 作為 Learning Asset 的概念 → `data-model.md`
@@ -42,7 +42,7 @@ Module Metadata 的目的，是讓所有依賴 Module 資料的系統（網站�
 
 ## Module Schema
 
-Module 的共用欄位（id、slug、title、chineseTitle、description、difficulty、duration、videoReference）由 `content-schema.md` 定義，本文件不重複列出，僅定義以下 Module 專屬欄位。
+Module 的共用欄位（id、slug、title、chineseTitle、summary、difficulty、duration、videoReference、tags）由 `content-schema.md` 定義，本文件不重複列出，僅定義以下 Module 專屬欄位。
 
 ### Module-Specific Fields
 
@@ -55,7 +55,7 @@ Learning Outcomes、Transcript、Resources 屬於 Module 的敘述性內容，�
 
 ### Metadata
 
-* **tags**（選填）— 描述性關鍵字，用於搜尋、篩選與 AI 推薦。範例：`beginner`、`breathing`、`foundation`、`nervous-system`、`flexibility`。Tags 不影響 Practice 組課驗證，純粹作為探索與推薦用途。
+* **tags** — 現為 Foundation 與 Module 共用欄位，定義移至 `content-schema.md`，本文件不再重複列出。不影響 Practice 組課驗證，純粹作為探索與推薦用途。
 * **capabilities**（選填，供未來 Practice Builder 使用）— 描述 Module 在 Practice 中可扮演的**結構角色**，而非練習的效益或描述。範例：一個 Asana Module 可能具備 `Warm Up`、`Main Practice` 兩種 Capability；一個 Meditation Module 可能具備 `Meditation`、`Closing`。Capabilities 使 Practice Builder 得以驗證某個 Module 是否可用於省略 Warm Up 或 Relaxation（詳見 `practice-builder.md` 的 Capability Validation）。此欄位延續先前文件審查中提出的 Future Consideration，目前尚未實作於程式碼中。完整 Capability 列舉值與規則，待實際內容確立後，將由未來的 Capability Dictionary 文件定義；本文件僅定義欄位本身的存在與用途。
 * **contraindications**（選填）— 輕量級安全提醒清單，非教學說明。範例：`經期`、`懷孕`、`高血壓`。用於練習前顯示簡短提醒，不應重複影片中已包含的教學內容。
 * **status**（選填，預設為已發布）— 標示 Module 目前是否可供學員使用（例如 `draft` / `published`）。目前所有既有 Module 皆視為 `published`，供未來內容管理與 Practice Builder 篩選未發布內容使用。

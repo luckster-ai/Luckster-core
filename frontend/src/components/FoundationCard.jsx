@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import formatDuration from '../utils/formatDuration'
+import { formatVideoDuration } from '../utils/formatDuration'
 
 function FoundationCard({ foundation }) {
   return (
@@ -8,9 +8,9 @@ function FoundationCard({ foundation }) {
 
       <p>{foundation.difficulty}</p>
 
-      <p>{formatDuration(foundation.duration)}</p>
+      <p>影片時長：{formatVideoDuration(foundation.duration)}</p>
 
-      <p>{foundation.description}</p>
+      <p>{foundation.summary}</p>
 
       <Link
         to={`/foundations/${foundation.slug}`}

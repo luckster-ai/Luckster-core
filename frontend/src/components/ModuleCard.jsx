@@ -1,4 +1,4 @@
-import formatDuration from '../utils/formatDuration'
+import { formatVideoDuration } from '../utils/formatDuration'
 
 function ModuleCard({ module }) {
   return (
@@ -11,7 +11,7 @@ function ModuleCard({ module }) {
       </p>
 
       <p>
-        時長：{formatDuration(module.duration)}
+        影片時長：{formatVideoDuration(module.duration)}
       </p>
 
     </div>

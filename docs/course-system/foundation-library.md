@@ -72,7 +72,7 @@ Self Verified 提供已有昆達里尼瑜伽經驗的學員使用。
 
 # Foundation Metadata
 
-Foundation 與 Module 共用的欄位（id、slug、title、chineseTitle、description、difficulty、duration、videoReference）由 `content-schema.md` 定義，本文件不重複列出。
+Foundation 與 Module 共用的欄位（id、slug、title、chineseTitle、summary、difficulty、duration、videoReference、tags）由 `content-schema.md` 定義，本文件不重複列出。
 
 Foundation 專屬欄位：
 
