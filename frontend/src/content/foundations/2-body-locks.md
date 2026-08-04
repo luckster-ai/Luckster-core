@@ -4,7 +4,7 @@
 
 ID:
 
-FD003
+FD002
 
 Title:
 
@@ -26,9 +26,15 @@ Difficulty:
 
 Beginner
 
-Estimated Duration:
+Duration:
 
-2 minutes
+2:26
+
+---
+
+## Summary
+
+昆達里尼瑜伽的重要技巧，包含根鎖、橫膈膜鎖與頸鎖，正確掌握有助於引導能量流動。
 
 ---
 
@@ -36,26 +42,31 @@ Estimated Duration:
 
 身體鎖是昆達里尼瑜伽的重要能量技巧，包括根鎖、橫膈膜鎖與頸鎖。正確掌握身體鎖，有助於穩定姿勢並引導能量流動。
 
-本 Foundation 將介紹三大身體鎖的目的、基本操作與安全原則。
+本影片將介紹三大身體鎖的目的、基本操作與安全原則。
 
 ---
 
 ## Prerequisites
 
-建議先完成：
-- Long Deep Breathing（FD001）
+none
 
 ---
 
 ## Learning Outcomes
 
-完成本 Foundation 後，學員應能：
+觀看完此影片後，學員應能：
 
 - 了解三大身體鎖的功能。
-- 在安全與放鬆的狀態下練習基本身體鎖。
-- 在後續 Practice 中辨識並運用適當的身體鎖。
+- 在後續正式練習中運用身體鎖。
 
 ---
+
+## Tags
+
+- 身體鎖
+- 基礎
+- 能量技巧
+- 穩定姿勢
 
 ## Sources
 
@@ -63,7 +74,13 @@ Estimated Duration:
 
 Primary Video：
 
-YouTube：
+Provider:
+
+YouTube
+
+URL:
+
+https://www.youtube.com/watch?v=TCh-Qcz-DK8
 
 ### Transcript
 

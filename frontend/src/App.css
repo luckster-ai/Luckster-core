@@ -89,6 +89,12 @@ button {
   transform: translateY(-4px);
 }
 
+a.card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 footer {
   text-align: center;
   padding: 40px;
