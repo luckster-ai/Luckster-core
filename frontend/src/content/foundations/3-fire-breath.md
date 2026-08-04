@@ -4,7 +4,7 @@
 
 ID:
 
-FD002
+FD003
 
 Title:
 
@@ -26,34 +26,47 @@ Difficulty:
 
 Beginner
 
-Estimated Duration:
+Duration:
 
-8 minutes
+8:43
 
 ---
+
+## Summary
+
+昆達里尼瑜伽極具代表性的呼吸法，透過有節奏且快速的呼吸，幫助提升活力、專注力與覺知。
 
 ## Description
 
 火呼吸是昆達里尼瑜伽中極具代表性的呼吸法，透過有節奏且快速的呼吸，幫助提升活力、專注力與覺知。
 
-本 Foundation 將介紹火呼吸的基本原理、正確技巧與常見注意事項，為日後的 Practice 奠定基礎。
+此影片將介紹火呼吸的基本原理、正確技巧與常見注意事項，為日後的正式練習奠定基礎。
 
 ---
 
 ## Prerequisites
 
-建議先完成：
-- Long Deep Breathing（FD001）
+none
 
 ---
 
 ## Learning Outcomes
 
-完成本 Foundation 後，學員應能：
+看完此影片後，學員應能：
 
 - 理解火呼吸的目的與作用。
 - 以正確節奏完成基礎火呼吸。
 - 辨識練習時常見的錯誤並加以調整。
+
+---
+
+## Tags
+
+- 呼吸法
+- 基礎
+- 提升活力
+- 專注力
+- 覺知
 
 ---
 
@@ -63,7 +76,13 @@ Estimated Duration:
 
 Primary Video：
 
-YouTube：
+Provider:
+
+YouTube
+
+URL:
+
+https://www.youtube.com/watch?v=2L5wFRii8fw
 
 ### Transcript
 
