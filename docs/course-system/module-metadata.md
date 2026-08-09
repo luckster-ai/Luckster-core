@@ -47,7 +47,7 @@ Module 的共用欄位（id、slug、title、chineseTitle、summary、difficulty
 ### Module-Specific Fields
 
 * **type**（必要）— Module 類型代碼（`tuning` / `warmup` / `asana` / `relax` / `med` / `end`）。定義於 `naming-convention.md`，本文件不重複列出列舉值。
-* **category**（必要）— 對應六大 Module Category 的顯示名稱，用途與規則定義於 `module-library.md`。
+* **category**（必要）— 對應六大 Module Category 的顯示名稱，用途與規則定義於 `module-library.md`。多數 Module 僅屬於一個 Category；少數天然同時服務多種目的的 Module（例如同時具備 Warm-up 與 Meditation 性質的短版呼吸冥想）可合法對應多個 Category。Category 為描述性中繼資料（Metadata），**不構成 Module 身份的一部分**——新增 Category 從不因此建立新的 Module（詳見 `docs/development/adr/0003-learning-asset-identity-and-prerequisite-validation.md`）。一支影片永遠對應恰好一個 Module 與一個 ID，不因所屬 Category 增加而重複建立。
 * **subcategory**（選填）— 部分 Module 可能沒有 Subcategory，屬於正常情況，非資料缺漏（此決策已於 Course System Specification v1.0 確認）。
 * **prerequisites**（選填；目前僅存在於內容中，尚未結構化）— 建議先具備的 Foundation 能力，對應 `data-model.md` 中 Foundation → Module 的先備關係。目前僅以文字形式存在於 Markdown 內容（見 `docs/course-content/template.md` 的 Prerequisites 章節），尚未成為 `data/modules.js` 中的結構化欄位；`practice-builder.md` 的 Foundation 檢查未來若需自動化，將依賴此欄位被結構化。
 

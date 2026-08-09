@@ -68,6 +68,8 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 * 提醒先完成 Foundation
 * 或由學員自行確認已具備能力。
 
+此步驟即 Step 5「Sequence Validation」章節所稱之 Presence Validation 的概念來源；完整的 Presence／Sequence 兩階段驗證規則定義於該章節，本步驟不重複列出。
+
 ---
 
 # Step 4
@@ -106,6 +108,7 @@ Rule Validation。
 驗證 Module 之間的相對順序：
 
 * Full Practice：Relaxation 是否發生在 Asana Module 之後？
+* **Prerequisite Sequence**：若 Practice 本身已包含某個 Prerequisite Learning Asset（Lesson 或 Module），該 Prerequisite 只有在 Practice 序列中**先於**依賴它的 Module 出現時，才視為滿足。Prerequisite 驗證因此分為兩個階段：（1）Presence Validation——確認 Prerequisite 是否已被學員完成或存在於本次 Practice 中；（2）Sequence Validation——確認該 Prerequisite 於 Practice 中出現的位置早於依賴它的 Module。詳見 `docs/development/adr/0003-learning-asset-identity-and-prerequisite-validation.md`。
 
 ## Structure Validation
 

@@ -166,7 +166,7 @@ practice03-evening-relax
 
 # IDs
 
-ID 與 Slug 為不同用途。
+ID 與 Slug 為不同用途，兩者不可互相取代。
 
 例如：
 
@@ -182,9 +182,22 @@ Slug：
 asana01-surya-kriya
 ```
 
-ID 用於系統內部識別。
+**ID 是 Learning Asset 與 Practice 的唯一權威識別（Canonical Identity）**，用於：
 
-Slug 用於網站、AI 與資料引用。
+- Prerequisites
+- Runtime Data 內部關聯
+- 未來 Learner Status
+- 內部架構邏輯
+
+**Slug 不代表身份識別（Identity）**，其用途僅限於：
+
+- 網站路由（Routing）
+- 網址（URL）
+- Markdown 檔名
+
+任何涉及「這是哪一個 Learning Asset」的邏輯判斷，應以 ID 為準，而非 Slug。
+
+> **實作現況（Implementation Status）**：此為已確認的目標架構（詳見 `docs/development/adr/0003-learning-asset-identity-and-prerequisite-validation.md`）。目前 `data/practices.js` 的 Module 組成與 Sprint 8.2 實作的 Prerequisite Engine 仍以 Slug 作為內部關聯依據，尚未遷移至 ID，此差異已記錄於上述 ADR，待未來實作 Sprint 處理。
 
 ---
 

@@ -35,13 +35,37 @@ Learning Asset 是 JOTI 課程系統中，任何對應一支影片、可供學�
 
 ## Shared Fields
 
-* **id**（必要）— 系統內部識別碼。命名規則見 `naming-convention.md`。
-* **slug**（必要）— 永久識別名稱，為 Markdown 檔名的唯一來源。命名規則見 `naming-convention.md`，本文件不重複列出。
+* **id**（必要）— Learning Asset 的唯一權威識別（Canonical Identity）。命名規則見 `naming-convention.md`。Prerequisites、Runtime Data 內部關聯、未來 Learner Status 與內部架構邏輯，皆應以 ID 為準（詳見 `docs/development/adr/0003-learning-asset-identity-and-prerequisite-validation.md`）。
+* **slug**（必要）— 永久的路由與檔名依據，為 Markdown 檔名的唯一來源，**不代表身份識別**。命名規則見 `naming-convention.md`，本文件不重複列出。
 * **title**（必要）— 英文名稱。
 * **chineseTitle**（必要）— 中文名稱，作為 Chinese-first 原則下的主要顯示名稱（詳見 `product-design-principles.md`）。
 * **summary**（必要）— 簡短摘要，用於 Foundation Card、Module Card、搜尋結果與推薦列表。對應 Learning Asset 中的 Summary 欄位，與 Markdown 內容中的長篇 Description 為不同用途，兩者不重複維護。
 * **difficulty**（必要）— 適合程度（例如 `Beginner`）。
 * **duration**（必要）— 影片時長（秒）。
+* **Prerequisites**
+The `Prerequisites` section follows a standardized authoring format.
+If prerequisites exist:
+```text
+建議先完成：
+- FD001 Long Deep Breathing
+- FD004 Breath Suspension
+- FD005-L01 Easy Pose
+- FD008 Basic Mudras
+- MM001 Kirtan Kriya (18-Minute Guided)
+```
+Rules:
+- Begin with `建議先完成：`
+- Each prerequisite occupies one bullet.
+- **The ID is the canonical identifier; the English Title exists only for authoring readability** (see the `IDs` section of `naming-convention.md`).
+- Single-lesson Foundations (e.g. `FD001`) are referenced directly by their Foundation ID — the Foundation ID and its one Lesson's ID are the same value.
+- Multi-lesson Foundations must reference a specific Lesson ID (e.g. `FD005-L01 Easy Pose`), **unless** the reference is to that Foundation's own Introduction Lesson, which shares the Foundation's own ID (e.g. `FD008 Basic Mudras`). A bare multi-lesson Foundation ID never means "all Lessons inside the Foundation" — it means that Foundation's Introduction Lesson specifically.
+- Modules may reference other Modules as prerequisites (e.g. `MM001 Kirtan Kriya (18-Minute Guided)`). Module prerequisite chains must resolve recursively (see ADR 0003).
+If no prerequisite exists:
+```text
+none
+```
+Always use the lowercase keyword `none`.
+This standard allows Runtime synchronization and future prerequisite parsing to remain deterministic.
 * **videoReference**（結構上必要，內容可為空）— 對應的 Learning Asset 影片參照，格式為：
 
 ```

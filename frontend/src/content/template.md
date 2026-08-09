@@ -59,8 +59,50 @@ Duration:
 
 ## Prerequisites
 
-* None
-* 或列出建議先具備的 Foundation
+## Prerequisites
+
+Describe the recommended knowledge learners should complete before starting this Learning Asset.
+
+Use exactly one of the following formats.
+
+### If prerequisites exist
+
+```text
+建議先完成：
+
+- FD001 Long Deep Breathing
+- FD004 Suspending the Breath 
+- FD005-L01 Easy Pose
+- FD008 Basic Mudras
+- MM001 Kirtan Kriya (18-Minute Guided)
+```
+
+Rules:
+
+- Always begin with `建議先完成：`
+- Use one prerequisite per bullet.
+- **The ID is the canonical identifier. The English Title exists only for readability** — it is never used to resolve the reference.
+- Single-lesson Foundations (e.g. `FD001`) are referenced by their Foundation ID directly.
+- Multi-lesson Foundations must reference a specific Lesson ID (e.g. `FD005-L01 Easy Pose`) — **except** when referencing that Foundation's own Introduction Lesson, which shares the Foundation's own ID (e.g. `FD008 Basic Mudras`). A bare multi-lesson Foundation ID never means "all Lessons in the Foundation."
+- Modules may reference other Modules as prerequisites (e.g. `MM001 Kirtan Kriya (18-Minute Guided)`).
+- Do not include Chinese titles.
+- Keep the list ordered by learning priority.
+
+### If there are no prerequisites
+
+```text
+none
+```
+
+Always use the lowercase keyword `none`.
+
+Do not use:
+
+- None
+- 無
+- 沒有
+- N/A
+- 無需前置知識
 
 ---
 
