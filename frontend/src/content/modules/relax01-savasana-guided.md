@@ -30,31 +30,50 @@ Difficulty:
 
 Beginner
 
-Estimated Duration:
+Duration:
 
-11 minutes
+10:55
+
+Variant:
+
+Leading into
+
+---
+
+## Summary
+
+在整個奎亞或冥想結束後，要做一次8-15分鐘的深度放鬆，或瑜伽睡眠。
 
 ---
 
 ## Description
 
-本 Module 採用攤屍式（Savasana）進行深度放鬆，透過溫和的口語引導，協助身體釋放緊張、平衡神經系統，並整合前一階段奎亞練習所帶來的效益。
+本影片採用攤屍式（Savasana）進行深度放鬆，透過溫和的口語引導，協助身體每一個部位釋放緊張、平衡神經系統，並整合前一階段奎亞練習所帶來的效益。
 
 ---
 
 ## Prerequisites
 
+建議先完成：
 - FD001 Long Deep Breathing
 
 ---
 
 ## Learning Outcomes
 
-完成本 Module 後，學員將有機會：
+完成本影片後，學員將有機會：
 
 - 體驗深度的身心放鬆。
 - 提升對身體與呼吸的覺察。
 - 感受練習後的平靜與整合。
+
+---
+
+## Tags
+
+- 深度放鬆
+- 神經系統調節
+- 攤屍式
 
 ---
 
@@ -64,7 +83,13 @@ Estimated Duration:
 
 Primary Video：
 
-YouTube：
+Provider:
+
+YouTube
+
+URL:
+
+https://www.youtube.com/watch?v=Gg5F3Py8un4
 
 ### Transcript
 

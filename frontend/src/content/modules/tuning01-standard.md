@@ -26,9 +26,9 @@ Difficulty:
 
 Beginner
 
-Estimated Duration:
+Duration:
 
-3 minutes
+3:15
 
 Variant:
 
@@ -36,26 +36,42 @@ Standard
 
 ---
 
+## Summary
+
+完整的昆達里尼瑜伽練習的開頭必備程序：黃金鏈接調頻；本影片還包含保護咒。
+
 ## Description
 
-本 Module 包含黃金鏈接與保護咒，作為正式練習開始前的調頻程序，協助學員安定心念、連結傳承，並建立安全而專注的練習空間。
+本影片包含黃金鏈接與保護咒，作為正式練習開始前的調頻程序，協助學員安定心念、連結傳承，並建立安全而專注的練習空間。
 
 ---
 
 ## Prerequisites
 
+建議先完成：
 - FD001 Long Deep Breathing
-- FD003 Body Locks（建議）
+- FD002 Body Locks
+- FD004 Suspending the Breath
+- FD005-L01 Easy Pose
+- FD006 Tuning In Mantras
+- FD008-L05 Prayer Pose
 
 ---
 
 ## Learning Outcomes
 
-完成本 Module 後，學員應能：
+完成本影片後，學員應能：
 
-- 正確誦唱黃金鏈接與保護咒。
-- 理解調頻在 ABC 昆達里尼瑜伽中的目的。
-- 以穩定而專注的狀態開始後續 Practice。
+- 調整頻率以穩定而專注的狀態開始後續練習。
+
+---
+
+## Tags
+
+- Mantra
+- 唱誦
+- 阿迪梵音
+- 調頻
 
 ---
 
@@ -65,7 +81,13 @@ Standard
 
 Primary Video：
 
-YouTube：
+Provider:
+
+YouTube
+
+URL:
+
+https://www.youtube.com/watch?v=tvkcOmfXQuE
 
 ### Transcript
 

@@ -2,27 +2,29 @@ const modules = [
   {
     id: 'MT001',
     slug: 'tuning01-standard',
-    title: 'Tuning In',
-    chineseTitle: '開始調頻',
+    title: 'Tuning In (Standard)',
+    chineseTitle: '調頻（標準版）',
     type: 'tuning',
     category: 'Tuning In',
     difficulty: 'Beginner',
     duration: 195,
-    summary: '以 Adi Mantra 開始正式進入練習狀態。',
-    videoReference: { provider: 'youtube', videoId: 'tvkcOmfXQuE' }
+    summary: '完整的昆達里尼瑜伽練習的開頭必備程序：黃金鏈接調頻；本影片還包含保護咒。',
+    videoReference: { provider: 'youtube', videoId: 'tvkcOmfXQuE' },
+    tags: ['Mantra', '唱誦', '阿迪梵音', '調頻']
   },
 
   {
     id: 'MW001',
     slug: 'warmup01-surya-namaskar',
-    title: 'Surya Namaskar',
-    chineseTitle: '拜日式暖身',
+    title: 'Surya Namaskar Warm-Up (3 Rounds)',
+    chineseTitle: '拜日式熱身 (3遍)',
     type: 'warmup',
     category: 'Warm Up',
     difficulty: 'Beginner',
-    duration: 268,
-    summary: '透過拜日式喚醒身體，準備進入主要練習。',
-    videoReference: { provider: 'youtube', videoId: 'e_esmWeX2Oc' }
+    duration: 267,
+    summary: '拜日式熱身，是昆達里尼瑜伽常用的熱身方式。',
+    videoReference: { provider: 'youtube', videoId: 'e_esmWeX2Oc' },
+    tags: ['熱身', '拜日式', 'Asana']
   },
 
   {
@@ -34,21 +36,23 @@ const modules = [
     category: 'Asana',
     difficulty: 'Beginner',
     duration: 2280,
-    summary: '以身體姿勢與呼吸節奏完成完整的太陽奎亞練習。',
-    videoReference: { provider: 'youtube', videoId: 'BvcoNwATUW4' }
+    summary: '以太陽能量（Surya）命名，透過一系列體式與呼吸的結合，系統性地刺激陽性的普拉那能量與昆達里尼能量。這套奎亞有助於提升活力、淨化身心，並為日常薩達那練習注入穩定而充沛的能量。',
+    videoReference: { provider: 'youtube', videoId: 'BvcoNwATUW4' },
+    tags: ['太陽能量', '減肥', '有活力']
   },
 
   {
     id: 'MR001',
     slug: 'relax01-savasana-guided',
-    title: 'Guided Savasana',
-    chineseTitle: '引導式大休息',
+    title: 'Guided Savasana Relaxation',
+    chineseTitle: '引導式攤屍式深度放鬆',
     type: 'relax',
     category: 'Relaxation',
     difficulty: 'Beginner',
-    duration: 656,
-    summary: '透過引導語進入深度放鬆，協助身體吸收前段練習。',
-    videoReference: { provider: 'youtube', videoId: 'Gg5F3Py8un4' }
+    duration: 655,
+    summary: '在整個奎亞或冥想結束後，要做一次8-15分鐘的深度放鬆，或瑜伽睡眠。',
+    videoReference: { provider: 'youtube', videoId: 'Gg5F3Py8un4' },
+    tags: ['深度放鬆', '神經系統調節', '攤屍式']
   },
 
   {
@@ -60,21 +64,51 @@ const modules = [
     category: 'Meditation',
     difficulty: 'Beginner',
     duration: 1128,
-    summary: '透過唱誦、手印與專注完成 Kirtan Kriya 冥想。',
-    videoReference: { provider: 'youtube', videoId: 'VDdVzux-7HY' }
+    summary: 'Sa Ta Na Ma 唱誦冥想 + 詳細解說。',
+    videoReference: { provider: 'youtube', videoId: 'VDdVzux-7HY' },
+    tags: ['唱誦', '手印', '冥想', '專注力', '基礎']
+  },
+
+  {
+    id: 'MM002',
+    slug: 'med02-kirtan-kriya-31min',
+    title: 'Kirtan Kriya (31-Minute)',
+    chineseTitle: '克爾坦奎亞（31分鐘）',
+    type: 'med',
+    category: 'Meditation',
+    difficulty: 'Intermediate',
+    duration: 1978,
+    summary: 'Sa Ta Na Ma 唱誦冥想。31分鐘版本（無解說）。',
+    videoReference: { provider: 'youtube', videoId: 'KYwWSdNb3UA' },
+    tags: ['唱誦', '手印', '冥想', '專注力']
+  },
+
+  {
+    id: 'MM003',
+    slug: 'med03-kirtan-kriya-150min',
+    title: 'Kirtan Kriya (150-Minute)',
+    chineseTitle: '克爾坦奎亞（150分鐘）',
+    type: 'med',
+    category: 'Meditation',
+    difficulty: 'Advanced',
+    duration: 9260,
+    summary: 'Sa Ta Na Ma 唱誦冥想。2.5小時版本（無解說）。',
+    videoReference: { provider: 'youtube', videoId: '2GaicKj6jMg' },
+    tags: ['唱誦', '手印', '冥想', '專注力']
   },
 
   {
     id: 'ME001',
     slug: 'end01-long-time-sun-en',
-    title: 'Long Time Sun (English)',
-    chineseTitle: '永恆的陽光（英文版）',
+    title: 'Long Time Sun Closing (English)',
+    chineseTitle: '永恆的陽光結束儀式（英文版）',
     type: 'end',
     category: 'Ending',
     difficulty: 'Beginner',
     duration: 148,
-    summary: '以 Long Time Sun 與祝福語結束整堂 Practice。',
-    videoReference: { provider: 'youtube', videoId: 'sQ6KQU2wQ_k' }
+    summary: '包含《Long Time Sun》英文版本歌曲、融入其中的三次 Sat Nam 唱誦作爲結尾。',
+    videoReference: { provider: 'youtube', videoId: 'sQ6KQU2wQ_k' },
+    tags: ['唱誦', '結尾儀式', '基礎']
   }
 ]
 

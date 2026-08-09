@@ -48,7 +48,8 @@ Duration:
 
 ## Prerequisites
 
-- Basic Mudras（FD008）
+建議先完成：
+- FD008 Basic Mudras
 
 ---
 

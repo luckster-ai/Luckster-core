@@ -53,6 +53,14 @@ none
 
 ---
 
+## Tags
+
+- 坐姿
+- Asana
+- 基礎
+
+---
+
 ## Sources
 
 ### Transcript

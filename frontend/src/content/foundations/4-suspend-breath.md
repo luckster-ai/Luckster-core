@@ -45,7 +45,7 @@ Duration:
 ## Prerequisites
 
 建議先完成：
-- Long Deep Breathing（FD001）
+- FD001 Long Deep Breathing
 
 ---
 

@@ -47,13 +47,13 @@ Duration:
 
 ## Prerequisites
 
-None
+none
 
 ---
 
 ## Learning Outcomes
 
-完成本 Foundation 後，學員應能：
+完成本影片後，學員應能：
 
 - 理解深長呼吸的目的與重要性。
 - 正確完成深長呼吸。

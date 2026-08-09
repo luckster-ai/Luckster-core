@@ -51,6 +51,14 @@ none
 
 ---
 
+## Tags
+
+- 白色衣著
+- 天然材質
+- 基礎
+
+---
+
 ## Sources
 
 ### Transcript

@@ -47,8 +47,8 @@ Duration:
 ## Prerequisites
 
 建議先完成：
-- Easy Pose（FD005-L01）
-- Perfect Pose（FD005-L02）
+- FD005-L01 Easy Pose
+- FD005-L02 Perfect Pose
 
 ---
 

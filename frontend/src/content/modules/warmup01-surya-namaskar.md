@@ -30,9 +30,9 @@ Difficulty:
 
 Beginner
 
-Estimated Duration:
+Duration:
 
-4 minutes
+4:27
 
 Variant:
 
@@ -40,9 +40,13 @@ Variant:
 
 ---
 
+## Summary
+
+拜日式熱身，是昆達里尼瑜伽常用的熱身方式。
+
 ## Description
 
-本 Module 以拜日式作為熱身，溫和地喚醒全身，協調呼吸與動作，為後續練習做好準備。
+本影片以拜日式作為熱身，溫和地喚醒全身，協調呼吸與動作，為後續練習做好準備。
 
 Surya Namaskar is commonly known in English as Sun Salutation.
 
@@ -50,17 +54,26 @@ Surya Namaskar is commonly known in English as Sun Salutation.
 
 ## Prerequisites
 
+建議先完成：
 - FD001 Long Deep Breathing
 
 ---
 
 ## Learning Outcomes
 
-完成本 Module 後，學員應能：
+完成本影片後，學員應能：
 
-- 熟悉拜日式的基本流程。
-- 協調呼吸與動作。
+- 完成拜日式熱身。
+- 協調呼吸。
 - 以穩定且溫暖的身體狀態進入正式 Practice。
+
+---
+
+## Tags
+
+- 熱身
+- 拜日式
+- Asana
 
 ---
 
@@ -70,7 +83,13 @@ Surya Namaskar is commonly known in English as Sun Salutation.
 
 Primary Video：
 
-YouTube：
+Provider:
+
+YouTube
+
+URL:
+
+https://www.youtube.com/watch?v=e_esmWeX2Oc
 
 ### Transcript
 

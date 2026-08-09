@@ -48,7 +48,7 @@ Duration:
 
 ## Prerequisites
 
-None
+none
 
 ---
 
