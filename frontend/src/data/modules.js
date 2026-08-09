@@ -10,7 +10,8 @@ const modules = [
     duration: 195,
     summary: '完整的昆達里尼瑜伽練習的開頭必備程序：黃金鏈接調頻；本影片還包含保護咒。',
     videoReference: { provider: 'youtube', videoId: 'tvkcOmfXQuE' },
-    tags: ['Mantra', '唱誦', '阿迪梵音', '調頻']
+    tags: ['Mantra', '唱誦', '阿迪梵音', '調頻'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD006', 'FD008-L05']
   },
 
   {
@@ -24,7 +25,8 @@ const modules = [
     duration: 267,
     summary: '拜日式熱身，是昆達里尼瑜伽常用的熱身方式。',
     videoReference: { provider: 'youtube', videoId: 'e_esmWeX2Oc' },
-    tags: ['熱身', '拜日式', 'Asana']
+    tags: ['熱身', '拜日式', 'Asana'],
+    prerequisites: ['FD001']
   },
 
   {
@@ -38,7 +40,8 @@ const modules = [
     duration: 2280,
     summary: '以太陽能量（Surya）命名，透過一系列體式與呼吸的結合，系統性地刺激陽性的普拉那能量與昆達里尼能量。這套奎亞有助於提升活力、淨化身心，並為日常薩達那練習注入穩定而充沛的能量。',
     videoReference: { provider: 'youtube', videoId: 'BvcoNwATUW4' },
-    tags: ['太陽能量', '減肥', '有活力']
+    tags: ['太陽能量', '減肥', '有活力'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008-L01', 'FD008-L07']
   },
 
   {
@@ -52,7 +55,8 @@ const modules = [
     duration: 655,
     summary: '在整個奎亞或冥想結束後，要做一次8-15分鐘的深度放鬆，或瑜伽睡眠。',
     videoReference: { provider: 'youtube', videoId: 'Gg5F3Py8un4' },
-    tags: ['深度放鬆', '神經系統調節', '攤屍式']
+    tags: ['深度放鬆', '神經系統調節', '攤屍式'],
+    prerequisites: ['FD001']
   },
 
   {
@@ -66,7 +70,8 @@ const modules = [
     duration: 1128,
     summary: 'Sa Ta Na Ma 唱誦冥想 + 詳細解說。',
     videoReference: { provider: 'youtube', videoId: 'VDdVzux-7HY' },
-    tags: ['唱誦', '手印', '冥想', '專注力', '基礎']
+    tags: ['唱誦', '手印', '冥想', '專注力', '基礎'],
+    prerequisites: ['FD004', 'FD005-L01', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04']
   },
 
   {
@@ -80,7 +85,8 @@ const modules = [
     duration: 1978,
     summary: 'Sa Ta Na Ma 唱誦冥想。31分鐘版本（無解說）。',
     videoReference: { provider: 'youtube', videoId: 'KYwWSdNb3UA' },
-    tags: ['唱誦', '手印', '冥想', '專注力']
+    tags: ['唱誦', '手印', '冥想', '專注力'],
+    prerequisites: ['FD004', 'FD005-L01', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001']
   },
 
   {
@@ -94,7 +100,8 @@ const modules = [
     duration: 9260,
     summary: 'Sa Ta Na Ma 唱誦冥想。2.5小時版本（無解說）。',
     videoReference: { provider: 'youtube', videoId: '2GaicKj6jMg' },
-    tags: ['唱誦', '手印', '冥想', '專注力']
+    tags: ['唱誦', '手印', '冥想', '專注力'],
+    prerequisites: ['FD004', 'FD005-L01', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001', 'MM002']
   },
 
   {
@@ -108,7 +115,8 @@ const modules = [
     duration: 148,
     summary: '包含《Long Time Sun》英文版本歌曲、融入其中的三次 Sat Nam 唱誦作爲結尾。',
     videoReference: { provider: 'youtube', videoId: 'sQ6KQU2wQ_k' },
-    tags: ['唱誦', '結尾儀式', '基礎']
+    tags: ['唱誦', '結尾儀式', '基礎'],
+    prerequisites: ['FD005-L01', 'FD006', 'FD008-L05']
   }
 ]
 

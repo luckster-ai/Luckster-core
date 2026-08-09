@@ -16,7 +16,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 301,
         videoReference: { provider: 'youtube', videoId: 'f07tEDlzB5c' },
-        tags: ['呼吸法', '基礎', '放鬆平靜', '對抗憂鬱', '增強直覺', '調整磁場', '淨化血液']
+        tags: ['呼吸法', '基礎', '放鬆平靜', '對抗憂鬱', '增強直覺', '調整磁場', '淨化血液'],
+        prerequisites: []
       }
     ]
   },
@@ -38,7 +39,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 146,
         videoReference: { provider: 'youtube', videoId: 'TCh-Qcz-DK8' },
-        tags: ['身體鎖', '基礎', '能量技巧', '穩定姿勢']
+        tags: ['身體鎖', '基礎', '能量技巧', '穩定姿勢'],
+        prerequisites: []
       }
     ]
   },
@@ -60,7 +62,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 523,
         videoReference: { provider: 'youtube', videoId: '2L5wFRii8fw' },
-        tags: ['呼吸法', '基礎', '提升活力', '專注力', '覺知']
+        tags: ['呼吸法', '基礎', '提升活力', '專注力', '覺知'],
+        prerequisites: []
       }
     ]
   },
@@ -82,7 +85,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 234,
         videoReference: { provider: 'youtube', videoId: 'TqdWpGvdCEs' },
-        tags: ['呼吸法', '基礎', '屏息', '神經系統調節', '專注力', '情緒控制']
+        tags: ['呼吸法', '基礎', '屏息', '神經系統調節', '專注力', '情緒控制'],
+        prerequisites: ['FD001']
       }
     ]
   },
@@ -104,7 +108,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 56,
         videoReference: { provider: 'youtube', videoId: 'rsOpfPySzR4' },
-        tags: ['坐姿', '基礎', 'Asana']
+        tags: ['坐姿', '基礎', 'Asana'],
+        prerequisites: []
       },
       {
         id: 'FD005-L02',
@@ -115,7 +120,8 @@ const foundations = [
         difficulty: 'Intermediate',
         duration: 37,
         videoReference: { provider: 'youtube', videoId: 'Ag0EatcbbHM' },
-        tags: ['坐姿', 'Asana']
+        tags: ['坐姿', 'Asana'],
+        prerequisites: ['FD005-L01']
       },
       {
         id: 'FD005-L03',
@@ -126,7 +132,8 @@ const foundations = [
         difficulty: 'Advanced',
         duration: 57,
         videoReference: { provider: 'youtube', videoId: 'thuSaU8s7Fk' },
-        tags: ['坐姿', 'Asana', '深度冥想']
+        tags: ['坐姿', 'Asana', '深度冥想'],
+        prerequisites: ['FD005-L01', 'FD005-L02']
       },
       {
         id: 'FD005-L04',
@@ -137,7 +144,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 59,
         videoReference: { provider: 'youtube', videoId: 'XdAWh3GEE-c' },
-        tags: ['坐姿', 'Asana', '基礎', '消化系統']
+        tags: ['坐姿', 'Asana', '基礎', '消化系統'],
+        prerequisites: []
       }
     ]
   },
@@ -159,7 +167,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 260,
         videoReference: { provider: 'youtube', videoId: 'LP96w17xioo' },
-        tags: ['Mantra', '唱誦', '阿迪梵音', '調頻']
+        tags: ['Mantra', '唱誦', '阿迪梵音', '調頻'],
+        prerequisites: []
       }
     ]
   },
@@ -181,7 +190,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 56,
         videoReference: { provider: 'youtube', videoId: 'evnC1lf0ioI' },
-        tags: ['頭巾', '白色衣著', '天然材質']
+        tags: ['頭巾', '白色衣著', '天然材質'],
+        prerequisites: []
       },
       {
         id: 'FD007-L02',
@@ -192,7 +202,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 54,
         videoReference: { provider: 'youtube', videoId: 'IIU9l26tm44' },
-        tags: ['白色衣著', '瑜伽墊', '天然材質']
+        tags: ['白色衣著', '瑜伽墊', '天然材質'],
+        prerequisites: []
       }
     ]
   },
@@ -214,7 +225,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 46,
         videoReference: { provider: 'youtube', videoId: '5QIEhgr87OI' },
-        tags: ['手印', '基礎', '木星']
+        tags: ['手印', '基礎', '木星'],
+        prerequisites: []
       },
       {
         id: 'FD008-L02',
@@ -225,7 +237,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 30,
         videoReference: { provider: 'youtube', videoId: 'SpgFoPQ51wc' },
-        tags: ['手印', '基礎', '土星']
+        tags: ['手印', '基礎', '土星'],
+        prerequisites: []
       },
       {
         id: 'FD008-L03',
@@ -236,7 +249,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 29,
         videoReference: { provider: 'youtube', videoId: 'e70HdrXW7bs' },
-        tags: ['手印', '基礎', '太陽能量']
+        tags: ['手印', '基礎', '太陽能量'],
+        prerequisites: []
       },
       {
         id: 'FD008-L04',
@@ -247,7 +261,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 21,
         videoReference: { provider: 'youtube', videoId: 'XYYv5SflBYk' },
-        tags: ['手印', '基礎', '水星', '溝通力']
+        tags: ['手印', '基礎', '水星', '溝通力'],
+        prerequisites: []
       },
       {
         id: 'FD008-L05',
@@ -258,7 +273,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 57,
         videoReference: { provider: 'youtube', videoId: 'xZR0gYkoWOg' },
-        tags: ['手印', '基礎', '阿迪梵音']
+        tags: ['手印', '基礎', '阿迪梵音'],
+        prerequisites: []
       },
       {
         id: 'FD008-L06',
@@ -269,7 +285,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 42,
         videoReference: { provider: 'youtube', videoId: 'asfS9nRsdwQ' },
-        tags: ['手印', '基礎']
+        tags: ['手印', '基礎'],
+        prerequisites: []
       },
       {
         id: 'FD008-L07',
@@ -280,7 +297,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 56,
         videoReference: { provider: 'youtube', videoId: 'S4JgxXQ91JM' },
-        tags: ['手印', '基礎', '性能量', '腺體平衡']
+        tags: ['手印', '基礎', '性能量', '腺體平衡'],
+        prerequisites: []
       },
       {
         id: 'FD008-L08',
@@ -291,7 +309,8 @@ const foundations = [
         difficulty: 'Beginner',
         duration: 49,
         videoReference: { provider: 'youtube', videoId: 'dG5IF_kptHQ' },
-        tags: ['手印', '基礎', '專注力']
+        tags: ['手印', '基礎', '專注力'],
+        prerequisites: []
       }
     ]
   }
