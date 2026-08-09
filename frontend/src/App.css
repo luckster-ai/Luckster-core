@@ -175,6 +175,20 @@ footer {
   color: #8a7b54;
 }
 
+.foundation-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.foundation-page h1 {
+  margin: 0 0 8px;
+}
+
+.foundation-page .cards {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .practice-complete-actions {
   display: flex;
   justify-content: center;
@@ -222,6 +236,14 @@ footer {
   }
 
   .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .foundation-page {
+    padding: 32px 16px;
+  }
+
+  .foundation-page .cards {
     grid-template-columns: 1fr;
   }
 

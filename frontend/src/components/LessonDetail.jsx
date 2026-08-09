@@ -1,14 +1,18 @@
 import { useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { formatVideoDuration } from '../utils/formatDuration'
-import { stripMarkdownSection } from '../utils/stripMarkdownSection'
+import { stripMarkdownSection, stripSectionIfEmpty } from '../utils/stripMarkdownSection'
 import VideoPlayer from './VideoPlayer'
 
 function toLessonContent(markdown) {
   let result = markdown.replace(/^#\s+.+\n+/, '')
   result = stripMarkdownSection(result, '##\\s*Basic Information')
   result = stripMarkdownSection(result, '##\\s*Summary')
+  result = stripMarkdownSection(result, '##\\s*Tags')
   result = stripMarkdownSection(result, '###\\s*Video')
+  result = stripSectionIfEmpty(result, '###\\s*Transcript')
+  result = stripSectionIfEmpty(result, '###\\s*Resources')
+  result = stripSectionIfEmpty(result, '##\\s*Sources')
   return result
 }
 
