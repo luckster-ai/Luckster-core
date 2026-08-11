@@ -5,6 +5,7 @@ import modules from '../data/modules'
 import formatDuration from '../utils/formatDuration'
 import { calculatePracticeDuration } from '../utils/calculatePracticeDuration'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
+import { getCustomPractice } from '../state/customPracticeStore'
 import PracticeStep from '../components/PracticeStep'
 
 const markdownModules = import.meta.glob(
@@ -19,9 +20,8 @@ const markdownModules = import.meta.glob(
 function PracticePage() {
   const { slug } = useParams()
 
-  const practice = practices.find(
-    (item) => item.slug === slug
-  )
+  const practice =
+    practices.find((item) => item.slug === slug) || getCustomPractice(slug)
 
   if (!practice) {
     return (
@@ -33,7 +33,7 @@ function PracticePage() {
   }
 
   const markdownPath = `../content/practices/${slug}.md`
-  const markdown = markdownModules[markdownPath] || ''
+  const markdown = practice.isCustom ? '' : markdownModules[markdownPath] || ''
 
   const orderedModules = resolvePracticeModules(practice, modules)
   const totalDuration = calculatePracticeDuration(practice, modules)
@@ -55,6 +55,12 @@ function PracticePage() {
 
         <p>{practice.description}</p>
 
+        {practice.isCustom && (
+          <p className="practice-custom-note">
+            這是你建立的 Practice，暫存於本次瀏覽階段（重新整理仍可查看，但關閉分頁後將會遺失）。
+          </p>
+        )}
+
         <Link to={`/practices/${slug}/play`} className="button">
           開始練習
         </Link>
@@ -74,11 +80,13 @@ function PracticePage() {
         </ol>
       </section>
 
-      <section className="practice-notes">
-        <h2>練習筆記 Practice Notes</h2>
+      {!practice.isCustom && (
+        <section className="practice-notes">
+          <h2>練習筆記 Practice Notes</h2>
 
-        <ReactMarkdown>{markdown}</ReactMarkdown>
-      </section>
+          <ReactMarkdown>{markdown}</ReactMarkdown>
+        </section>
+      )}
     </div>
   )
 }

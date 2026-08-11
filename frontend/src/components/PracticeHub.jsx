@@ -10,6 +10,10 @@ function PracticeHub({ practices }) {
         選擇一堂完整的引導練習，跟著步驟開始今天的 Kundalini Yoga 練習。
       </p>
 
+      <Link to="/practice/build" className="button practice-hub-build-link">
+        建立新課程
+      </Link>
+
       <div className="cards">
         {practices.map((practice) => (
           <Link

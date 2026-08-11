@@ -7,6 +7,7 @@ import LessonPage from '../pages/LessonPage'
 import ModuleLibraryPage from '../pages/ModuleLibraryPage'
 import ModulePage from '../pages/ModulePage'
 import PracticeHubPage from '../pages/PracticeHubPage'
+import PracticeBuilderPage from '../pages/PracticeBuilderPage'
 import PracticePage from '../pages/PracticePage'
 import PracticePlayerPage from '../pages/PracticePlayerPage'
 
@@ -46,6 +47,11 @@ function AppRouter() {
       <Route
         path="/practice"
         element={<PracticeHubPage />}
+      />
+
+      <Route
+        path="/practice/build"
+        element={<PracticeBuilderPage />}
       />
 
       <Route

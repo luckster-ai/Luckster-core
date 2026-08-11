@@ -27,6 +27,16 @@ This ADR resolves both: it establishes ID as the canonical identity going forwar
 
 **5. Module Categories.** Most Modules belong to exactly one Category. A small number of Modules that genuinely serve multiple purposes (e.g. a short Breathing Meditation serving both Warm-up and Meditation) may legitimately carry multiple Categories. This never creates a second Module — Category is descriptive metadata, not part of Module identity.
 
+Formally, combining this with Decision 1 and Decision 4: **one Module = one Learning Asset = one canonical ID = one Markdown file**, regardless of how many Categories it belongs to. Multi-category support requires no change to how a Module is identified, referenced, or resolved anywhere else in the system, precisely because identity was already separated from every descriptive attribute (including Category) by Decision 1:
+
+- **Prerequisites** (Decision 2) reference Modules by ID. A multi-category Module is referenced exactly the same way as a single-category one — Category plays no role in resolving a Prerequisite.
+- **Learner Status** is keyed by canonical ID (see `frontend/src/utils/learnerStatus.js`). A multi-category Module has exactly one completion state, not one per Category it belongs to — completing it once satisfies it wherever it's shown, consistent with it being one Learning Asset.
+- **Category** is purely a display/browsing concern — e.g. a future Module Library may list the same Module under both its Warm-up and Meditation views, but every such view points at the same ID, the same Markdown file, and the same Learner Status entry.
+
+The canonical multi-value authoring format and Runtime Data shape are now defined in `module-metadata.md` (Sprint 8.3 Pre-Implementation): a single Category keeps the existing bare-line format unchanged; multiple Categories use a `- ` bullet list, one per line, mirroring the Prerequisites list convention; the Runtime Data target shape is `categories: string[]` (plural, always an array), replacing the singular `category: string` field. Defining this format is a documentation decision only — no Learning Asset content or Runtime Data has been migrated to it yet (see Consequences).
+
+See `practice-builder.md`'s Composition Validation for how the existing "no duplicate Module" Practice rule already resolves the case of a multi-category Module being discoverable from more than one Practice Builder section — it does not require a new rule, since Module identity (not Category) is what that validation was already keyed on.
+
 **6. Practice Ordering.** If a Practice already contains a prerequisite Learning Asset, that occurrence satisfies the dependency only if it appears **earlier** in the Practice sequence than the Module that depends on it. Prerequisite validation is therefore two stages: **Presence Validation** (is it satisfied at all, per Learner Status or by appearing in this Practice) and **Sequence Validation** (if satisfied by appearing in this Practice, does it appear before the dependent Module).
 
 **7. Content Authoring Documentation.** These rules are recorded in `frontend/src/content/template.md` (the Learning Asset authoring guide) so future content authors apply them without ambiguity, in addition to their formal definition in `content-schema.md`.
@@ -51,6 +61,7 @@ This ADR resolves both: it establishes ID as the canonical identity going forwar
 - **No Introduction Lesson entry exists in Runtime Data for `FD008`** — `data/foundations.js`'s `FD008` object has a `lessons[]` array containing only the 8 named mudras; the Introduction Lesson's own data (Duration `0:49`, video `e70HdrXW7bs`) has never been synced as its own lesson entry.
 - **Decision 6 (Sequence Validation) is not implemented.** The Sprint 8.2 engine performs Presence-style collection only; it has no concept of Practice-internal ordering yet.
 - **`module-library.md`, referenced by both `content-schema.md` and `module-metadata.md` as the canonical home for Module Category rules, does not exist.** This predates this ADR but is newly relevant given Decision 5's multi-category rule now needs a documented home for its full enumeration.
+- **The canonical multi-Category authoring format and Runtime Data shape are now defined (`module-metadata.md`), but not yet implemented.** No existing Module Markdown or `data/modules.js` entry uses the multi-value format yet — every current Module remains single-Category. `ModulePage.jsx` also currently renders each Module's raw Markdown Basic Information block unstripped (unlike Foundation/Lesson pages, which use `stripMarkdownSection`), so the first multi-Category Module's `- ` list will render as-authored on the public Module page until that is addressed — implementation work, not covered by this ADR.
 
 ## Future Considerations
 
@@ -59,7 +70,7 @@ This ADR resolves both: it establishes ID as the canonical identity going forwar
 - Re-run prerequisite collection for `asana01-surya-kriya`, `med01`, `med02`, and `med03` once the Introduction Lesson exists, to confirm it's no longer silently dropped.
 - Implement Sequence Validation (Decision 6) in the prerequisite engine.
 - Decide whether `module-library.md` should finally be created, or whether its referenced content should be folded into `module-metadata.md` directly.
-- Extend `data/modules.js`'s `category` field to support an array once a real multi-category Module is authored (Decision 5) — not needed until one actually exists.
+- Migrate `data/modules.js`'s `category` field to the canonical `categories: string[]` shape (and update all consumers, e.g. `ModuleCard.jsx`'s `類別：{module.category}` display), and author the first genuinely multi-category Module's Markdown using the new list format — the format itself is already defined (`module-metadata.md`); this is the remaining implementation step, no longer blocked on a future design decision.
 
 ---
 

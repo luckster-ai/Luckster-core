@@ -2,14 +2,14 @@ import { useParams } from 'react-router-dom'
 import practices from '../data/practices'
 import modules from '../data/modules'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
+import { getCustomPractice } from '../state/customPracticeStore'
 import PracticePlayer from '../components/PracticePlayer'
 
 function PracticePlayerPage() {
   const { slug } = useParams()
 
-  const practice = practices.find(
-    (item) => item.slug === slug
-  )
+  const practice =
+    practices.find((item) => item.slug === slug) || getCustomPractice(slug)
 
   if (!practice) {
     return (

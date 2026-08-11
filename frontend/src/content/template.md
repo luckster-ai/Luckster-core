@@ -26,6 +26,17 @@ Type:
 
 Category:
 
+（單一 Category 範例：）
+
+Tuning In
+
+（多個 Category 範例，僅在 Module 確實同時屬於多個 Category 時使用：）
+
+- Warm Up
+- Meditation
+
+（Category 為描述性中繼資料，非身份識別；一個 Module 永遠只有一個 ID、一份 Markdown 檔案，絕不因為適合多個 Category 而複製影片或建立第二個 Module。完整規則與撰寫格式定義見 `docs/course-system/module-metadata.md`。）
+
 Difficulty:
 
 Duration:

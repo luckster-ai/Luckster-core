@@ -203,12 +203,254 @@ footer {
   gap: 16px;
 }
 
+.practice-builder {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  text-align: left;
+}
+
+.practice-builder h1 {
+  text-align: center;
+}
+
+.builder-type-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.builder-type-choices .card {
+  border: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+
+.builder-name-field {
+  display: block;
+  margin: 24px 0;
+  font-weight: bold;
+}
+
+.builder-name-field input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d9c6a5;
+  font: inherit;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #8a7b54;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.builder-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.builder-section {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.builder-section.valid {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), inset 4px 0 0 #d9c6a5;
+}
+
+.builder-section-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  min-height: 44px;
+}
+
+.builder-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+}
+
+.builder-section-tag {
+  font-size: 12px;
+  font-weight: normal;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #f4e7a1;
+  color: #3a3a3a;
+}
+
+.builder-section-summary {
+  color: #8a7b54;
+  white-space: nowrap;
+}
+
+.builder-section-body {
+  padding: 0 24px 24px;
+}
+
+.builder-section-guidance {
+  color: #8a7b54;
+  margin-bottom: 12px;
+}
+
+.builder-section-capability-note {
+  background: #faf8f3;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.builder-relaxation-position {
+  border: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.builder-relaxation-position legend {
+  font-weight: bold;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.builder-selected-modules {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.builder-selected-modules li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #faf8f3;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.builder-order-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.builder-order-controls button {
+  padding: 8px 14px;
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.module-picker {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.module-picker-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #d9c6a5;
+  border-radius: 10px;
+}
+
+.module-picker-item button {
+  min-height: 44px;
+}
+
+.module-picker-title {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.module-picker-meta {
+  color: #8a7b54;
+}
+
+.module-picker-empty {
+  color: #8a7b54;
+}
+
+.builder-errors {
+  color: #b3372c;
+  margin: 16px 0;
+  padding-left: 20px;
+}
+
+.builder-save {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  min-height: 48px;
+  font-weight: bold;
+}
+
+.builder-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.practice-hub-build-link {
+  display: inline-block;
+  margin: 16px 0 8px;
+}
+
+.practice-custom-note {
+  color: #8a7b54;
+  font-style: italic;
+}
+
 /* 平板 */
 
 @media (max-width: 1024px) {
 
   .cards {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .builder-type-choices {
+    grid-template-columns: 1fr;
   }
 
 }
@@ -251,6 +493,26 @@ footer {
     display: block;
     width: 100%;
     margin: 12px 0;
+  }
+
+  .practice-builder {
+    padding: 32px 16px;
+  }
+
+  .builder-order-controls {
+    width: 100%;
+  }
+
+  .builder-order-controls button {
+    display: inline-block;
+    width: auto;
+    flex: 1;
+    margin: 8px 0 0;
+  }
+
+  .module-picker-item button {
+    width: 100%;
+    margin: 8px 0 0;
   }
 
 }

@@ -91,10 +91,14 @@ Rule Validation。
 驗證 Practice 是否包含所有必要 Module：
 
 * 是否缺少 Tuning In？
+* Tuning In 是否恰好 1 個，且位於 Practice 開頭？（數量限制詳見 `practice-library.md`）
 * 是否缺少 Ending？
+* Ending 是否恰好 1 個，且位於 Practice 結尾？（數量限制詳見 `practice-library.md`）
 * Full Practice：是否包含恰好一個 Asana Module？
 * Meditation Practice：是否至少包含一個 Meditation Module？
-* 是否有重複 Module？
+* 若包含 Warm Up，數量是否為 1–3 個？（詳見 `practice-library.md`）
+* 若包含 Relaxation，數量是否恰好 1 個？（詳見 `practice-library.md`）
+* 是否有重複 Module？Module 即使具備多個 Category（見 `module-metadata.md`），仍為單一 Module；即使可從多個 Category 對應的區塊加入，同一 Practice 中仍不可重複加入同一 Module，適用同一條「是否有重複 Module」規則。
 
 ## Capability Validation
 

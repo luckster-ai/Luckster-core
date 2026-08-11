@@ -7,7 +7,7 @@ function ModuleCard({ module }) {
       <h3>{module.title}</h3>
 
       <p>
-        類別：{module.category}
+        類別：{module.categories.join('、')}
       </p>
 
       <p>

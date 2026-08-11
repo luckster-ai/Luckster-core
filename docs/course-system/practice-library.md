@@ -66,7 +66,7 @@ JOTI 目前支援兩種 Practice 結構：Full Practice 與 Meditation Practice�
 
 兩種結構皆必須包含 Tuning In 與 Ending。是否包含 Asana Module 是判斷結構的依據：包含一個 Asana Module 即為 Full Practice；不包含 Asana Module 則為 Meditation Practice。
 
-Practice 所包含的 Module 數量並無固定限制，各結構的完整規則如下。
+Practice 所包含的 Module 數量並無固定限制，各結構的完整規則如下。以下 Mandatory／Conditional Requirements 中標註的數量限制，為 Sprint 8.3 Pre-Implementation 新確認的內容，屬於既有規則的補充，不取代既有的必要／可省略判斷。
 
 ## Full Practice
 
@@ -78,15 +78,15 @@ Definition：
 
 Mandatory：
 
-* Tuning In
+* Tuning In（必要；恰好一個；固定位於 Practice 開頭 — 數量與位置限制為新確認規則）
 * Asana Module（恰好一個）
-* Meditation
-* Ending
+* Meditation（至少一個，可包含多個）
+* Ending（必要；恰好一個；固定位於 Practice 結尾 — 數量與位置限制為新確認規則）
 
 Conditional Requirements：
 
-* Warm Up：一般為必要，但若所選 Asana Module 本身已包含熱身功能，則可省略。
-* Relaxation：一般為必要，但若所選 Asana Module 本身已包含放鬆功能，則可省略。
+* Warm Up：一般為必要，但若所選 Asana Module 本身已包含熱身功能，則可省略。若納入 Warm Up，數量為 1–3 個 Module（新確認規則；此上限為目前的產品規則，未來可能依內容量與學員使用狀況調整）。
+* Relaxation：一般為必要，但若所選 Asana Module 本身已包含放鬆功能，則可省略。若納入 Relaxation，數量恰好為 1 個 Module（新確認規則）。
 
 Sequence Rule：
 
@@ -121,16 +121,17 @@ Meditation Practice 可依情境對應不同使用場景，例如：
 
 Mandatory：
 
-* Tuning In
+* Tuning In（必要；恰好一個；固定位於 Practice 開頭 — 數量與位置限制為新確認規則）
 * Meditation Module（至少一個，可包含多個）
-* Ending
+* Ending（必要；恰好一個；固定位於 Practice 結尾 — 數量與位置限制為新確認規則）
 
 Conditional Requirements：
 
-* Warm Up：一般為必要，但若第一個 Meditation Module 本身已包含熱身功能，則可省略。
+* Warm Up：一般為必要，但若第一個 Meditation Module 本身已包含熱身功能，則可省略。若納入 Warm Up，數量為 1–3 個 Module（新確認規則；同 Full Practice 之上限規則）。
 * Relaxation：一般為必要，但可於以下情況省略：
   * 該 Practice 屬於 Short Meditation Practice 情境，或
   * 所選 Meditation Module 本身已包含放鬆功能。
+  * 若納入 Relaxation，數量恰好為 1 個 Module（新確認規則）。
 
 常見熱身包括：
 
