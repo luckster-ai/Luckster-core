@@ -8,11 +8,11 @@ MM004
 
 Title:
 
-Caliber of Life Meditation Kriya (3-Minute Guided)
+Caliber of Life Meditation Kriya (3-Minute Detailed)
 
 Chinese Title:
 
-生命力冥想奎亞 (3分鐘引導版)
+生命力冥想奎亞 (3分鐘詳解版)
 
 Type:
 
@@ -36,7 +36,7 @@ Duration:
 
 Variant:
 
-3-Minute Guided
+3-Minute Detailed
 
 ---
 

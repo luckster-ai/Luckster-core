@@ -8,11 +8,11 @@ MM001
 
 Title:
 
-Kirtan Kriya (18-Minute Guided)
+Kirtan Kriya (18-Minute Detailed)
 
 Chinese Title:
 
-克爾坦奎亞（18分鐘引導版）
+克爾坦奎亞（18分鐘詳解版）
 
 Type:
 
@@ -36,7 +36,7 @@ Duration:
 
 Variant:
 
-18-Minute Guided
+18-Minute Detailed
 
 ---
 

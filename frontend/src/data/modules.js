@@ -32,8 +32,8 @@ const modules = [
   {
     id: 'MW002',
     slug: 'warmup02-calm-heart-3min',
-    title: 'Meditation Kriya for a Calm Heart (3-Minute Guided)',
-    chineseTitle: '平靜內心冥想 (3分鐘引導版)',
+    title: 'Meditation Kriya for a Calm Heart (3-Minute Detailed)',
+    chineseTitle: '平靜內心冥想 (3分鐘詳解版)',
     type: 'warmup',
     categories: ['Warm Up', 'Meditation'],
     difficulty: 'Beginner',
@@ -77,8 +77,8 @@ const modules = [
   {
     id: 'MM001',
     slug: 'med01-kirtan-kriya-18min',
-    title: 'Kirtan Kriya (18-Minute Guided)',
-    chineseTitle: '克爾坦奎亞（18分鐘引導版）',
+    title: 'Kirtan Kriya (18-Minute Detailed)',
+    chineseTitle: '克爾坦奎亞（18分鐘詳解版）',
     type: 'med',
     categories: ['Meditation'],
     difficulty: 'Beginner',
@@ -121,9 +121,9 @@ const modules = [
 
   {
     id: 'MM004',
-    slug: 'med04-life-caliber',
-    title: 'Caliber of Life Meditation Kriya (3-Minute Guided)',
-    chineseTitle: '生命力冥想奎亞 (3分鐘引導版)',
+    slug: 'med04-life-caliber-3min',
+    title: 'Caliber of Life Meditation Kriya (3-Minute Detailed)',
+    chineseTitle: '生命力冥想奎亞 (3分鐘詳解版)',
     type: 'med',
     categories: ['Meditation'],
     difficulty: 'Intermediate',
@@ -132,6 +132,21 @@ const modules = [
     videoReference: { provider: 'youtube', videoId: 'QnwrIXNddqk' },
     tags: ['冥想', '呼吸法', '屏息', '神經系統'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
+  },
+
+  {
+    id: 'MM005',
+    slug: 'med05-life-caliber-11min',
+    title: 'Caliber of Life Meditation Kriya (11-Minute Guided)',
+    chineseTitle: '生命力冥想奎亞 (11分鐘引導版)',
+    type: 'med',
+    categories: ['Meditation'],
+    difficulty: 'Advanced',
+    duration: 668,
+    summary: '透過拳頭與拇指構成準心般的手印，配合精確計時的吸氣、呼氣與屏息循環，強化呼吸的投射力與掌控力，是需逐步培養的進階冥想練習。',
+    videoReference: { provider: 'youtube', videoId: 'aCyKYSj3aU0' },
+    tags: ['冥想', '呼吸法', '屏息', '神經系統'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'MM004']
   },
 
   {

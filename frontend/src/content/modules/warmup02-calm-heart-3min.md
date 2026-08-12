@@ -8,11 +8,11 @@ MW002
 
 Title:
 
-Meditation Kriya for a Calm Heart (3-Minute Guided)
+Meditation Kriya for a Calm Heart (3-Minute Detailed)
 
 Chinese Title:
 
-平靜內心冥想 (3分鐘引導版)
+平靜內心冥想 (3分鐘詳解版)
 
 Type:
 
@@ -37,7 +37,7 @@ Duration:
 
 Variant:
 
-3-Minute Guided
+3-Minute Detailed
 
 ---
 
