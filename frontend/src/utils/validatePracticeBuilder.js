@@ -102,6 +102,27 @@ export function getCapabilityNote(sectionKey, state, modules) {
   return null
 }
 
+// Availability of a single candidate that has ALREADY passed Category
+// filtering and same-section exclusion (see ModulePicker) — those remain
+// filtering concerns, not availability states (Sprint 8.6 architecture
+// review: "Category vs eligibility"). This only decides the one remaining
+// case: a Category-compatible candidate already selected in another
+// section. Section-maximum is a separate, section-level concern (the
+// picker itself stops rendering once a section is full) and is not part
+// of this per-candidate check.
+export function getModuleAvailability(moduleId, { disabledIds, moduleSectionLabels }) {
+  if (!disabledIds.includes(moduleId)) {
+    return { disabled: false, reason: null }
+  }
+
+  const sectionLabel = moduleSectionLabels[moduleId]
+
+  return {
+    disabled: true,
+    reason: sectionLabel ? `已加入「${sectionLabel}」` : '已加入此 Practice'
+  }
+}
+
 export function validatePracticeComposition(state) {
   if (!state.practiceType) {
     return {

@@ -1,13 +1,17 @@
 import { formatVideoDuration } from '../utils/formatDuration'
+import { getModuleAvailability } from '../utils/validatePracticeBuilder'
 
 // Shows only Modules relevant to the section being edited (filtered by
-// Category), so the picker stays usable as the Module Library grows. A
-// Module with multiple Categories (see module-metadata.md) is discoverable
-// from every section it belongs to, but can only be added once per Practice
-// — enforced here by canonical ID, not by section membership. A candidate
-// already selected in THIS section is excluded outright (it's already shown
-// above with reorder/remove controls); one selected in another section stays
-// visible here, disabled, so its cross-category availability remains clear.
+// Category), so the picker stays usable as the Module Library grows. Category
+// mismatch is a filtering concern — a Module that doesn't belong to this
+// Category is never a candidate here, not shown disabled (Sprint 8.6
+// architecture review: "Category vs eligibility"). A Module with multiple
+// Categories (see module-metadata.md) is discoverable from every section it
+// belongs to, but can only be added once per Practice — enforced by
+// canonical ID, not by section membership. A candidate already selected in
+// THIS section is excluded outright (it's already shown above with
+// reorder/remove controls); one selected in another section stays visible
+// here, disabled with a reason, via getModuleAvailability.
 function ModulePicker({ category, modules, currentSectionIds, disabledIds, moduleSectionLabels, onAdd }) {
   const candidates = modules
     .filter((module) => module.categories.includes(category))
@@ -20,8 +24,7 @@ function ModulePicker({ category, modules, currentSectionIds, disabledIds, modul
   return (
     <ul className="module-picker">
       {candidates.map((module) => {
-        const alreadyAdded = disabledIds.includes(module.id)
-        const addedToLabel = moduleSectionLabels[module.id]
+        const { disabled, reason } = getModuleAvailability(module.id, { disabledIds, moduleSectionLabels })
 
         return (
           <li key={module.id} className="module-picker-item">
@@ -32,12 +35,10 @@ function ModulePicker({ category, modules, currentSectionIds, disabledIds, modul
 
             <button
               type="button"
-              disabled={alreadyAdded}
+              disabled={disabled}
               onClick={() => onAdd(module.id)}
             >
-              {alreadyAdded
-                ? (addedToLabel ? `已加入「${addedToLabel}」` : '已加入此 Practice')
-                : '加入'}
+              {disabled ? reason : '加入'}
             </button>
           </li>
         )
