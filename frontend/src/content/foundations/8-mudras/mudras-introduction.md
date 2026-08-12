@@ -16,7 +16,7 @@ Chinese Title:
 
 Type:
 
-Foundation
+Lesson
 
 Category:
 
@@ -25,6 +25,10 @@ Asana
 Difficulty:
 
 Beginner
+
+Duration:
+
+0:49
 
 ---
 
@@ -44,6 +48,16 @@ none
 
 ---
 
+## Learning Outcomes
+
+看完此影片後，學員應能：
+
+- 理解手印作為能量鎖與能量地圖。
+- 了解手指與大拇指所對應的能量意涵。
+- 以正確的指尖觸碰方式與適當壓力練習手印。
+
+---
+
 ## Tags
 
 - 手印
@@ -53,6 +67,18 @@ none
 ---
 
 ## Sources
+
+### Video
+
+Primary Video：
+
+Provider:
+
+YouTube
+
+URL:
+
+https://www.youtube.com/shorts/NPorMswOLkM
 
 ### Transcript
 

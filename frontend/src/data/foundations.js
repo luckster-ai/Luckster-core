@@ -217,6 +217,18 @@ const foundations = [
     summary: '手的姿勢，可鎖住或封住能量，並引導能量流和大腦反射。',
     lessons: [
       {
+        id: 'FD008',
+        slug: 'mudras-introduction',
+        title: 'Basic Mudras',
+        chineseTitle: '基本的手印',
+        summary: '手的姿勢，可鎖住或封住能量，並引導能量流和大腦反射。',
+        difficulty: 'Beginner',
+        duration: 49,
+        videoReference: { provider: 'youtube', videoId: 'NPorMswOLkM' },
+        tags: ['手印', '基礎', '能量引導'],
+        prerequisites: []
+      },
+      {
         id: 'FD008-L01',
         slug: 'knowledge-seal',
         title: 'Seal of Knowledge',
