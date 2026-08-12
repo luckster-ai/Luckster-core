@@ -8,7 +8,7 @@ import {
   getCapabilityNote,
   assemblePracticeOrder
 } from '../utils/validatePracticeBuilder'
-import { sectionsForPracticeType, PRACTICE_TYPES } from '../utils/practiceStructure'
+import { sectionsForPracticeType, PRACTICE_TYPES, getSection } from '../utils/practiceStructure'
 import { saveCustomPractice, generateCustomPracticeSlug } from '../state/customPracticeStore'
 import PracticeBuilderSection from './PracticeBuilderSection'
 
@@ -17,9 +17,25 @@ function PracticeBuilder() {
   const [state, actions] = usePracticeBuilder()
   const [activeSectionKey, setActiveSectionKey] = useState('tuningIn')
   const [practiceName, setPracticeName] = useState('')
+  const [hasAttemptedSave, setHasAttemptedSave] = useState(false)
 
   const composition = validatePracticeComposition(state)
   const allSelectedIds = Object.values(state.sections).flat()
+
+  // Maps each already-selected Module ID to the Category label of the
+  // section it's actually in, so a disabled candidate shown elsewhere (e.g.
+  // a multi-category Module) can say which section it was added to, instead
+  // of a generic "already in this Practice" message.
+  const moduleSectionLabels = Object.entries(state.sections).reduce((labels, [sectionKey, ids]) => {
+    const section = getSection(sectionKey)
+
+    ids.forEach((id) => {
+      labels[id] = section?.category
+    })
+
+    return labels
+  }, {})
+
   const isNameValid = practiceName.trim().length > 0
   const canSave = composition.isStructurallyValid && isNameValid
 
@@ -46,6 +62,8 @@ function PracticeBuilder() {
   }
 
   function handleSave() {
+    setHasAttemptedSave(true)
+
     if (!canSave) return
 
     const slug = generateCustomPracticeSlug()
@@ -150,6 +168,7 @@ function PracticeBuilder() {
               moduleIds={state.sections[sectionConfig.key]}
               modules={modules}
               allSelectedIds={allSelectedIds}
+              moduleSectionLabels={moduleSectionLabels}
               capabilityNote={capabilityNote}
               isExpanded={isExpanded}
               onToggle={() => setActiveSectionKey(isExpanded ? null : sectionConfig.key)}
@@ -163,16 +182,22 @@ function PracticeBuilder() {
       </div>
 
       {composition.errors.length > 0 && (
-        <ul className="builder-errors">
+        <ul className={hasAttemptedSave ? 'builder-errors' : 'builder-progress'}>
           {composition.errors.map((error) => (
             <li key={error}>{error}</li>
           ))}
         </ul>
       )}
 
-      {!isNameValid && <p className="builder-errors">請輸入 Practice 名稱。</p>}
+      {!isNameValid && (
+        <p className={hasAttemptedSave ? 'builder-errors' : 'builder-progress'}>請輸入 Practice 名稱。</p>
+      )}
 
-      <button type="button" className="builder-save" disabled={!canSave} onClick={handleSave}>
+      <button
+        type="button"
+        className={`builder-save${canSave ? '' : ' builder-save-pending'}`}
+        onClick={handleSave}
+      >
         儲存 Practice
       </button>
     </div>

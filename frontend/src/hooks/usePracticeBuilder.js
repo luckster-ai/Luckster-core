@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { createEmptyBuilderState, isModuleAlreadyInPractice } from '../utils/validatePracticeBuilder'
+import { getSection } from '../utils/practiceStructure'
 
 // Builder state is intentionally plain data (see createEmptyBuilderState),
 // independent of any visual/styling concern, so a future Visual Identity
@@ -32,11 +33,20 @@ export function usePracticeBuilder() {
             return current
           }
 
+          const section = getSection(sectionKey)
+          const currentIds = current.sections[sectionKey]
+
+          // Mirrors the UI's own gate (Picker hides once count reaches max)
+          // at the state layer, so max is enforced regardless of call path.
+          if (section && currentIds.length >= section.max) {
+            return current
+          }
+
           return {
             ...current,
             sections: {
               ...current.sections,
-              [sectionKey]: [...current.sections[sectionKey], moduleId]
+              [sectionKey]: [...currentIds, moduleId]
             }
           }
         })

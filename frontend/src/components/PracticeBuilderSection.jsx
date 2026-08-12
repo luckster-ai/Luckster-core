@@ -22,6 +22,7 @@ function PracticeBuilderSection({
   moduleIds,
   modules,
   allSelectedIds,
+  moduleSectionLabels,
   capabilityNote,
   isExpanded,
   onToggle,
@@ -99,7 +100,9 @@ function PracticeBuilderSection({
             <ModulePicker
               category={result.category}
               modules={modules}
+              currentSectionIds={moduleIds}
               disabledIds={allSelectedIds}
+              moduleSectionLabels={moduleSectionLabels}
               onAdd={onAdd}
             />
           )}

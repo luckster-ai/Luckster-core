@@ -418,6 +418,12 @@ footer {
   padding-left: 20px;
 }
 
+.builder-progress {
+  color: #8a7b54;
+  margin: 16px 0;
+  padding-left: 20px;
+}
+
 .builder-save {
   display: block;
   width: 100%;
@@ -426,9 +432,8 @@ footer {
   font-weight: bold;
 }
 
-.builder-save:disabled {
+.builder-save-pending {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .practice-hub-build-link {
