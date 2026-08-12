@@ -56,7 +56,7 @@ const modules = [
     summary: '以太陽能量（Surya）命名，透過一系列體式與呼吸的結合，系統性地刺激陽性的普拉那能量與昆達里尼能量。這套奎亞有助於提升活力、淨化身心，並為日常薩達那練習注入穩定而充沛的能量。',
     videoReference: { provider: 'youtube', videoId: 'BvcoNwATUW4' },
     tags: ['太陽能量', '減肥', '有活力'],
-    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008-L01', 'FD008-L07']
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008', 'FD008-L01', 'FD008-L07']
   },
 
   {
@@ -86,7 +86,7 @@ const modules = [
     summary: 'Sa Ta Na Ma 唱誦冥想 + 詳細解說。',
     videoReference: { provider: 'youtube', videoId: 'VDdVzux-7HY' },
     tags: ['唱誦', '手印', '冥想', '專注力', '基礎'],
-    prerequisites: ['FD004', 'FD005-L01', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04']
+    prerequisites: ['FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04']
   },
 
   {
@@ -101,7 +101,7 @@ const modules = [
     summary: 'Sa Ta Na Ma 唱誦冥想。31分鐘版本（無解說）。',
     videoReference: { provider: 'youtube', videoId: 'KYwWSdNb3UA' },
     tags: ['唱誦', '手印', '冥想', '專注力'],
-    prerequisites: ['FD004', 'FD005-L01', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001']
+    prerequisites: ['FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001']
   },
 
   {
@@ -116,7 +116,7 @@ const modules = [
     summary: 'Sa Ta Na Ma 唱誦冥想。2.5小時版本（無解說）。',
     videoReference: { provider: 'youtube', videoId: '2GaicKj6jMg' },
     tags: ['唱誦', '手印', '冥想', '專注力'],
-    prerequisites: ['FD004', 'FD005-L01', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001', 'MM002']
+    prerequisites: ['FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001', 'MM002']
   },
 
   {
