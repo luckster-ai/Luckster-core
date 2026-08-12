@@ -45,6 +45,36 @@ const modules = [
   },
 
   {
+    id: 'MW003',
+    slug: 'warmup03-alternate-nostril-3min',
+    title: 'Alternate Nostril Breathing (3-Minute Detailed)',
+    chineseTitle: '交替鼻孔呼吸冥想（3分鐘詳解版）',
+    type: 'warmup',
+    categories: ['Warm Up', 'Meditation'],
+    difficulty: 'Beginner',
+    duration: 264,
+    summary: '以交替鼻孔呼吸建立情緒平衡與新的洞察力，是昆達里尼與哈他瑜伽的基本技巧，也是睡前排除白天憂慮的極佳練習，練習時長依目的可從 3 分鐘延伸至 31 分鐘。',
+    videoReference: { provider: 'youtube', videoId: 'HTV4E4ornUA' },
+    tags: ['呼吸法', '交替鼻孔呼吸', '情緒平衡', '洞察力', '初學者', '睡前'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L04']
+  },
+
+  {
+    id: 'MW004',
+    slug: 'warmup04-self-authority-3min',
+    title: 'Caliber for Constant Self-Authority Meditation Kriya（3-Minute Detailed）',
+    chineseTitle: '恆常自主的冥想（3分鐘詳解版）',
+    type: 'warmup',
+    categories: ['Warm Up', 'Meditation'],
+    difficulty: 'Beginner',
+    duration: 382,
+    summary: '提升自控能力，幫助練習者保持並履行自我的權威。',
+    videoReference: { provider: 'youtube', videoId: '1Z4VQv71l-I' },
+    tags: ['冥想', '呼吸法', '自我權威', '自控力', '心輪'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
+  },
+
+  {
     id: 'MA001',
     slug: 'asana01-surya-kriya',
     title: 'Surya Kriya',
@@ -55,7 +85,68 @@ const modules = [
     duration: 2280,
     summary: '以太陽能量（Surya）命名，透過一系列體式與呼吸的結合，系統性地刺激陽性的普拉那能量與昆達里尼能量。這套奎亞有助於提升活力、淨化身心，並為日常薩達那練習注入穩定而充沛的能量。',
     videoReference: { provider: 'youtube', videoId: 'BvcoNwATUW4' },
-    tags: ['太陽能量', '減肥', '有活力'],
+    tags: ['身體奎亞', '太陽能量', '減肥', '有活力'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008', 'FD008-L01', 'FD008-L07', 'FD009']
+  },
+
+  {
+    id: 'MA002',
+    slug: 'asana02-elevation-kriya',
+    title: 'Kriya for Elevation',
+    chineseTitle: '提升的奎亞',
+    type: 'asana',
+    categories: ['Asana'],
+    capabilities: ['Warm Up'],
+    difficulty: 'Beginner',
+    duration: 2674,
+    summary: '一套簡單的暖身身體奎亞，能系統地鍛鍊脊柱，開展普拉納（prana）的循環，以平衡脈輪（chakras）。',
+    videoReference: { provider: 'youtube', videoId: 'ASHd6cEdKRs' },
+    tags: ['身體奎亞', '暖身', '脊柱', '脈輪平衡', '普拉納能量'],
+    prerequisites: ['FD001', 'FD002', 'FD003', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008-L07', 'FD009']
+  },
+
+  {
+    id: 'MA003',
+    slug: 'asana03-sat-kriya',
+    title: 'Praticing Sat Kriya',
+    chineseTitle: '薩特奎亞練習',
+    type: 'asana',
+    categories: ['Asana'],
+    difficulty: 'Beginner',
+    duration: 1198,
+    summary: '薩特奎亞是少數可單獨完整練習的奎亞，透過岩石坐姿、交扣手印與節奏唱誦「Sat Naam」帶動丹田與身體鎖自動收縮，能協調神經系統、平息情緒、疏導性與創造能量，是昆達里尼練習的核心必修動作。',
+    videoReference: { provider: 'youtube', videoId: 'KjQ_sUbH3qQ' },
+    tags: ['身體奎亞', '身體鎖', '神經系統', '性能量'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L04', 'FD006', 'FD008-L07', 'FD009']
+  },
+
+  {
+    id: 'MA004',
+    slug: 'asnan04-morning-sadhana',
+    title: 'Kriya for Morning Sadhana（Standard）',
+    chineseTitle: '晨間薩達那奎亞（能量鍛鍊版）',
+    type: 'asana',
+    categories: ['Asana'],
+    difficulty: 'Intermidiate',
+    duration: 3702,
+    summary: '包含23個動作的全套昆達里尼練習，能鬆開全身緊繃處、強化神經與腺體系統，據說能解決所有問題；為晨間冥想做好準備。',
+    videoReference: { provider: 'youtube', videoId: 'P5mkSMFGB04' },
+    tags: ['身體奎亞', '晨間練習', '薩達那', '神經系統', '解決所有問題'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008', 'FD008-L01', 'FD008-L07']
+  },
+
+  {
+    id: 'MA005',
+    slug: 'asnan05-morning-sadhana-short',
+    title: 'Kriya for Morning Sadhana（Short）',
+    chineseTitle: '晨間薩達那奎亞（新手舒適版）',
+    type: 'asana',
+    categories: ['Asana'],
+    difficulty: 'Beginner',
+    duration: 2869,
+    summary: '包含23個動作的全套昆達里尼練習，能鬆開全身緊繃處、強化神經與腺體系統，據說能解決所有問題；為晨間冥想做好準備。',
+    videoReference: { provider: 'youtube', videoId: 'BE6FcaLEcL8' },
+    tags: ['身體奎亞', '晨間練習', '薩達那', '神經系統', '解決所有問題'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008', 'FD008-L01', 'FD008-L07']
   },
 
@@ -147,6 +238,81 @@ const modules = [
     videoReference: { provider: 'youtube', videoId: 'aCyKYSj3aU0' },
     tags: ['冥想', '呼吸法', '屏息', '神經系統'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'MM004']
+  },
+
+  {
+    id: 'MM006',
+    slug: 'med06-aerobic-capacity-11min',
+    title: 'Aerobic Capacity and Efficiency Kriya (11-Minute)',
+    chineseTitle: '提高攝氧量和效率冥想（11分鐘）',
+    type: 'med',
+    categories: ['Meditation'],
+    difficulty: 'Intermediate',
+    duration: 855,
+    summary: '透過屏息配合前後彎曲脊椎的單步驟奎亞，能增強肺部向血液輸送氧氣的效率、促進心肌協調並有益腎臟與生殖系統，需逐步培養耐力才能獲得全部功效。',
+    videoReference: { provider: 'youtube', videoId: 'V3skjng5qP0' },
+    tags: ['呼吸法', '神經系統', '屏息', '心肺功能', '耐力', '排毒'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
+  },
+
+  {
+    id: 'MM007',
+    slug: 'med07-fire-breath',
+    title: 'Beginning a Practice of Breath of Fire',
+    chineseTitle: '火呼吸練習冥想',
+    type: 'med',
+    categories: ['Meditation'],
+    difficulty: 'Beginner',
+    duration: 867,
+    summary: '火呼吸能排毒、增強肺活量與神經系統韌性、強化臍輪並提升專注與免疫力；初學者可從祈禱式坐姿開始，搭配短時間火呼吸與屏息的組合逐步練習。',
+    videoReference: { provider: 'youtube', videoId: 'KsOP80J80T8' },
+    tags: ['呼吸法', '火呼吸', '初學者', '排毒', '神經系統'],
+    prerequisites: ['FD001', 'FD002', 'FD003', 'FD004', 'FD005-L01']
+  },
+
+  {
+    id: 'MM008',
+    slug: 'med08-bahuta-karam-31min',
+    title: 'Bahuta Karam Meditation - 25th Pauri of Japji Sahib (31-Minute)',
+    chineseTitle: '富足品德財富房產冥想（31分鐘）',
+    type: 'med',
+    categories: ['Meditation'],
+    difficulty: 'Advanced',
+    duration: 2548,
+    summary: '以簡易坐姿搭配智慧手印，唱誦 Japji Sahib 第25節（Bahuta Karam）31分鐘，接著靜心聆聽內在的梵音餘韻，是一套據稱能將匱乏轉化為豐盛的冥想練習。',
+    videoReference: { provider: 'youtube', videoId: 'yEYFwtmMVLg' },
+    tags: ['Mantra', '豐盛', 'Japji Sahib', '財富'],
+    prerequisites: ['FD005-L01', 'FD008', 'FD008-L01']
+  },
+
+  {
+    id: 'MM009',
+    slug: 'med09-alternate-nostril-15min',
+    title: 'Alternate Nostril Breathing (15-Minute)',
+    chineseTitle: '交替鼻孔呼吸冥想（15分鐘）',
+    type: 'med',
+    categories: ['Meditation'],
+    difficulty: 'Beginner',
+    duration: 958,
+    summary: '以交替鼻孔呼吸建立情緒平衡與新的洞察力，是昆達里尼與哈他瑜伽的基本技巧，也是睡前排除白天憂慮的極佳練習，練習時長依目的可從 3 分鐘延伸至 31 分鐘。',
+    videoReference: { provider: 'youtube', videoId: '3Ld22dSlG7I' },
+    tags: ['呼吸法', '交替鼻孔呼吸', '情緒平衡', '洞察力', '初學者', '睡前'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L04']
+  },
+
+  {
+    id: 'MM010',
+    slug: 'med10-self-authority-11min',
+    title: 'Caliber for Constant Self-Authority Meditation Kriya（11-Minute）',
+    chineseTitle: '恆常自主的冥想（11分鐘）',
+    type: 'med',
+    categories: ['Meditation'],
+    difficulty: 'Beginner',
+    duration: 806,
+    summary: '提升自控能力，幫助練習者保持並履行自我的權威。',
+    videoReference: { provider: 'youtube', videoId: 'i1asgPzb9yk' },
+    tags: ['冥想', '呼吸法', '自我權威', '自控力', '心輪'],
+    prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
   },
 
   {

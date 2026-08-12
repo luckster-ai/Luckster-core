@@ -43,6 +43,14 @@ Duration:
 
 （格式範例：5:01）
 
+Capabilities:
+
+（選填。僅在內容本身確實提供 Warm Up 或 Relaxation 等功能時撰寫，不得僅依 Category、標題或影片長度推論。若未確認，省略此欄位，不撰寫「無」。範例：）
+
+- Warm Up
+
+（Capability 回答「這個 Module 的內容本身實際提供什麼功能」，與回答「這是什麼類型 Module」的 Category 是兩個不同的問題，不可互相推導。完整規則與撰寫格式定義見 `docs/course-system/module-metadata.md`。）
+
 ---
 
 ## Summary

@@ -107,7 +107,38 @@ Learning Outcomes、Transcript、Resources 屬於 Module 的敘述性內容，�
 ### Metadata
 
 * **tags** — 現為 Foundation 與 Module 共用欄位，定義移至 `content-schema.md`，本文件不再重複列出。不影響 Practice 組課驗證，純粹作為探索與推薦用途。
-* **capabilities**（選填，供未來 Practice Builder 使用）— 描述 Module 在 Practice 中可扮演的**結構角色**，而非練習的效益或描述。範例：一個 Asana Module 可能具備 `Warm Up`、`Main Practice` 兩種 Capability；一個 Meditation Module 可能具備 `Meditation`、`Closing`。Capabilities 使 Practice Builder 得以驗證某個 Module 是否可用於省略 Warm Up 或 Relaxation（詳見 `practice-builder.md` 的 Capability Validation）。此欄位延續先前文件審查中提出的 Future Consideration，目前尚未實作於程式碼中。完整 Capability 列舉值與規則，待實際內容確立後，將由未來的 Capability Dictionary 文件定義；本文件僅定義欄位本身的存在與用途。
+* **capabilities**（選填）— 描述 Module **本身內容實際提供**的練習功能，而非 Module 屬於哪個 Category。Capabilities 使 Practice Builder 得以驗證某個 Module 是否可用於省略 Warm Up 或 Relaxation（詳見 `practice-builder.md` 的 Capability Validation）。
+
+  **Capability 與 Category 是兩個不同的問題**：Category 回答「這是什麼類型的 Module／可放在哪個區塊」；Capability 回答「這個 Module 的內容本身實際提供什麼功能」。兩者不可互相推導：
+
+  - 不得僅因為 Module 屬於 Warm Up Category，就自動賦予 `Warm Up` Capability。
+  - 一個 Category 為 `Asana` 的 Module，仍可能實際提供 `Warm Up` 功能（例如內容本身即為暖身奎亞）。
+  - Capability 只能依據該 Module 實際內容（Summary／Description 等敘述性內容）判斷，不得僅依 Category、標題或影片長度推論。
+
+  **撰寫格式**（僅在有足夠內容依據時使用，格式與多重 Category 清單一致）：
+
+  ```text
+  Capabilities:
+
+  - Warm Up
+  ```
+
+  規則：
+
+  - Capabilities 為選填欄位。若 Module 未經確認具備任何 Capability，**省略此欄位**，不撰寫 `無`、`None` 或空清單。
+  - 省略此欄位代表「尚未確認」，不代表「確定不具備」。
+  - 每行一個 Capability，開頭為 `- `，與 Category、Prerequisites 清單格式一致。
+  - 目前已確認的初始 Capability 詞彙為 `Warm Up`、`Relaxation`（對應 `practice-library.md` 既有的省略規則）。完整列舉值與規則，待更多內容確立後，將由未來的 Capability Dictionary 文件定義。
+
+  **Runtime Data 對應格式**：
+
+  ```js
+  capabilities: ['Warm Up']
+  ```
+
+  未指定 Capability 的 Module，Runtime Data 中省略 `capabilities` 欄位（不設為 `[]` 或 `null`）。
+
+  **實作現況（Implementation Status）**：Practice Builder 讀取端邏輯（`validatePracticeBuilder.js` 的 `getCapabilityNote`）已於 Sprint 8.3 實作完成，讀取 `module.capabilities` 並在符合條件時提供省略 Warm Up／Relaxation 的引導文字；此邏輯先前因缺少 Runtime Data 與撰寫格式而未實際觸發。Sprint 8.5B 已補上本節撰寫格式，並將第一批依實際內容判斷之 Capability（`asana02-elevation-kriya.md` 的 `Warm Up`）同步至 Markdown 與 `data/modules.js`。
 * **contraindications**（選填）— 輕量級安全提醒清單，非教學說明。範例：`經期`、`懷孕`、`高血壓`。用於練習前顯示簡短提醒，不應重複影片中已包含的教學內容。
 * **status**（選填，預設為已發布）— 標示 Module 目前是否可供學員使用（例如 `draft` / `published`）。目前所有既有 Module 皆視為 `published`，供未來內容管理與 Practice Builder 篩選未發布內容使用。
 

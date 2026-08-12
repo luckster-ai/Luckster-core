@@ -325,6 +325,29 @@ const foundations = [
         prerequisites: []
       }
     ]
+  },
+
+  {
+    id: 'FD009',
+    slug: '9-sat-kriya',
+    title: 'Sat Kriya',
+    chineseTitle: '薩特奎亞',
+    category: 'Asana',
+    summary: '',
+    lessons: [
+      {
+        id: 'FD009',
+        slug: '9-sat-kriya',
+        title: 'Sat Kriya',
+        chineseTitle: '薩特奎亞',
+        summary: '薩特奎亞是少數可單獨完整練習的奎亞，透過岩石坐姿、交扣手印與節奏唱誦「Sat Naam」帶動丹田與身體鎖自動收縮，能協調神經系統、平息情緒、疏導性與創造能量，是昆達里尼練習的核心必修動作。',
+        difficulty: 'Beginner',
+        duration: 343,
+        videoReference: { provider: 'youtube', videoId: 'w9ylNXUzQxw' },
+        tags: ['身體奎亞', '身體鎖', '神經系統', '性能量'],
+        prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L04', 'FD006', 'FD008-L07']
+      }
+    ]
   }
 ]
 
