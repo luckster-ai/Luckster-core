@@ -23,7 +23,7 @@ Category:
 - Warm Up
 - Meditation
 
-Subcatogory:
+Subcategory:
 
 Breath
 

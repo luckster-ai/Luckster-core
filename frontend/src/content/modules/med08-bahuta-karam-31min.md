@@ -22,7 +22,7 @@ Category:
 
 Meditation
 
-Subcatogory:
+Subcategory:
 
 Chant
 

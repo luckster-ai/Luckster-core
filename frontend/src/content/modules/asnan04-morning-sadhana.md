@@ -22,7 +22,7 @@ Category:
 
 Asana
 
-Subcatogory:
+Subcategory:
 
 Difficulty:
 
