@@ -1,4 +1,4 @@
-# Caliber of Life Meditation Kriya
+# Caliber of Life Meditation Kriya (11-Minute Guided)
 
 ## Basic Information
 

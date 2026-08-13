@@ -56,6 +56,7 @@ Duration:
 - FD008 Mudras
 - FD008-L01 Seal of Knowledge
 - FD008-L07 Venus Lock 
+- FD009 Sat Kriya
 
 ---
 
@@ -71,6 +72,7 @@ Duration:
 
 ## Tags
 
+- 身體奎亞
 - 太陽能量
 - 減肥
 - 有活力
