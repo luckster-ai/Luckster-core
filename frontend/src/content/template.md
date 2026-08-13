@@ -37,6 +37,10 @@ Tuning In
 
 （Category 為描述性中繼資料，非身份識別；一個 Module 永遠只有一個 ID、一份 Markdown 檔案，絕不因為適合多個 Category 而複製影片或建立第二個 Module。完整規則與撰寫格式定義見 `docs/course-system/module-metadata.md`。）
 
+Subcategory:
+
+（選填。描述 Module 的內容型態，例如 Asana、Breath、Chant、Savasana。若不確定，省略此欄位即可，這是正常情況，非資料缺漏。Subcategory 與 Category 是不同問題：Category 決定 Module 可出現在哪個 Practice 區段，Subcategory 描述該內容本身屬於哪種型態，兩者不可互相推導。）
+
 Difficulty:
 
 Duration:

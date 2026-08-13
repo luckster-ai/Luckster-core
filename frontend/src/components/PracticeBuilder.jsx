@@ -8,7 +8,7 @@ import {
   getCapabilityNote,
   assemblePracticeOrder
 } from '../utils/validatePracticeBuilder'
-import { sectionsForPracticeType, PRACTICE_TYPES, getSection } from '../utils/practiceStructure'
+import { sectionsForPracticeType, derivePracticeType, PRACTICE_TYPES, getSection } from '../utils/practiceStructure'
 import { saveCustomPractice, generateCustomPracticeSlug } from '../state/customPracticeStore'
 import PracticeBuilderSection from './PracticeBuilderSection'
 
@@ -20,6 +20,7 @@ function PracticeBuilder() {
   const [hasAttemptedSave, setHasAttemptedSave] = useState(false)
 
   const composition = validatePracticeComposition(state)
+  const practiceType = derivePracticeType(state)
   const allSelectedIds = Object.values(state.sections).flat()
 
   // Maps each already-selected Module ID to the Category label of the
@@ -38,11 +39,6 @@ function PracticeBuilder() {
 
   const isNameValid = practiceName.trim().length > 0
   const canSave = composition.isStructurallyValid && isNameValid
-
-  function handleSelectType(practiceType) {
-    actions.setPracticeType(practiceType)
-    setActiveSectionKey('tuningIn')
-  }
 
   function handleAdd(sectionConfig, moduleId) {
     actions.addModule(sectionConfig.key, moduleId)
@@ -83,39 +79,18 @@ function PracticeBuilder() {
     navigate(`/practices/${slug}`)
   }
 
-  if (!state.practiceType) {
-    return (
-      <div className="practice-builder">
-        <h1>建立新課程</h1>
-        <p className="section-description">選擇要建立的 Practice 類型。</p>
-
-        <div className="builder-type-choices">
-          <button type="button" className="card" onClick={() => handleSelectType(PRACTICE_TYPES.FULL)}>
-            <h3>完整練習 Full Practice</h3>
-            <p>包含 Asana Module，是最主要的課程形式。</p>
-          </button>
-
-          <button type="button" className="card" onClick={() => handleSelectType(PRACTICE_TYPES.MEDITATION)}>
-            <h3>冥想練習 Meditation Practice</h3>
-            <p>不包含 Asana Module，適合呼吸與冥想為主的練習。</p>
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  const sections = sectionsForPracticeType(state.practiceType)
+  const sections = sectionsForPracticeType(practiceType)
 
   return (
     <div className="practice-builder">
       <h1>建立新課程</h1>
 
       <p className="section-description">
-        目前類型：{state.practiceType === PRACTICE_TYPES.FULL ? '完整練習 Full Practice' : '冥想練習 Meditation Practice'}
+        目前類型：{practiceType === PRACTICE_TYPES.FULL ? '完整練習 Full Practice' : '冥想練習 Meditation Practice'}
         {' '}
-        <button type="button" className="link-button" onClick={() => actions.setPracticeType(null)}>
-          變更類型
-        </button>
+        <span className="builder-type-hint">
+          （加入體式 Asana 即成為完整練習，不加入則為冥想練習）
+        </span>
       </p>
 
       <label className="builder-name-field">

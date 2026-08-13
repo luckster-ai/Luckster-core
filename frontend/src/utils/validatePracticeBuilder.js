@@ -1,11 +1,14 @@
-import { SECTIONS, sectionsForPracticeType } from './practiceStructure'
+import { SECTIONS, sectionsForPracticeType, derivePracticeType, PRACTICE_TYPES } from './practiceStructure'
 
 // Builder state shape:
 // {
-//   practiceType: 'full' | 'meditation' | null,
 //   relaxationPosition: 'before' | 'after', // relative to Meditation
 //   sections: { tuningIn: [moduleId], warmup: [...], asana: [...], relaxation: [...], meditation: [...], ending: [...] }
 // }
+//
+// Practice type is not stored here — it's derived from `sections.asana`
+// (see derivePracticeType in practiceStructure.js, Sprint 8.7) so there is
+// exactly one source of truth for it and no "unset" state to guard against.
 //
 // Sections store canonical Module IDs (not slugs), matching ADR 0003's
 // identity model: duplicate prevention across Categories is an ID concern.
@@ -14,7 +17,6 @@ import { SECTIONS, sectionsForPracticeType } from './practiceStructure'
 
 export function createEmptyBuilderState() {
   return {
-    practiceType: null,
     relaxationPosition: 'before',
     sections: {
       tuningIn: [],
@@ -85,7 +87,7 @@ export function getCapabilityNote(sectionKey, state, modules) {
   }
 
   if (sectionKey === 'relaxation') {
-    if (state.practiceType === 'meditation') {
+    if (derivePracticeType(state) === PRACTICE_TYPES.MEDITATION) {
       return '冥想練習可省略放鬆段落（例如時間較短的練習情境），或由所選 Module 本身已包含放鬆功能。'
     }
 
@@ -123,16 +125,36 @@ export function getModuleAvailability(moduleId, { disabledIds, moduleSectionLabe
   }
 }
 
-export function validatePracticeComposition(state) {
-  if (!state.practiceType) {
-    return {
-      isStructurallyValid: false,
-      sectionResults: [],
-      errors: ['請先選擇 Practice 類型（完整練習或冥想練習）。']
+// Groups already-filtered Picker candidates by Subcategory for presentation
+// only (Sprint 8.7) — Subcategory is a discovery aid, never an eligibility
+// gate; Category filtering (in ModulePicker, before this runs) remains the
+// only mechanism that decides whether a Module is a candidate at all.
+// Candidates with no Subcategory are grouped together under a null key
+// rather than an invented placeholder value, and rendered without a
+// heading. Group order follows first-appearance order in the input array
+// (which mirrors modules.js's authored order), avoiding an arbitrary sort.
+export function groupModulesBySubcategory(candidates) {
+  const groups = []
+  const bySubcategory = new Map()
+
+  for (const module of candidates) {
+    const key = module.subcategory || null
+    let group = bySubcategory.get(key)
+
+    if (!group) {
+      group = { subcategory: key, modules: [] }
+      bySubcategory.set(key, group)
+      groups.push(group)
     }
+
+    group.modules.push(module)
   }
 
-  const applicableSections = sectionsForPracticeType(state.practiceType)
+  return groups
+}
+
+export function validatePracticeComposition(state) {
+  const applicableSections = sectionsForPracticeType(derivePracticeType(state))
   const sectionResults = applicableSections.map((section) =>
     validateSection(section.key, state)
   )

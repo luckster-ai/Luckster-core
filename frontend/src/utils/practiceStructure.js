@@ -8,6 +8,16 @@ export const PRACTICE_TYPES = {
   MEDITATION: 'meditation'
 }
 
+// Practice type is derived from composition, not chosen upfront (Sprint 8.7):
+// practice-library.md already defines the discriminator this way — "是否包含
+// Asana Module 是判斷結構的依據" — so this simply implements the documented
+// rule rather than introducing a new one. Asana itself stays optional (see
+// its SECTIONS entry below); there is no "unset" state, since zero Asana is
+// itself a valid, fully-formed Meditation Practice.
+export function derivePracticeType(state) {
+  return state.sections.asana.length > 0 ? PRACTICE_TYPES.FULL : PRACTICE_TYPES.MEDITATION
+}
+
 // Section keys follow Builder/state order. Actual playback order additionally
 // depends on relaxationPosition (see assemblePracticeOrder in
 // validatePracticeBuilder.js), since Relaxation may come before or after
@@ -37,11 +47,11 @@ export const SECTIONS = [
     key: 'asana',
     category: 'Asana',
     label: '體式 Asana',
-    required: true,
-    min: 1,
+    required: false,
+    min: 0,
     max: 1,
-    appliesTo: [PRACTICE_TYPES.FULL],
-    guidance: '必須恰好 1 部影片。'
+    appliesTo: [PRACTICE_TYPES.FULL, PRACTICE_TYPES.MEDITATION],
+    guidance: '可選，最多 1 部影片。加入 Asana 即成為 Full Practice；不加入則為 Meditation Practice。'
   },
   {
     key: 'relaxation',
@@ -75,6 +85,12 @@ export const SECTIONS = [
   }
 ]
 
+// Every section now applies to both derived types (Sprint 8.7 — Asana is
+// the only section that ever differed, and it's optional-in-both now), so
+// this always returns the full SECTIONS list today. Kept as the existing
+// mechanism, not removed, so a future section that genuinely needs
+// type-conditional visibility has a place to plug into without inventing a
+// new one.
 export function sectionsForPracticeType(practiceType) {
   return SECTIONS.filter((section) => section.appliesTo.includes(practiceType))
 }

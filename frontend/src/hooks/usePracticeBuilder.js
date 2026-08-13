@@ -10,19 +10,6 @@ export function usePracticeBuilder() {
 
   const actions = useMemo(
     () => ({
-      setPracticeType(practiceType) {
-        setState((current) => ({
-          ...current,
-          practiceType,
-          // Asana never applies to Meditation Practice; clear it if the
-          // learner switches type after having selected one.
-          sections:
-            practiceType === 'meditation'
-              ? { ...current.sections, asana: [] }
-              : current.sections
-        }))
-      },
-
       setRelaxationPosition(position) {
         setState((current) => ({ ...current, relaxationPosition: position }))
       },

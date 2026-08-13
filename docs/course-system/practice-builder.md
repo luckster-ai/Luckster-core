@@ -43,12 +43,12 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 
 # Step 2
 
-選擇 Practice Structure。
+Practice Structure 由組課內容決定，非事先選擇的步驟（Sprint 8.7）：
 
-目前支援：
+* 包含 Asana Module → Full Practice
+* 不包含 Asana Module → Meditation Practice
 
-* Full Practice
-* Meditation Practice
+Asana 恆為可省略區段；學員無需在開始組課前先行選擇 Practice 類型。判斷依據與 `practice-library.md`「Practice Structure」章節一致，本文件不重複定義規則本身，僅說明其在 Builder 流程中的位置。
 
 ---
 
@@ -74,9 +74,11 @@ Practice Builder 定義 JOTI 如何建立一堂完整的 Practice。
 
 # Step 4
 
-依照 Step 2 選定的 Practice Structure，組裝 Practice 所需的 Module。
+組裝 Practice 所需的 Module；Practice Structure（Full / Meditation）隨組裝內容即時反映，見 Step 2。
 
 實際應包含之 Module 與組課規則，統一定義於 `practice-library.md`「Practice Structure」章節，此處不重複列出。
+
+Module Picker 依 Category 篩選候選 Module 後，再依 Subcategory（見 `module-metadata.md`）分組呈現，協助學員理解同一區段內不同內容型態的差異（例如 Meditation 區段中的 Chant 與 Breath）。Subcategory 分組僅為呈現方式，不影響 Category 篩選或組課資格判斷。
 
 ---
 

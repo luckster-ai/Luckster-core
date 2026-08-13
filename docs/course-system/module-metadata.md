@@ -99,7 +99,15 @@ Module 的共用欄位（id、slug、title、chineseTitle、summary、difficulty
   `data/modules.js` 的欄位名稱將由單數 `category`（字串）改為複數 `categories`（陣列），即使只有一個 Category 也一律使用陣列，避免程式碼需同時處理字串與陣列兩種型別。這是一項**破壞性欄位變更**，需同時更新所有讀取 `category` 的程式碼（例如 `ModuleCard.jsx` 目前顯示「類別：{module.category}」）。
 
   **實作現況（Implementation Status）**：本節定義的撰寫格式與 Runtime Data 結構為**已確認的目標架構（Canonical Architecture）**，尚未實作。目前所有既有 Module 內容與 `data/modules.js` 皆仍為單一 Category（字串）。在實際撰寫並同步第一個多重 Category 的 Module 之前，不需要進行任何程式碼或 Runtime Data 遷移；本節內容作為該次遷移的依據。另外，`ModulePage.jsx` 目前會將 Module 的原始 Markdown（含 Basic Information 區塊）直接渲染給學員（不同於 Foundation／Lesson 頁面的 `stripMarkdownSection` 處理方式），因此第一個採用多重 Category 清單格式的 Module，其 `- ` 清單將會直接顯示在頁面上，直到有進一步的實作調整此渲染行為。
-* **subcategory**（選填）— 部分 Module 可能沒有 Subcategory，屬於正常情況，非資料缺漏（此決策已於 Course System Specification v1.0 確認）。
+* **subcategory**（選填）— 描述 Module 內容本身的型態（例如 `Asana`、`Breath`、`Chant`、`Savasana`），與 Category（決定 Module 可出現在哪個 Practice 區段）是不同問題，不可互相推導。部分 Module 可能沒有 Subcategory，屬於正常情況，非資料缺漏（此決策已於 Course System Specification v1.0 確認）。目前既有內容皆僅使用單一值，尚無 Module 需要多個 Subcategory；若未來出現真正需要多值的內容，屆時再依實際內容擴充為陣列，避免預先引入未經驗證的複雜度。
+
+  **Runtime Data 對應格式**：
+
+  ```js
+  subcategory: 'Breath'
+  ```
+
+  單一字串，選填；Markdown 未填寫時，Runtime Data 省略此欄位（不設為 `''` 或 `null`）。Subcategory 目前僅作為 Practice Builder 的 Module Picker 分組／呈現用途（見 `practice-builder.md`），並非組課資格判斷依據——不得因 Subcategory 不同而使 Module 無法選取。
 * **prerequisites**（選填；目前僅存在於內容中，尚未結構化）— 建議先具備的 Foundation 能力，對應 `data-model.md` 中 Foundation → Module 的先備關係。目前僅以文字形式存在於 Markdown 內容（見 `docs/course-content/template.md` 的 Prerequisites 章節），尚未成為 `data/modules.js` 中的結構化欄位；`practice-builder.md` 的 Foundation 檢查未來若需自動化，將依賴此欄位被結構化。
 
 Learning Outcomes、Transcript、Resources 屬於 Module 的敘述性內容，由 `docs/course-content/template.md` 定義與擁有，非結構化資料欄位，故不列入本 Schema。
