@@ -33,6 +33,77 @@ function findModuleById(modules, id) {
   return modules.find((item) => item.id === id) || null
 }
 
+// Maps a Module's own `type` field to its canonical Section key.
+// Used only by buildBuilderStateFromPractice below.
+const TYPE_TO_SECTION_KEY = {
+  tuning: 'tuningIn',
+  warmup: 'warmup',
+  asana: 'asana',
+  relax: 'relaxation',
+  med: 'meditation',
+  end: 'ending'
+}
+
+// Reconstructs Builder state from an already-saved Practice, for the
+// "reopen and edit a saved Practice" flow (Sprint 1E).
+//
+// Preferred path: practice.builderSections + practice.relaxationPosition,
+// an exact copy of Builder state written by PracticeBuilder.jsx's
+// handleSave alongside the flat modules list -- every Practice saved
+// through the Builder from Sprint 1E onward carries this, so
+// reconstruction is exact, with no ambiguity about which Section a
+// multi-category Module (e.g. a Warm Up Module also valid for
+// Meditation) was actually placed in.
+//
+// Fallback path: practice.modules (the flat, playback-ordered slug
+// list every Practice has, custom or official) mapped back to a
+// Section via each Module's own `type` field -- used only when
+// builderSections is absent (e.g. an official Practice, which this
+// flow never opens for editing, or a Practice saved before this field
+// existed). This fallback has a known fidelity gap for multi-category
+// Modules: it always restores them into their `type`-implied Section,
+// which can misplace one that was actually placed in the other
+// Category's Section, and can as a result also mis-infer
+// relaxationPosition. Confirmed via Sprint 1E validation testing, not
+// just theoretical -- exactly why the exact path above exists.
+export function buildBuilderStateFromPractice(practice, modules) {
+  const state = createEmptyBuilderState()
+
+  if (practice.builderSections) {
+    Object.keys(state.sections).forEach((sectionKey) => {
+      state.sections[sectionKey] = [...(practice.builderSections[sectionKey] || [])]
+    })
+
+    state.relaxationPosition = practice.relaxationPosition || 'before'
+
+    return state
+  }
+
+  const resolved = (practice.modules || [])
+    .map((slug) => modules.find((module) => module.slug === slug))
+    .filter(Boolean)
+
+  resolved.forEach((module) => {
+    const sectionKey = TYPE_TO_SECTION_KEY[module.type]
+
+    if (sectionKey) {
+      state.sections[sectionKey].push(module.id)
+    }
+  })
+
+  // relaxationPosition is a single before/after toggle, not stored
+  // directly in the saved Practice -- infer it from whichever of
+  // Relaxation/Meditation appears first in the saved playback order.
+  const relaxIndex = resolved.findIndex((module) => module.type === 'relax')
+  const medIndex = resolved.findIndex((module) => module.type === 'med')
+
+  if (relaxIndex !== -1 && medIndex !== -1 && relaxIndex > medIndex) {
+    state.relaxationPosition = 'after'
+  }
+
+  return state
+}
+
 export function moduleIdsInPractice(state) {
   return Object.values(state.sections).flat()
 }
@@ -174,6 +245,26 @@ export function validatePracticeComposition(state) {
     sectionResults,
     errors
   }
+}
+
+// Pure derived duration helpers (Sprint 8.8) — sum Module `duration`
+// (seconds) already present in Runtime Data. Not stored in state; recomputed
+// from `state` + `modules` on every render, same pattern as
+// validatePracticeComposition/derivePracticeType.
+export function getSectionDuration(sectionKey, state, modules) {
+  const ids = state.sections[sectionKey] || []
+
+  return ids.reduce((total, id) => {
+    const module = findModuleById(modules, id)
+    return total + (module ? module.duration : 0)
+  }, 0)
+}
+
+export function getTotalDuration(state, modules) {
+  return Object.keys(state.sections).reduce(
+    (total, sectionKey) => total + getSectionDuration(sectionKey, state, modules),
+    0
+  )
 }
 
 // Assembles the final playback-ordered slug list, implementing the

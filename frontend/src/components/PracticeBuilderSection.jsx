@@ -25,6 +25,7 @@ function PracticeBuilderSection({
   moduleSectionLabels,
   capabilityNote,
   isExpanded,
+  sectionDuration,
   onToggle,
   onAdd,
   onRemove,
@@ -35,8 +36,10 @@ function PracticeBuilderSection({
     .map((id) => modules.find((module) => module.id === id))
     .filter(Boolean)
 
+  const hasSelected = sectionModules.length > 0
+
   return (
-    <section className={`builder-section${isExpanded ? ' expanded' : ' collapsed'}${result.isValid ? ' valid' : ''}`}>
+    <section className={`builder-section builder-section--${result.key}${isExpanded ? ' expanded' : ' collapsed'}${result.isValid ? ' valid' : ''}`}>
       <button type="button" className="builder-section-header" onClick={onToggle}>
         <span className="builder-section-title">
           {result.label}
@@ -46,10 +49,56 @@ function PracticeBuilderSection({
         <span className="builder-section-summary">
           {result.count} 部
           {Number.isFinite(result.max) && result.max !== result.min ? `（限 ${result.min}–${result.max}）` : ''}
+          {hasSelected ? ` · ${formatVideoDuration(sectionDuration)}` : ''}
           {' · '}
           {statusLabel(result)}
         </span>
       </button>
+
+      {/* Selected Modules stay visible as building-block cards regardless of
+          which section is currently active/expanded (Sprint 8.8) — only the
+          guidance text, capability note, relaxation control, and Picker
+          remain tied to isExpanded below. This is what lets the learner see
+          the Practice they've already assembled while working on another
+          section. */}
+      {hasSelected && (
+        <ol className="builder-selected-modules">
+          {sectionModules.map((module, index) => (
+            <li key={module.id} className="builder-module-card">
+              <div className="builder-module-card-info">
+                <span className="module-picker-title">{module.chineseTitle}</span>
+                <span className="module-picker-meta">{formatVideoDuration(module.duration)}</span>
+              </div>
+
+              <span className="builder-order-controls">
+                <button
+                  type="button"
+                  onClick={() => onMove(module.id, 'up')}
+                  disabled={index === 0}
+                  aria-label="上移"
+                >
+                  ↑ 上移
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onMove(module.id, 'down')}
+                  disabled={index === sectionModules.length - 1}
+                  aria-label="下移"
+                >
+                  ↓ 下移
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemove(module.id)}
+                  aria-label="移除"
+                >
+                  移除
+                </button>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
 
       {isExpanded && (
         <div className="builder-section-body">
@@ -58,43 +107,6 @@ function PracticeBuilderSection({
           {capabilityNote && <p className="builder-section-capability-note">{capabilityNote}</p>}
 
           {relaxationPositionControl}
-
-          {sectionModules.length > 0 && (
-            <ol className="builder-selected-modules">
-              {sectionModules.map((module, index) => (
-                <li key={module.id}>
-                  <span className="module-picker-title">{module.chineseTitle}</span>
-                  <span className="module-picker-meta">{formatVideoDuration(module.duration)}</span>
-
-                  <span className="builder-order-controls">
-                    <button
-                      type="button"
-                      onClick={() => onMove(module.id, 'up')}
-                      disabled={index === 0}
-                      aria-label="上移"
-                    >
-                      ↑ 上移
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onMove(module.id, 'down')}
-                      disabled={index === sectionModules.length - 1}
-                      aria-label="下移"
-                    >
-                      ↓ 下移
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onRemove(module.id)}
-                      aria-label="移除"
-                    >
-                      移除
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
 
           {result.count < result.max && (
             <ModulePicker

@@ -219,6 +219,46 @@ footer {
   font-size: 14px;
 }
 
+.practice-summary-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  background: #faf8f3;
+  border-bottom: 1px solid #d9c6a5;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+
+.practice-summary-total {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.practice-summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.practice-summary-chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  color: #3a3a3a;
+  white-space: nowrap;
+}
+
+.practice-summary-chip--tuningIn { background: #f4e7a1; }
+.practice-summary-chip--warmup { background: #e6d9ab; }
+.practice-summary-chip--asana { background: #d9c6a5; }
+.practice-summary-chip--relaxation { background: #cab999; }
+.practice-summary-chip--meditation { background: #b8a67e; }
+.practice-summary-chip--ending { background: #8a7b54; color: #faf8f3; }
+
 .builder-name-field {
   display: block;
   margin: 24px 0;
@@ -265,12 +305,20 @@ footer {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), inset 4px 0 0 #d9c6a5;
 }
 
+.builder-section--tuningIn { --section-accent: #f4e7a1; }
+.builder-section--warmup { --section-accent: #e6d9ab; }
+.builder-section--asana { --section-accent: #d9c6a5; }
+.builder-section--relaxation { --section-accent: #cab999; }
+.builder-section--meditation { --section-accent: #b8a67e; }
+.builder-section--ending { --section-accent: #8a7b54; }
+
 .builder-section-header {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 8px 16px;
   padding: 20px 24px;
   background: none;
   border: none;
@@ -335,22 +383,30 @@ footer {
 
 .builder-selected-modules {
   list-style: none;
-  padding: 0;
+  padding: 0 24px;
   margin: 0 0 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.builder-selected-modules li {
+.builder-module-card {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  background: #faf8f3;
+  background: white;
+  border-left: 4px solid var(--section-accent, #d9c6a5);
   border-radius: 10px;
   padding: 12px 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.builder-module-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .builder-order-controls {
@@ -449,6 +505,685 @@ footer {
   font-style: italic;
 }
 
+/* ============================================================
+   Practice Composition Canvas (Stage 1A UX slice — Warm Up only)
+   New, additive classes. Does not modify any .builder-section /
+   .builder-module-card / .module-picker rule above, which continue
+   to render Tuning In, Asana, Relaxation, Meditation and Ending
+   unchanged until this direction is reviewed and approved.
+   ============================================================ */
+
+.canvas-section--tuningIn { --section-accent: #f4e7a1; --section-tint: #fdf9ea; }
+.canvas-section--warmup { --section-accent: #e6d9ab; --section-tint: #fbf7e9; }
+.canvas-section--asana { --section-accent: #d9c6a5; --section-tint: #f8f2e7; }
+.canvas-section--relaxation { --section-accent: #cab999; --section-tint: #f5efe3; }
+.canvas-section--meditation { --section-accent: #b8a67e; --section-tint: #f2ebdd; }
+.canvas-section--ending { --section-accent: #8a7b54; --section-tint: #efe7d6; }
+
+.canvas-section {
+  background: var(--section-tint, #faf8f3);
+  border: 1px solid var(--section-accent, #d9c6a5);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.canvas-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--section-accent, #d9c6a5);
+}
+
+.canvas-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.canvas-section-title .tag {
+  font-size: 11px;
+  font-weight: normal;
+  padding: 2px 9px;
+  border-radius: 10px;
+  background: var(--section-accent, #d9c6a5);
+  color: #3a3a3a;
+}
+
+.canvas-section-status {
+  font-size: 13px;
+  color: #8a7b54;
+}
+
+.canvas-capability-note {
+  background: white;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin: 0 0 14px;
+}
+
+.canvas-empty {
+  padding: 0 0 14px;
+  color: #8a7b54;
+  font-size: 13px;
+}
+
+.piece-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.piece-card {
+  width: 100%;
+  max-width: 220px;
+  flex: 1 1 180px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+}
+
+.piece-card-image {
+  width: 100%;
+  height: 110px;
+  background: var(--section-accent, #d9c6a5);
+}
+
+.piece-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.piece-card-image-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: white;
+}
+
+.piece-card-body {
+  padding: 10px 12px;
+}
+
+.piece-card-title {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0 0 4px;
+  line-height: 1.35;
+}
+
+.piece-card-meta {
+  font-size: 11px;
+  color: #8a7b54;
+  margin: 0 0 10px;
+}
+
+.piece-card-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.piece-card-controls button {
+  flex: 1;
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 8px;
+  border: none;
+  background: #faf8f3;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.piece-card-controls button:disabled {
+  opacity: 0.4;
+}
+
+.piece-card-add {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 8px;
+  border: none;
+  background: #f4e7a1;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.piece-card-add:disabled {
+  background: #eee5d0;
+  color: #8a7b54;
+  cursor: default;
+}
+
+.canvas-add-btn {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: var(--section-accent, #d9c6a5);
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.canvas-collapse-btn {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--section-accent, #d9c6a5);
+  background: none;
+  font-size: 13px;
+  color: #8a7b54;
+  cursor: pointer;
+}
+
+.canvas-picker {
+  margin-top: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fbf7ee;
+  border: 1px dashed var(--section-accent, #d9c6a5);
+}
+
+.canvas-picker-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #8a7b54;
+  margin: 0 0 10px;
+}
+
+.canvas-picker-group-label {
+  font-size: 11px;
+  color: #8a7b54;
+  margin: 12px 0 8px;
+}
+
+.canvas-picker-group:first-child .canvas-picker-group-label {
+  margin-top: 0;
+}
+
+.canvas-picker-empty {
+  color: #8a7b54;
+  font-size: 13px;
+}
+
+.piece-list--picker {
+  margin-bottom: 4px;
+}
+
+.piece-card--picker {
+  max-width: 180px;
+}
+
+.piece-card--picker.disabled {
+  opacity: 0.55;
+}
+
+/* ============================================================
+   Practice Composition Overview (Stage 1C — Level 1)
+   Sits above the six per-section containers (Level 2) and replaces
+   the old .practice-summary-bar counters row (left unused rather
+   than deleted). Desktop/tablet and mobile are intentionally
+   different architectures, not one layout scaled:
+   - Desktop/tablet: .overview-card (grid workbench + connecting rail)
+   - Mobile: .overview-sticky (persistent header) + .overview-flow
+     (vertical numbered Sections)
+   Visibility between the two is controlled entirely by the media
+   queries below; both are always in the DOM (same state, same data),
+   only presentation differs.
+   ============================================================ */
+
+.overview-sticky {
+  display: none;
+}
+
+.overview-flow {
+  display: none;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+.overview-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 16px;
+}
+
+.overview-head h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.overview-sub {
+  font-size: 12px;
+  color: #8a7b54;
+}
+
+.overview-order-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: none;
+  padding: 0;
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #8a7b54;
+}
+
+.overview-order-control legend {
+  font-weight: bold;
+  padding: 0;
+}
+
+.overview-order-control label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.overview-rail {
+  height: 4px;
+  border-radius: 2px;
+  margin-bottom: 14px;
+  background: linear-gradient(
+    to right,
+    #f4e7a1 0%, #f4e7a1 16.66%,
+    #e6d9ab 16.66%, #e6d9ab 33.33%,
+    #d9c6a5 33.33%, #d9c6a5 50%,
+    #cab999 50%, #cab999 66.66%,
+    #b8a67e 66.66%, #b8a67e 83.33%,
+    #8a7b54 83.33%, #8a7b54 100%
+  );
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+.overview-col {
+  background: #fdfcf8;
+  border: 1px solid var(--col-accent, #d9c6a5);
+  border-radius: 14px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.overview-col--active {
+  border-width: 2px;
+  box-shadow: 0 0 0 2px var(--col-accent, #d9c6a5);
+}
+
+.overview-col--tuningIn { --col-accent: #f4e7a1; }
+.overview-col--warmup { --col-accent: #e6d9ab; }
+.overview-col--asana { --col-accent: #d9c6a5; }
+.overview-col--relaxation { --col-accent: #cab999; }
+.overview-col--meditation { --col-accent: #b8a67e; }
+.overview-col--ending { --col-accent: #8a7b54; }
+
+.overview-col-head {
+  border-bottom: 1px solid var(--col-accent, #d9c6a5);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.overview-col-head .zh {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.overview-col-head .meta {
+  font-size: 11px;
+  color: #8a7b54;
+  display: block;
+  margin-top: 2px;
+}
+
+.overview-chip-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overview-chip {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.overview-chip-image {
+  width: 100%;
+  height: 44px;
+  background: var(--col-accent, #d9c6a5);
+}
+
+.overview-chip-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.overview-chip-image-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+}
+
+.overview-chip-body {
+  padding: 6px 8px;
+}
+
+.overview-chip-title {
+  font-size: 11px;
+  font-weight: bold;
+  margin: 0 0 2px;
+  line-height: 1.3;
+}
+
+.overview-chip-meta {
+  font-size: 9px;
+  color: #8a7b54;
+  margin: 0;
+}
+
+.overview-empty {
+  border: 1px dashed #e4dcc8;
+  border-radius: 10px;
+  text-align: center;
+  padding: 14px 4px;
+  font-size: 11px;
+  color: #8a7b54;
+  margin: 0 0 10px;
+}
+
+.overview-add-btn {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px;
+  margin: 0;
+  border-radius: 8px;
+  border: 1px dashed var(--col-accent, #d9c6a5);
+  background: none;
+  font-size: 12px;
+  color: #8a7b54;
+  cursor: pointer;
+}
+
+/* Sprint 1D — Desktop Workbench card controls (WorkbenchCard). Not
+   used by the Mobile ModuleChip/FlowSection, which stay untouched. */
+.overview-chip-controls {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.overview-chip-controls button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 24px;
+  padding: 2px;
+  margin: 0;
+  border-radius: 6px;
+  border: none;
+  background: #faf8f3;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.overview-chip-controls button:disabled {
+  opacity: 0.4;
+}
+
+/* Sprint 1D — Desktop-only active Picker panel (DesktopActivePicker),
+   appears below the Workbench grid. Hidden below 1024px via the
+   min-width media query further down, alongside .builder-sections. */
+.workbench-picker {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+.workbench-picker-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.workbench-picker-head h3 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.workbench-picker-close {
+  min-height: 36px;
+  padding: 0 14px;
+  margin: 0;
+  border-radius: 8px;
+  border: 1px solid #d9c6a5;
+  background: none;
+  font-size: 12px;
+  color: #8a7b54;
+  cursor: pointer;
+}
+
+/* Sprint 1D — Desktop only (1366x768 primary target). The Workbench
+   above becomes the real composition surface: keep it visible while
+   scrolling into the active Picker, and hide the old Level 2 accordion
+   (.builder-sections) so there is no duplicate editing surface. Tablet
+   (768-1023px) and Mobile keep the Stage 1C behavior untouched --
+   .builder-sections stays visible there, still the actual editor for
+   those widths. max-height + overflow-y is a safety valve only, so a
+   heavily-populated Practice can't grow the sticky area to consume the
+   whole viewport. */
+@media (min-width: 1024px) {
+  .overview-card {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    max-height: 78vh;
+    overflow-y: auto;
+  }
+
+  .builder-sections {
+    display: none;
+  }
+
+  /* Sprint 1F — compact selected-Video "piece" cards, Desktop only.
+     Tablet (768-1023px) keeps the exact same WorkbenchCard markup and
+     the pre-Sprint-1F stacked layout (title / meta+Subcategory /
+     controls), unaffected, since none of this applies below 1024px. */
+  .overview-chip--workbench .overview-chip-image {
+    height: 32px;
+  }
+
+  .overview-chip--workbench .overview-chip-body {
+    padding: 4px 6px;
+  }
+
+  .overview-chip--workbench .overview-chip-title {
+    margin: 0 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .overview-chip--workbench .overview-chip-subcategory {
+    display: none;
+  }
+
+  .overview-chip--workbench .overview-chip-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .overview-chip--workbench .overview-chip-meta {
+    flex-shrink: 0;
+  }
+
+  .overview-chip--workbench .overview-chip-controls {
+    margin-top: 0;
+  }
+
+  .overview-chip--workbench .overview-chip-controls button {
+    min-height: 20px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .overview-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .overview-card {
+    display: none;
+  }
+
+  .overview-sticky {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: white;
+    border-bottom: 1px solid #e4dcc8;
+    padding: 10px 16px;
+    margin: 0 -16px 16px;
+  }
+
+  .overview-sticky-total {
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .overview-sticky-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .overview-sticky-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+  }
+
+  .overview-sticky-dot.empty {
+    border: 1px solid #e4dcc8;
+    background: none;
+  }
+
+  .overview-sticky-dot--tuningIn { background: #f4e7a1; }
+  .overview-sticky-dot--warmup { background: #e6d9ab; }
+  .overview-sticky-dot--asana { background: #d9c6a5; }
+  .overview-sticky-dot--relaxation { background: #cab999; }
+  .overview-sticky-dot--meditation { background: #b8a67e; }
+  .overview-sticky-dot--ending { background: #8a7b54; }
+
+  .overview-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .overview-flow-section {
+    background: white;
+    border: 1px solid var(--col-accent, #d9c6a5);
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .overview-flow-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .overview-flow-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--col-accent, #d9c6a5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .overview-flow-head .zh {
+    font-weight: bold;
+    font-size: 15px;
+  }
+
+  .overview-flow-head .meta {
+    font-size: 11px;
+    color: #8a7b54;
+    margin-left: auto;
+  }
+
+  .overview-flow .overview-chip-image {
+    height: 64px;
+  }
+}
+
 /* 平板 */
 
 @media (max-width: 1024px) {
@@ -503,6 +1238,15 @@ footer {
     padding: 32px 16px;
   }
 
+  .practice-summary-bar {
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .practice-summary-total {
+    font-size: 15px;
+  }
+
   .builder-order-controls {
     width: 100%;
   }
@@ -517,6 +1261,20 @@ footer {
   .module-picker-item button {
     width: 100%;
     margin: 8px 0 0;
+  }
+
+  .canvas-section {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .overview-zones {
+    width: max-content;
+  }
+
+  .overview-zone {
+    width: 180px;
+    flex: none;
   }
 
 }

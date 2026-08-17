@@ -57,13 +57,19 @@ function PracticePage() {
 
         {practice.isCustom && (
           <p className="practice-custom-note">
-            這是你建立的 Practice，暫存於本次瀏覽階段（重新整理仍可查看，但關閉分頁後將會遺失）。
+            這是你建立的 Practice，儲存在此裝置的瀏覽器中（尚未提供跨裝置同步）。
           </p>
         )}
 
         <Link to={`/practices/${slug}/play`} className="button">
           開始練習
         </Link>
+
+        {practice.isCustom && (
+          <Link to={`/practice/build?edit=${slug}`} className="button secondary">
+            編輯 Practice
+          </Link>
+        )}
       </section>
 
       <section className="practice-sequence-section">

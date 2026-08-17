@@ -5,8 +5,14 @@ import { getSection } from '../utils/practiceStructure'
 // Builder state is intentionally plain data (see createEmptyBuilderState),
 // independent of any visual/styling concern, so a future Visual Identity
 // pass can restyle the Builder without touching this state or its rules.
-export function usePracticeBuilder() {
-  const [state, setState] = useState(createEmptyBuilderState)
+//
+// initialState (Sprint 1E) — optional, for the "reopen and edit a saved
+// Practice" flow: PracticeBuilder.jsx passes the result of
+// buildBuilderStateFromPractice when a Practice slug is being edited.
+// Only read once, on mount (React's lazy useState initializer form),
+// which is correct here since this hook owns the state from then on.
+export function usePracticeBuilder(initialState) {
+  const [state, setState] = useState(() => initialState || createEmptyBuilderState())
 
   const actions = useMemo(
     () => ({
