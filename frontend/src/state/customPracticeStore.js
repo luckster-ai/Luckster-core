@@ -53,6 +53,13 @@ export function getCustomPractice(slug) {
   return all[slug] || null
 }
 
+// Sprint 2A — Practice Hub "我的練習": makes existing saved Practices
+// discoverable without a URL. Read-only, reuses the same readAll() the
+// store already computed internally; no persistence/schema change.
+export function getAllCustomPractices() {
+  return Object.values(readAll())
+}
+
 export function generateCustomPracticeSlug() {
   return `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }

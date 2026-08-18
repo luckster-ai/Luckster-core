@@ -13,7 +13,7 @@ function CoursesSection() {
         </Link>
 
         <Link to="/practice" className="card course-card">
-          <h3>開始練習 Start Practice</h3>
+          <h3>完整練習 Full Practice</h3>
 
           <p>開始今日的完整引導練習。</p>
         </Link>

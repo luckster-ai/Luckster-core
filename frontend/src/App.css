@@ -58,6 +58,32 @@ button {
   background: #d9c6a5;
 }
 
+/* Sprint 2A — fixes a genuine pre-existing gap found by the Practice
+   Hub UX audit: className="button" is already referenced on <a>/<Link>
+   elements in several places (Hero CTA, Practice detail, Practice
+   Player, and now Practice Hub), but no .button rule ever existed, so
+   every one of them rendered as a default blue underlined link. This
+   reuses the exact same visual tokens the <button> element above
+   already uses (#f4e7a1 / #d9c6a5 / 10px radius / 12px 24px padding),
+   not a new visual language -- so it also incidentally fixes those
+   other already-existing buttons, without this Sprint redesigning
+   those pages. */
+.button {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 10px;
+  margin: 0 10px;
+  background: #f4e7a1;
+  color: #3a3a3a;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.button.secondary {
+  background: #d9c6a5;
+}
+
 .about,
 .practice,
 .videos,
@@ -503,6 +529,202 @@ footer {
 .practice-custom-note {
   color: #8a7b54;
   font-style: italic;
+}
+
+/* ============================================================
+   Practice Hub (Sprint 2A)
+   The section wrapper below fixes a second pre-existing gap the
+   audit found: the component uses className="practice-hub", but the
+   CSS only ever defined `.practice` (a different, unused class name)
+   -- so the whole page had no section padding/centering at all. Card
+   content styling (.card, a.card) is intentionally NOT duplicated
+   here; PracticeCard.jsx now renders the same working `.card` pattern
+   FoundationCard/ModuleCard already use, so this only adds the
+   Practice-specific extras (image, meta, description, badge) plus the
+   Hub's own section/empty-state layout.
+   ============================================================ */
+
+.practice-hub {
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.practice-hub-section {
+  margin-top: 56px;
+}
+
+.practice-hub-section:first-of-type {
+  margin-top: 40px;
+}
+
+.practice-hub-section h2 {
+  margin-bottom: 8px;
+}
+
+.practice-hub-empty {
+  max-width: 420px;
+  margin: 24px auto 0;
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  color: #8a7b54;
+}
+
+.practice-hub-empty p {
+  margin: 0 0 20px;
+}
+
+.practice-hub-create {
+  margin-top: 48px;
+}
+
+.practice-card-image {
+  width: 100%;
+  height: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: #d9c6a5;
+}
+
+.practice-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.practice-card-image-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+}
+
+.practice-card-badge {
+  display: inline-block;
+  font-size: 11px;
+  color: #8a7b54;
+  background: #faf8f3;
+  border-radius: 8px;
+  padding: 3px 10px;
+  margin-bottom: 8px;
+}
+
+.practice-card-meta {
+  color: #8a7b54;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.practice-card-description {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* ============================================================
+   Home — Featured Practice + Practice Flow (Sprint 2B)
+   New, additive sections only. Reuses PracticeCard / .card as-is;
+   no Practice Hub, Practice Builder, or Practice Player rule above
+   is modified. Section-accent colors below match the Practice
+   Builder's own canvas-section--* tokens further down this file, so
+   the six-phase sequence reads as the same product concept, not a
+   new color language.
+   ============================================================ */
+
+.home-featured,
+.practice-flow-strip-section {
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.home-featured-lead,
+.practice-flow-strip-lead {
+  color: #8a7b54;
+  margin-bottom: 32px;
+}
+
+.home-featured-card {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.home-featured-more {
+  display: inline-block;
+  margin-top: 24px;
+  color: #8a7b54;
+  text-decoration: none;
+}
+
+.home-featured-more:hover {
+  text-decoration: underline;
+}
+
+.practice-flow-strip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 960px;
+  gap: 4px;
+}
+
+.practice-flow-item {
+  display: flex;
+  align-items: center;
+}
+
+.practice-flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 88px;
+}
+
+.practice-flow-step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  background: var(--flow-accent, #d9c6a5);
+  color: #3a3a3a;
+  flex-shrink: 0;
+}
+
+.practice-flow-step-label {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.practice-flow-step--tuningIn { --flow-accent: #f4e7a1; }
+.practice-flow-step--warmup { --flow-accent: #e6d9ab; }
+.practice-flow-step--asana { --flow-accent: #d9c6a5; }
+.practice-flow-step--relaxation { --flow-accent: #cab999; }
+.practice-flow-step--meditation { --flow-accent: #b8a67e; }
+.practice-flow-step--ending { --flow-accent: #8a7b54; }
+
+.practice-flow-connector {
+  display: inline-block;
+  min-width: 20px;
+  color: #d9c6a5;
+  font-size: 18px;
+  margin: 0 2px 24px;
+}
+
+.practice-flow-connector::before {
+  content: '→';
 }
 
 /* ============================================================
@@ -1234,6 +1456,22 @@ footer {
     margin: 12px 0;
   }
 
+  .button {
+    display: block;
+    width: 100%;
+    margin: 12px 0;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .practice-hub {
+    padding: 48px 16px;
+  }
+
+  .practice-hub-empty {
+    padding: 24px 20px;
+  }
+
   .practice-builder {
     padding: 32px 16px;
   }
@@ -1275,6 +1513,49 @@ footer {
   .overview-zone {
     width: 180px;
     flex: none;
+  }
+
+  .home-featured,
+  .practice-flow-strip-section {
+    padding: 48px 16px;
+  }
+
+  .home-featured-card {
+    max-width: 100%;
+  }
+
+  /* Mobile: vertical sequence instead of a horizontal row -- see
+     Sprint 2B brief section 11. Each step becomes a compact
+     number+label row, connected by a short vertical arrow rather
+     than the desktop side-by-side "→" chain. */
+  .practice-flow-strip {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    max-width: 240px;
+  }
+
+  .practice-flow-item {
+    flex-direction: column;
+  }
+
+  .practice-flow-step {
+    flex-direction: row;
+    width: auto;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .practice-flow-step-label {
+    font-size: 16px;
+  }
+
+  .practice-flow-connector {
+    margin: 4px 0;
+  }
+
+  .practice-flow-connector::before {
+    content: '↓';
   }
 
 }
