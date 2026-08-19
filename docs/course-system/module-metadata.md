@@ -108,9 +108,9 @@ Module 的共用欄位（id、slug、title、chineseTitle、summary、difficulty
   ```
 
   單一字串，選填；Markdown 未填寫時，Runtime Data 省略此欄位（不設為 `''` 或 `null`）。Subcategory 目前僅作為 Practice Builder 的 Module Picker 分組／呈現用途（見 `practice-builder.md`），並非組課資格判斷依據——不得因 Subcategory 不同而使 Module 無法選取。
-* **prerequisites**（選填；目前僅存在於內容中，尚未結構化）— 建議先具備的 Foundation 能力，對應 `data-model.md` 中 Foundation → Module 的先備關係。目前僅以文字形式存在於 Markdown 內容（見 `docs/course-content/template.md` 的 Prerequisites 章節），尚未成為 `data/modules.js` 中的結構化欄位；`practice-builder.md` 的 Foundation 檢查未來若需自動化，將依賴此欄位被結構化。
+* **prerequisites**（選填；目前僅存在於內容中，尚未結構化）— 建議先具備的 Foundation 能力，對應 `data-model.md` 中 Foundation → Module 的先備關係。目前僅以文字形式存在於 Markdown 內容（見 `frontend/src/content/template.md` 的 Prerequisites 章節），尚未成為 `data/modules.js` 中的結構化欄位；`practice-builder.md` 的 Foundation 檢查未來若需自動化，將依賴此欄位被結構化。
 
-Learning Outcomes、Transcript、Resources 屬於 Module 的敘述性內容，由 `docs/course-content/template.md` 定義與擁有，非結構化資料欄位，故不列入本 Schema。
+Learning Outcomes、Transcript、Resources 屬於 Module 的敘述性內容，由 `frontend/src/content/template.md` 定義與擁有，非結構化資料欄位，故不列入本 Schema。
 
 ### Metadata
 

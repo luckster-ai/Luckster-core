@@ -41,7 +41,6 @@ Luckster-core/
 
 ├── docs/
 │   ├── brand/
-│   ├── course-content/
 │   ├── course-system/
 │   ├── development/
 │   ├── website/

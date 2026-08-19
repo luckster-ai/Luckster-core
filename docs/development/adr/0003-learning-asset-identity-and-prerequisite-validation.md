@@ -81,4 +81,3 @@ See `practice-builder.md`'s Composition Validation for how the existing "no dupl
 - `docs/course-system/module-metadata.md` — Category field
 - `docs/course-system/practice-builder.md` — Sequence Validation
 - `frontend/src/content/template.md` — Content Authoring Guide
-- `docs/development/adr/0002-learning-asset-first-development.md` — Learning Asset / Runtime Data boundary this ADR builds on

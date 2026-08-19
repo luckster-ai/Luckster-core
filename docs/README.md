@@ -21,10 +21,6 @@ development/
 
 course-system/
 
-## Course Content
-
-course-content/
-
 ## AI
 
 ai/

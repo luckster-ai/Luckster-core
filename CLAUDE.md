@@ -47,7 +47,6 @@ docs/
 
 ├── ai/
 ├── brand/
-├── course-content/
 ├── course-system/
 ├── development/
 └── website/

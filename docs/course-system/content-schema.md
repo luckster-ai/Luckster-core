@@ -78,7 +78,7 @@ This standard allows Runtime synchronization and future prerequisite parsing to 
 { provider: 'youtube', videoId: 'abc123XYZ' }
 ```
 
-此格式為 Foundation 與 Module 共同採用的目標結構。Module（`data/modules.js`）已全數完成同步；Foundation（`data/foundations.js`）目前僅部分完成同步，其餘將隨 Learning Asset 逐一同步（詳見 `docs/development/adr/0002-learning-asset-first-development.md`）。
+此格式為 Foundation 與 Module 共同採用的目標結構。Module（`data/modules.js`）已全數完成同步；Foundation（`data/foundations.js`）目前僅部分完成同步，其餘將隨 Learning Asset 逐一同步。
 
 * **tags**（選填）— 描述性關鍵字，用於搜尋、篩選與 AI 推薦。Foundation 與 Module 皆可使用，定義統一於本文件，`module-metadata.md` 不再重複定義。
 
@@ -98,9 +98,7 @@ This standard allows Runtime synchronization and future prerequisite parsing to 
 
 所有 Learning Asset 皆對應一份 Markdown 內容檔案，儲存於 `frontend/src/content/{foundations,modules}/`，是該 Learning Asset 唯一的人工維護來源（Single Source of Truth）。此檔案同時包含結構化欄位（本文件與各自 Metadata 文件定義）與敘述性內容（Description、Learning Outcomes、Prerequisites 等），兩者不再分離維護。
 
-`frontend/src/data/foundations.js`、`frontend/src/data/modules.js` 為 Derived Runtime Data，鏡射 Learning Asset 供網站路由、渲染與計算使用，透過 AI 協作同步維護，不另行人工維護內容（詳見 `docs/development/adr/0002-learning-asset-first-development.md`）。
-
-`docs/course-content/` 為歷史文件，其角色已由本架構取代，保留供歷史參考，不再更新。
+`frontend/src/data/foundations.js`、`frontend/src/data/modules.js` 為 Derived Runtime Data，鏡射 Learning Asset 供網站路由、渲染與計算使用，透過 AI 協作同步維護，不另行人工維護內容。
 
 ---
 

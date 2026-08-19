@@ -2,6 +2,7 @@ const homepage = {
   brand: {
     name: "JOTI",
     subtitle: "昆達里尼 ABC 瑜伽",
+    subtitleEn: "KUNDALINI ABC YOGA",
     tagline: "喚醒內在力量",
     taglineEn: "Awaken Your Inner Power"
   },
