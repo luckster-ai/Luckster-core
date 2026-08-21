@@ -45,7 +45,7 @@ function ModulePage() {
 
       <p>{module.summary}</p>
 
-      {module.videoReference?.videoId && (
+      {module.videoReference?.provider === 'youtube' && module.videoReference?.videoId && (
         <p>
           <a
             href={`https://www.youtube.com/watch?v=${module.videoReference.videoId}`}
@@ -56,6 +56,10 @@ function ModulePage() {
           </a>
         </p>
       )}
+      {/* Bunny (2026-08-21 Bunny-ready prep): no external "watch on
+          platform X" link exists for it — real Bunny library/pull-zone
+          config doesn't exist until the next (paid) phase. Rendering
+          nothing here (rather than guessing a URL) avoids a dead link. */}
 
       <hr />
 

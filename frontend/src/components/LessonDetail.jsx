@@ -30,6 +30,7 @@ function LessonDetail({ lesson, markdown }) {
         <div className="module-playback">
           <VideoPlayer
             ref={playerRef}
+            provider={lesson.videoReference.provider}
             videoId={lesson.videoReference.videoId}
             onEnded={() => {}}
           />

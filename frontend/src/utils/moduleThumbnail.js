@@ -12,5 +12,11 @@ export function getModuleThumbnailUrl(module) {
     return `https://img.youtube.com/vi/${ref.videoId}/mqdefault.jpg`
   }
 
+  // Bunny (2026-08-21 Bunny-ready prep) and any other future provider:
+  // no thumbnail URL convention exists yet — real Bunny library/pull-zone
+  // config doesn't exist until the next (paid) phase, so this returns
+  // null rather than guessing a URL shape. Every caller already renders a
+  // text-fallback when this is falsy (see PieceCard.jsx, PracticeCard.jsx,
+  // etc.), so this is a graceful no-thumbnail state, not a broken one.
   return null
 }

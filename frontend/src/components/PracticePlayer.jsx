@@ -4,6 +4,13 @@ import ModuleRenderer from './ModuleRenderer'
 
 function PracticePlayer({ practice, modules }) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  // Practice-level, presentation-only state — deliberately not the same
+  // thing as the browser's real Fullscreen API. Entered once, from the
+  // same first-play gesture that already requests real fullscreen, and
+  // then left alone: Module transitions never touch it, so it keeps
+  // filling the screen even if the video engine's own fullscreen session
+  // gets exited underneath it (see VideoPlayer.jsx / VideoModule.jsx).
+  const [immersiveMode, setImmersiveMode] = useState(false)
 
   const isComplete = currentIndex >= modules.length
 
@@ -20,7 +27,7 @@ function PracticePlayer({ practice, modules }) {
   }
 
   return (
-    <div className="practice-player">
+    <div className={`practice-player${immersiveMode && !isComplete ? ' practice-player--immersive' : ''}`}>
       <section className="practice-player-header">
         <Link
           to={`/practices/${practice.slug}`}
@@ -83,6 +90,7 @@ function PracticePlayer({ practice, modules }) {
           <ModuleRenderer
             module={modules[currentIndex]}
             onEnded={goNext}
+            onImmersiveStart={() => setImmersiveMode(true)}
           />
         </section>
       )}

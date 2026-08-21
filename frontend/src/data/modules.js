@@ -9,7 +9,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 195,
     summary: '完整的昆達里尼瑜伽練習的開頭必備程序：黃金鏈接調頻；本影片還包含保護咒。',
-    videoReference: { provider: 'youtube', videoId: 'tvkcOmfXQuE' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/00f9e1e3-6d0d-4a78-8770-e550d4239546/playlist.m3u8' },
     tags: ['Mantra', '唱誦', '阿迪梵音', '調頻'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD006', 'FD008-L05']
   },
@@ -25,7 +25,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 267,
     summary: '拜日式熱身，是昆達里尼瑜伽常用的熱身方式。',
-    videoReference: { provider: 'youtube', videoId: 'e_esmWeX2Oc' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/ca1b09dd-36e1-4c17-aff0-697cd23b159d/playlist.m3u8' },
     tags: ['熱身', '拜日式', 'Asana'],
     prerequisites: ['FD001']
   },
