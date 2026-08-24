@@ -40,10 +40,18 @@ function PickerPieceCard({ module, disabled, reason, onAdd }) {
   )
 }
 
-function ModulePickerCanvas({ category, modules, currentSectionIds, disabledIds, moduleSectionLabels, onAdd }) {
+// revealAddedInPlace (Mobile Practice Builder redesign): when true, a
+// Module already selected in THIS section stays visible in the grid
+// (marked "已加入" via getModuleAvailability's existing disabled-reason
+// mechanism, same as a cross-section conflict) instead of being
+// filtered out entirely. Defaults to false so every existing caller --
+// Desktop's DesktopActivePicker, and Mobile/Tablet's own Warm-Up-only
+// usage before this redesign -- keeps its exact prior behavior/render
+// output unless it explicitly opts in.
+function ModulePickerCanvas({ category, modules, currentSectionIds, disabledIds, moduleSectionLabels, onAdd, revealAddedInPlace = false }) {
   const candidates = modules
     .filter((module) => module.categories.includes(category))
-    .filter((module) => !currentSectionIds.includes(module.id))
+    .filter((module) => revealAddedInPlace || !currentSectionIds.includes(module.id))
 
   if (candidates.length === 0) {
     return <p className="canvas-picker-empty">目前沒有屬於「{category}」的 Module。</p>
@@ -64,13 +72,14 @@ function ModulePickerCanvas({ category, modules, currentSectionIds, disabledIds,
           <ul className="piece-list piece-list--picker">
             {group.modules.map((module) => {
               const { disabled, reason } = getModuleAvailability(module.id, { disabledIds, moduleSectionLabels })
+              const alreadyInThisSection = revealAddedInPlace && currentSectionIds.includes(module.id)
 
               return (
                 <PickerPieceCard
                   key={module.id}
                   module={module}
                   disabled={disabled}
-                  reason={reason}
+                  reason={alreadyInThisSection ? '已加入' : reason}
                   onAdd={onAdd}
                 />
               )

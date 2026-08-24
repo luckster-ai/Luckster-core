@@ -13,9 +13,11 @@ import {
 } from '../utils/validatePracticeBuilder'
 import { sectionsForPracticeType, derivePracticeType, PRACTICE_TYPES, getSection } from '../utils/practiceStructure'
 import { saveCustomPractice, generateCustomPracticeSlug, getCustomPractice } from '../state/customPracticeStore'
-import PracticeBuilderSection from './PracticeBuilderSection'
 import PracticeSectionCanvas from './PracticeSectionCanvas'
 import PracticeCompositionOverview from './PracticeCompositionOverview'
+import MobileSectionOverview from './MobileSectionOverview'
+import MobileSectionNav from './MobileSectionNav'
+import MobileModulePanel from './MobileModulePanel'
 
 function PracticeBuilder() {
   const navigate = useNavigate()
@@ -141,6 +143,77 @@ function PracticeBuilder() {
 
   const sections = sectionsForPracticeType(practiceType)
 
+  // Computed once and shared by .builder-sections (Tablet's inline
+  // accordion, via PracticeSectionCanvas) and the Mobile-only presentation
+  // components below (MobileSectionOverview/MobileSectionNav/
+  // MobileModulePanel) — same activeSectionKey, same per-Section data,
+  // just two different renderings of it. Not a second state model.
+  const sectionsData = sections.map((sectionConfig) => {
+    const result = validateSection(sectionConfig.key, state)
+    const isExpanded = activeSectionKey === sectionConfig.key
+
+    // Bug fix: Tablet's .builder-sections (PracticeSectionCanvas) and
+    // Mobile's .mobile-sections-area (MobileModulePanel) both mount
+    // simultaneously in the DOM — only one is visible at a time via CSS,
+    // but React renders both subtrees regardless of viewport. Reusing a
+    // single relaxationPositionControl element in both meant two native
+    // <input type="radio" name="relaxationPosition"> groups existed in
+    // the document at once; the browser's native radio-group toggling
+    // (which operates on `name` across the whole document, independent
+    // of React component boundaries) fought with React's controlled-
+    // value reconciliation, so a click could visually check the HIDDEN
+    // instance's radio while leaving the clicked, visible one unchecked
+    // until an unrelated re-render (e.g. switching Section) re-synced
+    // both from state.relaxationPosition. Fix: give each rendering
+    // context its own `name` so they're never the same native group.
+    // state.relaxationPosition / setRelaxationPosition are untouched —
+    // this only changes a DOM grouping detail, not the data.
+    const buildRelaxationPositionControl = (radioName) => (
+      <fieldset className="builder-relaxation-position">
+        <legend>Relaxation 位置</legend>
+
+        <label>
+          <input
+            type="radio"
+            name={radioName}
+            checked={state.relaxationPosition === 'before'}
+            onChange={() => actions.setRelaxationPosition('before')}
+          />
+          在 Meditation 之前
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name={radioName}
+            checked={state.relaxationPosition === 'after'}
+            onChange={() => actions.setRelaxationPosition('after')}
+          />
+          在 Meditation 之後
+        </label>
+      </fieldset>
+    )
+
+    const isRelaxation = sectionConfig.key === 'relaxation'
+
+    return {
+      sectionConfig,
+      result,
+      moduleIds: state.sections[sectionConfig.key],
+      capabilityNote: getCapabilityNote(sectionConfig.key, state, modules),
+      isExpanded,
+      sectionDuration: getSectionDuration(sectionConfig.key, state, modules),
+      onToggle: () => setActiveSectionKey(isExpanded ? null : sectionConfig.key),
+      onAdd: (moduleId) => handleAdd(sectionConfig, moduleId),
+      onRemove: (moduleId) => actions.removeModule(sectionConfig.key, moduleId),
+      onMove: (moduleId, direction) => actions.moveModule(sectionConfig.key, moduleId, direction),
+      relaxationPositionControl: isRelaxation ? buildRelaxationPositionControl('relaxationPosition') : null,
+      mobileRelaxationPositionControl: isRelaxation ? buildRelaxationPositionControl('mobileRelaxationPosition') : null
+    }
+  })
+
+  const activeSectionData = sectionsData.find((data) => data.isExpanded) || null
+
   return (
     <div className="practice-builder">
       <h1>{existingPractice ? '編輯課程' : '建立新課程'}</h1>
@@ -149,25 +222,22 @@ function PracticeBuilder() {
           Level 1 / Level 2 distinction) — replaces the Sprint 8.8
           counters-only summary bar. Still a pure view over existing state
           (see getTotalDuration/getSectionDuration), not a second source of
-          truth. Responsive architecture from Stage 1C (desktop grid
-          workbench with a connecting rail / mobile vertical flow with a
-          persistent sticky header) — see PracticeCompositionOverview.jsx.
-          Sprint 1D made the Desktop grid a real composition workspace:
-          "+ 加入 Module" opens a real Picker in a shared slot below the
-          grid (activeWorkbenchSection/onOpenPicker/onWorkbenchAdd), and
-          the old Level 2 accordion below is hidden at Desktop widths
-          (see .builder-sections in App.css). Mobile/Tablet still use
-          onNavigateToSection exactly as Stage 1C left it — "+ 加入
-          Module" there still just sets activeSectionKey and the Level 2
-          accordion below (still rendered, just hidden on Desktop) is
-          the actual editor. */}
+          truth. Responsive architecture: Desktop grid workbench with a
+          connecting rail (Sprint 1D — "+ 加入 Module" opens a real Picker
+          in a shared slot below the grid via activeWorkbenchSection/
+          onOpenPicker/onWorkbenchAdd, and the Level 2 accordion below is
+          hidden at Desktop widths, see .builder-sections in App.css).
+          Mobile Practice Builder: this component's Mobile output is just
+          the persistent "練習"/rail header — the six Section cards
+          themselves are the dedicated Mobile presentation further down
+          (MobileSectionOverview/MobileSectionNav/MobileModulePanel), not
+          this component's Desktop/Tablet grid. */}
       <PracticeCompositionOverview
         sections={sections}
         state={state}
         modules={modules}
         totalDuration={totalDuration}
         practiceType={practiceType}
-        onNavigateToSection={(sectionKey) => setActiveSectionKey(sectionKey)}
         activeWorkbenchSection={activeWorkbenchSection}
         onOpenPicker={handleOpenPicker}
         onWorkbenchAdd={handleWorkbenchAdd}
@@ -196,64 +266,63 @@ function PracticeBuilder() {
         />
       </label>
 
+      {/* Tablet's inline accordion (768–1023px). Hidden on Desktop
+          (≥1024px, unchanged) and now also hidden on Mobile (≤767px,
+          replaced by the dedicated Mobile presentation below) — see
+          .builder-sections in App.css. */}
       <div className="builder-sections">
-        {sections.map((sectionConfig) => {
-          const result = validateSection(sectionConfig.key, state)
-          const capabilityNote = getCapabilityNote(sectionConfig.key, state, modules)
-          const isExpanded = activeSectionKey === sectionConfig.key
+        {sectionsData.map((data) => (
+          <PracticeSectionCanvas
+            key={data.sectionConfig.key}
+            result={data.result}
+            moduleIds={data.moduleIds}
+            modules={modules}
+            allSelectedIds={allSelectedIds}
+            moduleSectionLabels={moduleSectionLabels}
+            capabilityNote={data.capabilityNote}
+            isExpanded={data.isExpanded}
+            sectionDuration={data.sectionDuration}
+            onToggle={data.onToggle}
+            onAdd={data.onAdd}
+            onRemove={data.onRemove}
+            onMove={data.onMove}
+            relaxationPositionControl={data.relaxationPositionControl}
+            revealAddedInPlace
+          />
+        ))}
+      </div>
 
-          const relaxationPositionControl =
-            sectionConfig.key === 'relaxation' ? (
-              <fieldset className="builder-relaxation-position">
-                <legend>Relaxation 位置</legend>
+      {/* Mobile-only (≤767px): two presentations of the exact same
+          sectionsData/activeSectionKey above — reference-01 "Overview"
+          when no Section is active, reference-02/03 "Module Selection"
+          (compact Section strip + large Picker) once one is. Same
+          Practice state throughout; no second state model, no route
+          change. See .mobile-overview-grid / .mobile-nav-grid in
+          App.css for the Mobile-only visibility scoping. */}
+      <div className="mobile-sections-area">
+        {activeSectionData ? (
+          <>
+            <MobileSectionNav sectionsData={sectionsData} modules={modules} />
 
-                <label>
-                  <input
-                    type="radio"
-                    name="relaxationPosition"
-                    checked={state.relaxationPosition === 'before'}
-                    onChange={() => actions.setRelaxationPosition('before')}
-                  />
-                  在 Meditation 之前
-                </label>
-
-                <label>
-                  <input
-                    type="radio"
-                    name="relaxationPosition"
-                    checked={state.relaxationPosition === 'after'}
-                    onChange={() => actions.setRelaxationPosition('after')}
-                  />
-                  在 Meditation 之後
-                </label>
-              </fieldset>
-            ) : null
-
-          const sectionProps = {
-            result,
-            moduleIds: state.sections[sectionConfig.key],
-            modules,
-            allSelectedIds,
-            moduleSectionLabels,
-            capabilityNote,
-            isExpanded,
-            sectionDuration: getSectionDuration(sectionConfig.key, state, modules),
-            onToggle: () => setActiveSectionKey(isExpanded ? null : sectionConfig.key),
-            onAdd: (moduleId) => handleAdd(sectionConfig, moduleId),
-            onRemove: (moduleId) => actions.removeModule(sectionConfig.key, moduleId),
-            onMove: (moduleId, direction) => actions.moveModule(sectionConfig.key, moduleId, direction),
-            relaxationPositionControl
-          }
-
-          // Stage 1A UX slice (approved B+A hybrid direction): only Warm Up
-          // renders via the new composition-canvas presentation for now.
-          // Every other section continues to use the unchanged,
-          // already-validated PracticeBuilderSection until this direction
-          // is reviewed and explicitly approved for propagation.
-          const SectionComponent = sectionConfig.key === 'warmup' ? PracticeSectionCanvas : PracticeBuilderSection
-
-          return <SectionComponent key={sectionConfig.key} {...sectionProps} />
-        })}
+            <MobileModulePanel
+              sectionConfig={activeSectionData.sectionConfig}
+              result={activeSectionData.result}
+              moduleIds={activeSectionData.moduleIds}
+              modules={modules}
+              allSelectedIds={allSelectedIds}
+              moduleSectionLabels={moduleSectionLabels}
+              capabilityNote={activeSectionData.capabilityNote}
+              sectionDuration={activeSectionData.sectionDuration}
+              onAdd={activeSectionData.onAdd}
+              onRemove={activeSectionData.onRemove}
+              onMove={activeSectionData.onMove}
+              relaxationPositionControl={activeSectionData.mobileRelaxationPositionControl}
+              revealAddedInPlace
+            />
+          </>
+        ) : (
+          <MobileSectionOverview sectionsData={sectionsData} modules={modules} />
+        )}
       </div>
 
       {composition.errors.length > 0 && (

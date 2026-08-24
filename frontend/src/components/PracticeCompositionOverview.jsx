@@ -18,41 +18,33 @@ import DesktopActivePicker from './DesktopActivePicker'
 //   Sections replaces the active Picker rather than stacking. The old
 //   Level 2 accordion below is hidden at this width (see .builder-sections
 //   in App.css) so there is no duplicate editing surface.
-// - Tablet (768-1023px): unchanged from Stage 1C -- the grid still
-//   renders (3 columns) as a read-only-ish overview whose "+ 加入 Module"
-//   still navigates to the Level 2 accordion below (onNavigateToSection),
-//   exactly as before this Sprint. Not redesigned here.
-// - Mobile (<768px): unchanged from Stage 1C -- vertical numbered
-//   Practice Flow + persistent sticky header, "+ 加入 Module" navigates
-//   to the Level 2 accordion below. Not touched by this Sprint.
-function ModuleChip({ module }) {
-  const thumbnailUrl = getModuleThumbnailUrl(module)
+// - Tablet (768-1023px): the grid still renders (3 columns). NOTE: the
+//   onNavigateToSection prop this comment used to describe was removed
+//   (Mobile Practice Builder pass) -- "+ 加入影片" now calls the same
+//   onOpenPicker as Desktop (Sprint 1D), opening DesktopActivePicker
+//   inline below the grid. Verified live (2026-08-25): this actually
+//   happens at Tablet widths too, not just Desktop -- .workbench-picker
+//   has no <1024px hiding rule in App.css despite a comment there
+//   claiming one exists. The .builder-sections accordion further down is
+//   therefore a second, separately reachable editing surface at Tablet
+//   widths, alongside this inline picker. Whether that overlap is
+//   intended has not been decided -- left as-is, flagged rather than
+//   silently resolved either way.
+// - Mobile (<768px): the six Section cards themselves live in
+//   .mobile-sections-area (MobileSectionOverview/MobileSectionNav/
+//   MobileModulePanel), not .builder-sections -- that stays Tablet-only
+//   (PracticeSectionCanvas). This component's Mobile role shrinks to
+//   just the persistent sticky header — "練習" + total duration/type +
+//   the same connecting rail Desktop already uses (reusing
+//   .overview-head/.overview-rail markup, not new CSS), matching
+//   reference-01's top information layer. The vertical numbered
+//   "Practice Flow" (FlowSection/ModuleChip) that used to duplicate that
+//   six-card list here was removed as redundant.
 
-  return (
-    <li className="overview-chip">
-      <div className="overview-chip-image">
-        {thumbnailUrl ? (
-          <img src={thumbnailUrl} alt={module.chineseTitle} loading="lazy" />
-        ) : (
-          <div className="overview-chip-image-fallback" aria-hidden="true">{module.chineseTitle.slice(0, 1)}</div>
-        )}
-      </div>
-
-      <div className="overview-chip-body">
-        <p className="overview-chip-title">{module.chineseTitle}</p>
-        <p className="overview-chip-meta">
-          {module.subcategory ? `${module.subcategory} · ` : ''}{formatVideoDuration(module.duration)}
-        </p>
-      </div>
-    </li>
-  )
-}
-
-// Desktop Workbench-only card: same visual language as ModuleChip plus
+// Desktop Workbench-only card --
 // working reorder/remove controls, since Sprint 1D removes the old
 // Level 2 editors from the Desktop page -- this is now the only place
-// on Desktop those actions are available. Not used by FlowSection
-// (Mobile), which keeps ModuleChip exactly as Stage 1C left it.
+// on Desktop those actions are available.
 //
 // Sprint 1F: compacted at Desktop (>=1024px) into a small "piece" --
 // single-line truncated title, Subcategory hidden, duration + controls
@@ -119,10 +111,9 @@ function WorkbenchColumn({ sectionConfig, state, modules, sectionDuration, isAct
       </div>
 
       {/* Sprint 1E — Part A: the "尚未加入" placeholder is intentionally
-          NOT rendered here (unlike FlowSection/Mobile below, which keeps
-          it). An empty Section's "0 部" header already signals emptiness;
-          removing the extra placeholder box is what compresses the
-          Workbench's height per the approved direction. */}
+          NOT rendered here. An empty Section's "0 部" header already
+          signals emptiness; removing the extra placeholder box is what
+          compresses the Workbench's height per the approved direction. */}
       {sectionModules.length > 0 && (
         <ul className="overview-chip-list">
           {sectionModules.map((module, index) => (
@@ -146,44 +137,12 @@ function WorkbenchColumn({ sectionConfig, state, modules, sectionDuration, isAct
   )
 }
 
-function FlowSection({ sectionConfig, index, state, modules, sectionDuration, onNavigateToSection }) {
-  const sectionModules = sectionModulesFor(sectionConfig, state, modules)
-  const zhLabel = sectionConfig.label.split(' ')[0]
-
-  return (
-    <div className={`overview-flow-section overview-col--${sectionConfig.key}`}>
-      <div className="overview-flow-head">
-        <span className="overview-flow-num">{index + 1}</span>
-        <span className="zh">{zhLabel}</span>
-        <span className="meta">
-          {sectionModules.length} 部{sectionModules.length > 0 ? ` · ${formatVideoDuration(sectionDuration)}` : ''}
-        </span>
-      </div>
-
-      {sectionModules.length > 0 ? (
-        <ul className="overview-chip-list">
-          {sectionModules.map((module) => (
-            <ModuleChip key={module.id} module={module} />
-          ))}
-        </ul>
-      ) : (
-        <p className="overview-empty">尚未加入</p>
-      )}
-
-      <button type="button" className="overview-add-btn" onClick={() => onNavigateToSection(sectionConfig.key)}>
-        ＋ 加入 Module
-      </button>
-    </div>
-  )
-}
-
 function PracticeCompositionOverview({
   sections,
   state,
   modules,
   totalDuration,
   practiceType,
-  onNavigateToSection,
   activeWorkbenchSection,
   onOpenPicker,
   onWorkbenchAdd,
@@ -199,18 +158,18 @@ function PracticeCompositionOverview({
 
   return (
     <div aria-live="polite">
-      {/* Mobile-only: persistent sticky orientation while scrolling
-          through the vertical flow below. Untouched by Sprint 1D. */}
+      {/* Mobile-only: persistent sticky header while scrolling through the
+          six Section cards in .builder-sections below. Reuses the exact
+          same "練習" heading + rail markup/CSS Desktop's .overview-card
+          already uses (matching reference-01's top information layer),
+          rather than inventing a second visual treatment. */}
       <div className="overview-sticky">
-        <span className="overview-sticky-total">總時長 {totalLabel}</span>
-        <div className="overview-sticky-dots">
-          {sections.map((sectionConfig) => (
-            <span
-              key={sectionConfig.key}
-              className={`overview-sticky-dot${state.sections[sectionConfig.key].length > 0 ? ` overview-sticky-dot--${sectionConfig.key}` : ' empty'}`}
-            />
-          ))}
+        <div className="overview-head">
+          <h2>練習</h2>
+          <span className="overview-sub">總時長 {totalLabel} · {typeLabel}</span>
         </div>
+
+        <div className="overview-rail" />
       </div>
 
       {/* Desktop / tablet: grid workbench with a connecting rail. */}
@@ -284,22 +243,6 @@ function PracticeCompositionOverview({
         onAdd={(moduleId) => onWorkbenchAdd(activeSectionConfig.key, moduleId)}
         onClose={() => onOpenPicker(activeSectionConfig?.key)}
       />
-
-      {/* Mobile-only: vertical numbered Practice Flow. Untouched by
-          Sprint 1D. */}
-      <div className="overview-flow">
-        {sections.map((sectionConfig, index) => (
-          <FlowSection
-            key={sectionConfig.key}
-            sectionConfig={sectionConfig}
-            index={index}
-            state={state}
-            modules={modules}
-            sectionDuration={getSectionDuration(sectionConfig.key, state, modules)}
-            onNavigateToSection={onNavigateToSection}
-          />
-        ))}
-      </div>
     </div>
   )
 }

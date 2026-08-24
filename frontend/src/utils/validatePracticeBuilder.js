@@ -176,7 +176,7 @@ export function getCapabilityNote(sectionKey, state, modules) {
 }
 
 // Availability of a single candidate that has ALREADY passed Category
-// filtering and same-section exclusion (see ModulePicker) — those remain
+// filtering and same-section exclusion (see ModulePickerCanvas) — those remain
 // filtering concerns, not availability states (Sprint 8.6 architecture
 // review: "Category vs eligibility"). This only decides the one remaining
 // case: a Category-compatible candidate already selected in another
@@ -198,7 +198,7 @@ export function getModuleAvailability(moduleId, { disabledIds, moduleSectionLabe
 
 // Groups already-filtered Picker candidates by Subcategory for presentation
 // only (Sprint 8.7) — Subcategory is a discovery aid, never an eligibility
-// gate; Category filtering (in ModulePicker, before this runs) remains the
+// gate; Category filtering (in ModulePickerCanvas, before this runs) remains the
 // only mechanism that decides whether a Module is a candidate at all.
 // Candidates with no Subcategory are grouped together under a null key
 // rather than an invented placeholder value, and rendered without a

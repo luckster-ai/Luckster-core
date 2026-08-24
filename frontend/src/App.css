@@ -72,10 +72,6 @@ nav a {
   color: #8a7b54;
 }
 
-.buttons {
-  margin-top: 32px;
-}
-
 button {
   padding: 12px 24px;
   border: none;
@@ -168,6 +164,71 @@ footer {
   border: none;
 }
 
+.video-player:fullscreen,
+.video-player:-webkit-full-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.video-player:fullscreen .video-player-frame,
+.video-player:-webkit-full-screen .video-player-frame {
+  width: min(100vw, calc(100vh * 16 / 9));
+}
+
+/* Practice-level immersive presentation — a plain CSS layout, NOT the
+   browser's real Fullscreen API (that's the `:fullscreen` block above).
+   Deliberately independent of it: this keeps filling the screen even if
+   the real fullscreen session gets exited underneath it (e.g. YouTube's
+   own player does this on mobile when the video changes). Toggled by
+   `.practice-player--immersive` on the root element; see
+   PracticePlayer.jsx. */
+.practice-player--immersive .practice-player-progress {
+  display: none;
+}
+
+.practice-player--immersive .practice-player-exit {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1001;
+  margin-bottom: 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+
+.practice-player--immersive .practice-player-module {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 24px 0;
+  background: #000;
+}
+
+.practice-player--immersive .video-player-frame {
+  width: min(100vw, calc(100vh * 16 / 9));
+}
+
+/* .video-player-frame's width is viewport-relative (vw), so it ignores
+   any horizontal padding on ancestors like .module-playback — any nonzero
+   horizontal padding here would push the already-100vw-wide video past
+   the viewport edge and cause horizontal overflow. Keeping vertical
+   padding only avoids that while still giving the title/controls above
+   and below the video some breathing room. */
+.practice-player--immersive .module-playback {
+  max-width: 100%;
+  padding: 16px 0;
+  box-sizing: border-box;
+}
+
 .practice-player {
   max-width: 720px;
   margin: 0 auto;
@@ -225,6 +286,10 @@ footer {
 .module-playback-subtitle {
   color: #8a7b54;
   margin-bottom: 16px;
+}
+
+.video-resume-prompt {
+  margin: 16px 0;
 }
 
 .module-placeholder-note {
@@ -351,78 +416,6 @@ footer {
   margin-top: 24px;
 }
 
-.builder-section {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.builder-section.valid {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), inset 4px 0 0 #d9c6a5;
-}
-
-.builder-section--tuningIn { --section-accent: #f4e7a1; }
-.builder-section--warmup { --section-accent: #e6d9ab; }
-.builder-section--asana { --section-accent: #d9c6a5; }
-.builder-section--relaxation { --section-accent: #cab999; }
-.builder-section--meditation { --section-accent: #b8a67e; }
-.builder-section--ending { --section-accent: #8a7b54; }
-
-.builder-section-header {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px 16px;
-  padding: 20px 24px;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-  min-height: 44px;
-}
-
-.builder-section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: bold;
-}
-
-.builder-section-tag {
-  font-size: 12px;
-  font-weight: normal;
-  padding: 2px 10px;
-  border-radius: 12px;
-  background: #f4e7a1;
-  color: #3a3a3a;
-}
-
-.builder-section-summary {
-  color: #8a7b54;
-  white-space: nowrap;
-}
-
-.builder-section-body {
-  padding: 0 24px 24px;
-}
-
-.builder-section-guidance {
-  color: #8a7b54;
-  margin-bottom: 12px;
-}
-
-.builder-section-capability-note {
-  background: #faf8f3;
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
-}
-
 .builder-relaxation-position {
   border: none;
   padding: 0;
@@ -436,96 +429,6 @@ footer {
   font-weight: bold;
   margin-bottom: 8px;
   width: 100%;
-}
-
-.builder-selected-modules {
-  list-style: none;
-  padding: 0 24px;
-  margin: 0 0 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.builder-module-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  background: white;
-  border-left: 4px solid var(--section-accent, #d9c6a5);
-  border-radius: 10px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.builder-module-card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.builder-order-controls {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.builder-order-controls button {
-  padding: 8px 14px;
-  min-height: 44px;
-  font-size: 14px;
-}
-
-.module-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.module-picker-group-label {
-  margin: 0 0 8px;
-  font-weight: bold;
-  color: #8a7b54;
-  font-size: 14px;
-}
-
-.module-picker-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.module-picker-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 16px;
-  border: 1px solid #d9c6a5;
-  border-radius: 10px;
-}
-
-.module-picker-item button {
-  min-height: 44px;
-}
-
-.module-picker-title {
-  font-weight: bold;
-  margin-right: 8px;
-}
-
-.module-picker-meta {
-  color: #8a7b54;
-}
-
-.module-picker-empty {
-  color: #8a7b54;
 }
 
 .builder-errors {
@@ -759,11 +662,10 @@ footer {
 }
 
 /* ============================================================
-   Practice Composition Canvas (Stage 1A UX slice — Warm Up only)
-   New, additive classes. Does not modify any .builder-section /
-   .builder-module-card / .module-picker rule above, which continue
-   to render Tuning In, Asana, Relaxation, Meditation and Ending
-   unchanged until this direction is reviewed and approved.
+   Practice Composition Canvas (originally the Stage 1A UX slice for
+   Warm Up only; the Mobile Practice Builder redesign propagated it to
+   every Section — this is now the only Level 2 editor presentation for
+   Mobile/Tablet, see PracticeBuilder.jsx / PracticeSectionCanvas.jsx)
    ============================================================ */
 
 .canvas-section--tuningIn { --section-accent: #f4e7a1; --section-tint: #fdf9ea; }
@@ -781,15 +683,14 @@ footer {
   margin-bottom: 24px;
 }
 
-.canvas-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--section-accent, #d9c6a5);
+/* Mobile Practice Builder — Reference alignment: the expanded (active)
+   Section card gets the same gold "currently active" treatment already
+   used elsewhere in the Builder (.overview-col--active / the old
+   .overview-flow-section--active), matching reference-02/03's active
+   border. Collapsed siblings keep the plain 1px border above. */
+.canvas-section.expanded {
+  border-width: 2px;
+  box-shadow: 0 0 0 2px var(--section-accent, #d9c6a5);
 }
 
 .canvas-section-title {
@@ -812,6 +713,114 @@ footer {
 .canvas-section-status {
   font-size: 13px;
   color: #8a7b54;
+}
+
+/* Collapsed-card presentation (reference-01/03): the whole card is one
+   tap target, unified name/count/thumbnail-or-add-prompt block instead
+   of two stacked boxes. */
+.canvas-section-collapsed {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.canvas-section-collapsed-count {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8a7b54;
+}
+
+.canvas-section-divider {
+  display: block;
+  height: 1px;
+  margin: 12px 0;
+  background: var(--section-accent, #d9c6a5);
+  opacity: 0.5;
+}
+
+.canvas-section-collapsed-add {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--section-accent, #d9c6a5);
+  font-size: 13px;
+  color: #8a7b54;
+}
+
+.canvas-section-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.canvas-section-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--section-accent, #d9c6a5);
+  flex-shrink: 0;
+}
+
+.canvas-section-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.canvas-section-thumb-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+}
+
+.canvas-section-thumb-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  color: #8a7b54;
+  background: #faf8f3;
+}
+
+/* Expanded-card heading (reference-02): "選擇 {Section} 影片" + 收起
+   share one row, replacing the old bottom-of-picker collapse button. */
+.canvas-section-picker-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.canvas-section-picker-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.canvas-section-picker-title .zh {
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .canvas-capability-note {
@@ -926,23 +935,11 @@ footer {
   cursor: default;
 }
 
-.canvas-add-btn {
-  display: block;
-  width: 100%;
-  min-height: 48px;
-  border-radius: 12px;
-  border: none;
-  background: var(--section-accent, #d9c6a5);
-  font-weight: bold;
-  font-size: 14px;
-  cursor: pointer;
-}
-
 .canvas-collapse-btn {
   display: block;
-  width: 100%;
-  min-height: 44px;
-  margin-top: 8px;
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 14px;
   border-radius: 10px;
   border: 1px solid var(--section-accent, #d9c6a5);
   background: none;
@@ -1000,18 +997,27 @@ footer {
    than deleted). Desktop/tablet and mobile are intentionally
    different architectures, not one layout scaled:
    - Desktop/tablet: .overview-card (grid workbench + connecting rail)
-   - Mobile: .overview-sticky (persistent header) + .overview-flow
-     (vertical numbered Sections)
+   - Mobile: .overview-sticky — just the persistent "練習"/rail header;
+     the six Section cards themselves live in .mobile-sections-area
+     (MobileSectionOverview/MobileSectionNav/MobileModulePanel), not
+     .builder-sections — that stays Tablet-only (PracticeSectionCanvas),
+     hidden on Mobile alongside Desktop (see .builder-sections rules
+     below).
    Visibility between the two is controlled entirely by the media
-   queries below; both are always in the DOM (same state, same data),
-   only presentation differs.
+   queries below; all three (.overview-card, .builder-sections,
+   .mobile-sections-area) are always in the DOM (same state, same
+   data), only presentation differs.
    ============================================================ */
 
 .overview-sticky {
   display: none;
 }
 
-.overview-flow {
+/* Mobile Practice Builder — the two-state Mobile presentation
+   (reference-01 Overview / reference-02-03 Module Selection). Hidden by
+   default (Desktop/Tablet); only shown inside the max-width:767px
+   breakpoint below, same pattern as .overview-sticky above. */
+.mobile-sections-area {
   display: none;
 }
 
@@ -1182,16 +1188,6 @@ footer {
   margin: 0;
 }
 
-.overview-empty {
-  border: 1px dashed #e4dcc8;
-  border-radius: 10px;
-  text-align: center;
-  padding: 14px 4px;
-  font-size: 11px;
-  color: #8a7b54;
-  margin: 0 0 10px;
-}
-
 .overview-add-btn {
   display: block;
   width: 100%;
@@ -1232,9 +1228,13 @@ footer {
   opacity: 0.4;
 }
 
-/* Sprint 1D — Desktop-only active Picker panel (DesktopActivePicker),
-   appears below the Workbench grid. Hidden below 1024px via the
-   min-width media query further down, alongside .builder-sections. */
+/* Sprint 1D — active Picker panel (DesktopActivePicker), appears below
+   the Workbench grid. NOTE: despite the "Desktop-only" name, there is no
+   <1024px hiding rule for this class anywhere in this file — verified
+   live (2026-08-25) that it also opens at Tablet widths (768-1023px),
+   alongside the still-visible .builder-sections accordion further down.
+   Not changed here; see PracticeCompositionOverview.jsx's file comment
+   for the same note. */
 .workbench-picker {
   background: white;
   border-radius: 20px;
@@ -1344,97 +1344,232 @@ footer {
     display: none;
   }
 
+  /* Mobile Practice Builder — Reference alignment: the sticky header now
+     reuses .overview-head/.overview-rail (Desktop's own markup) instead
+     of the old total+dots row, so it needs to stack them, not lay them
+     out in one horizontal line. */
   .overview-sticky {
-    display: flex;
+    display: block;
     position: sticky;
     top: 0;
     z-index: 5;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
     background: white;
     border-bottom: 1px solid #e4dcc8;
     padding: 10px 16px;
     margin: 0 -16px 16px;
   }
 
-  .overview-sticky-total {
-    font-size: 13px;
-    font-weight: bold;
-    white-space: nowrap;
+  .overview-sticky .overview-head {
+    margin-bottom: 10px;
   }
 
-  .overview-sticky-dots {
-    display: flex;
-    gap: 4px;
+  /* Mobile Practice Builder — Tablet's inline accordion is replaced by
+     the dedicated two-state Mobile presentation below (reference-01/02/03).
+     Same .builder-sections DOM/data exists (Tablet still uses it,
+     untouched), just not rendered visually at this breakpoint. */
+  .builder-sections {
+    display: none;
   }
 
-  .overview-sticky-dot {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
+  .mobile-sections-area {
+    display: block;
   }
 
-  .overview-sticky-dot.empty {
-    border: 1px solid #e4dcc8;
-    background: none;
-  }
-
-  .overview-sticky-dot--tuningIn { background: #f4e7a1; }
-  .overview-sticky-dot--warmup { background: #e6d9ab; }
-  .overview-sticky-dot--asana { background: #d9c6a5; }
-  .overview-sticky-dot--relaxation { background: #cab999; }
-  .overview-sticky-dot--meditation { background: #b8a67e; }
-  .overview-sticky-dot--ending { background: #8a7b54; }
-
-  .overview-flow {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  /* State A — reference-01 Overview grid. Two columns so all six
+     Sections fit within one viewport without scrolling; each card stays
+     a comfortable, tappable size rather than being compressed further. */
+  .mobile-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
     margin-bottom: 24px;
   }
 
-  .overview-flow-section {
-    background: white;
-    border: 1px solid var(--col-accent, #d9c6a5);
-    border-radius: 16px;
-    padding: 16px;
+  .mobile-overview-card {
+    display: block;
+    background: var(--section-tint, #faf8f3);
+    border: 1px solid var(--section-accent, #d9c6a5);
+    border-radius: 14px;
+    padding: 12px;
+    cursor: pointer;
   }
 
-  .overview-flow-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .overview-flow-num {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: var(--col-accent, #d9c6a5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
+  .mobile-overview-card .zh {
+    display: block;
     font-weight: bold;
+    font-size: 14px;
+  }
+
+  .mobile-overview-count {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: #8a7b54;
+  }
+
+  .mobile-overview-divider {
+    display: block;
+    height: 1px;
+    margin: 8px 0;
+    background: var(--section-accent, #d9c6a5);
+    opacity: 0.5;
+  }
+
+  .mobile-overview-add {
+    display: block;
+    text-align: center;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px dashed var(--section-accent, #d9c6a5);
+    font-size: 11px;
+    color: #8a7b54;
+  }
+
+  .mobile-overview-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-overview-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--section-accent, #d9c6a5);
     flex-shrink: 0;
   }
 
-  .overview-flow-head .zh {
-    font-weight: bold;
-    font-size: 15px;
+  .mobile-overview-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
-  .overview-flow-head .meta {
+  .mobile-overview-thumb-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 11px;
-    color: #8a7b54;
-    margin-left: auto;
+    font-weight: bold;
+    color: white;
   }
 
-  .overview-flow .overview-chip-image {
-    height: 64px;
+  .mobile-overview-thumb-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #8a7b54;
+    background: white;
   }
+
+  .mobile-overview-card--tuningIn { --section-accent: #f4e7a1; --section-tint: #fdf9ea; }
+  .mobile-overview-card--warmup { --section-accent: #e6d9ab; --section-tint: #fbf7e9; }
+  .mobile-overview-card--asana { --section-accent: #d9c6a5; --section-tint: #f8f2e7; }
+  .mobile-overview-card--relaxation { --section-accent: #cab999; --section-tint: #f5efe3; }
+  .mobile-overview-card--meditation { --section-accent: #b8a67e; --section-tint: #f2ebdd; }
+  .mobile-overview-card--ending { --section-accent: #8a7b54; --section-tint: #efe7d6; }
+
+  /* State B — reference-02/03 Module Selection: compact Section strip
+     (three columns so all six stay visible without horizontal scroll,
+     smaller than the Overview grid's own cards since the Picker below is
+     now the primary work area) + the large Module Picker itself, which
+     reuses .canvas-section/.canvas-section-picker-head styling already
+     defined above for Tablet's PracticeSectionCanvas. */
+  .mobile-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--nav-accent, #d9c6a5);
+    background: white;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-nav-item--active {
+    border-width: 2px;
+    box-shadow: 0 0 0 2px var(--nav-accent, #d9c6a5);
+  }
+
+  .mobile-nav-item .zh {
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .mobile-nav-count {
+    font-size: 10px;
+    color: #8a7b54;
+  }
+
+  .mobile-nav-thumbs {
+    display: flex;
+    gap: 3px;
+    margin-top: 2px;
+  }
+
+  .mobile-nav-thumb {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--nav-accent, #d9c6a5);
+    flex-shrink: 0;
+  }
+
+  .mobile-nav-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .mobile-nav-thumb-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 9px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .mobile-nav-thumb-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: bold;
+    color: #8a7b54;
+    background: #faf8f3;
+  }
+
+  .mobile-nav-item--tuningIn { --nav-accent: #f4e7a1; }
+  .mobile-nav-item--warmup { --nav-accent: #e6d9ab; }
+  .mobile-nav-item--asana { --nav-accent: #d9c6a5; }
+  .mobile-nav-item--relaxation { --nav-accent: #cab999; }
+  .mobile-nav-item--meditation { --nav-accent: #b8a67e; }
+  .mobile-nav-item--ending { --nav-accent: #8a7b54; }
 }
 
 /* 平板 */
@@ -1523,22 +1658,6 @@ footer {
 
   .practice-summary-total {
     font-size: 15px;
-  }
-
-  .builder-order-controls {
-    width: 100%;
-  }
-
-  .builder-order-controls button {
-    display: inline-block;
-    width: auto;
-    flex: 1;
-    margin: 8px 0 0;
-  }
-
-  .module-picker-item button {
-    width: 100%;
-    margin: 8px 0 0;
   }
 
   .canvas-section {
