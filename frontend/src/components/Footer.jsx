@@ -1,10 +1,11 @@
+import { Link } from 'react-router-dom'
 import homepage from '../data/homepage'
 
 function Footer() {
   return (
     <footer>
       <nav>
-        <a href="/#about">關於 JOTI</a>
+        <Link to="/about">關於 JOTI</Link>
 
         <a
           href={homepage.youtube.channelUrl}

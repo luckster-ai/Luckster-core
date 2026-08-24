@@ -1718,3 +1718,388 @@ footer {
   }
 
 }
+
+/* ============================================================
+   About page (/about) — first phase.
+   Structural/visual reference: docs/design/about-page/about-mockup.html
+   (seven full Sections, one idea per screen, generous whitespace).
+   Deliberately NOT ported from the mockup this phase: its serif/Google
+   Fonts pairing (site-wide type stays Arial, see body{} at the top of
+   this file) and its IntersectionObserver scroll-reveal animation --
+   both flagged as a possible later phase, not attempted here. Colors are
+   the same hardcoded brand hex values used everywhere else in this file
+   (#faf8f3 / #d9c6a5 / #f4e7a1 / #3a3a3a), not new CSS variables, so this
+   doesn't introduce a second theming system alongside the existing one.
+   ============================================================ */
+
+.about-page {
+  overflow-x: hidden;
+}
+
+.about-section {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 24px;
+  gap: 20px;
+}
+
+.about-section h1,
+.about-section h2 {
+  margin: 0;
+  font-weight: bold;
+  line-height: 1.6;
+}
+
+.about-section h1 {
+  font-size: clamp(26px, 4vw, 44px);
+}
+
+.about-section h2 {
+  font-size: clamp(24px, 3.4vw, 36px);
+}
+
+.about-line {
+  display: block;
+}
+
+.about-note {
+  max-width: 560px;
+  color: #6b6b6b;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.about-intro {
+  max-width: 560px;
+  line-height: 1.9;
+}
+
+/* Photo placeholders — no photography exists in the repo yet (only the
+   homepage hero image does). These are deliberately visible, labelled
+   blocks rather than being skipped, so a real <img> can drop in later
+   without a layout change. */
+.about-photo-placeholder {
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 4 / 3;
+  border-radius: 20px;
+  background: repeating-linear-gradient(135deg, #efe9da 0px, #efe9da 12px, #e4dcc8 12px, #e4dcc8 24px);
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.about-photo-placeholder--bleed {
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+}
+
+.about-photo-placeholder span {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: #8a7b54;
+  background: rgba(250, 248, 243, 0.85);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+/* Real photo (Section 1 triptych — Taipei / Shanghai / Jiangsu waterway,
+   matching the "台北、上海、江蘇" line). Real asset is exactly 1774x887
+   (2:1) -- aspect-ratio is set to that exact ratio, not an approximation,
+   so object-fit: cover never has to crop anything; it only has to fill
+   rounding-error subpixels. Other Sections (e.g. "becoming a teacher")
+   still use .about-photo-placeholder above -- no other photography exists
+   yet. */
+.about-photo {
+  width: 100%;
+}
+
+.about-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-photo--bleed {
+  aspect-ratio: 2 / 1;
+}
+
+.about-section--opening {
+  padding: 0 0 60px;
+  gap: 32px;
+}
+
+.about-section--opening .about-section-copy {
+  max-width: 620px;
+  padding: 0 24px;
+}
+
+/* 2012 / 2018 editorial year blocks. Mobile-first: numeral stacks above
+   a full-width photo (point 6 -- image/text never squeeze each other on
+   narrow screens). Tablet (>=768px) just scales the numeral up a step,
+   still stacked. Desktop (>=1024px) is the only breakpoint that does the
+   magazine-style bleed -- numeral positioned beside the photo, straddling
+   its edge (mostly in the surrounding whitespace, a small overlap hidden
+   behind the photo via z-index) -- see the min-width:1024px block below.
+   2012/2018 alternate left/right (.about-year-block--left/--right) so
+   they read as one visual language with a directional variation, not a
+   repeated card (real content requirement, not decoration): the caption
+   overlay corner is deliberately the OPPOSITE corner from the numeral's
+   side, chosen to sit in each specific photo's visual quiet zone (upper-
+   right of the 2012 photo, upper-left of the 2018 photo) rather than
+   over its main subject. */
+.about-section--turning-point {
+  background: #faf8f3;
+  padding: 80px 24px;
+  gap: 72px;
+}
+
+.about-year-block {
+  width: 100%;
+  max-width: 640px;
+}
+
+.about-year-frame {
+  position: relative;
+}
+
+.about-year-numeral {
+  display: block;
+  margin: 0 0 16px;
+  font-size: clamp(56px, 16vw, 88px);
+  font-weight: bold;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #d9c6a5;
+}
+
+.about-year-block--left .about-year-numeral {
+  text-align: left;
+}
+
+.about-year-block--right .about-year-numeral {
+  text-align: right;
+}
+
+.about-year-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.about-year-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: relative;
+  z-index: 1;
+}
+
+.about-year-caption {
+  position: absolute;
+  z-index: 2;
+  margin: 0;
+  max-width: 62%;
+  padding: 10px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  color: #3a3a3a;
+}
+
+.about-year-block--left .about-year-caption {
+  top: 16px;
+  right: 16px;
+  text-align: right;
+  border-radius: 0 4px 0 20px;
+  background: linear-gradient(225deg, rgba(250, 248, 243, 0.94) 0%, rgba(250, 248, 243, 0.55) 60%, transparent 100%);
+}
+
+.about-year-block--right .about-year-caption {
+  top: 16px;
+  left: 16px;
+  text-align: left;
+  border-radius: 4px 0 20px 0;
+  background: linear-gradient(135deg, rgba(250, 248, 243, 0.94) 0%, rgba(250, 248, 243, 0.55) 60%, transparent 100%);
+}
+
+@media (min-width: 768px) {
+  .about-year-block {
+    max-width: 720px;
+  }
+
+  .about-year-numeral {
+    font-size: clamp(72px, 9vw, 110px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .about-section--turning-point {
+    gap: 56px;
+  }
+
+  .about-year-block {
+    max-width: 1000px;
+  }
+
+  .about-year-frame {
+    max-width: 640px;
+  }
+
+  .about-year-block--left .about-year-frame {
+    margin-right: auto;
+  }
+
+  .about-year-block--right .about-year-frame {
+    margin-left: auto;
+  }
+
+  /* Anchored by the SIDE closer to the photo (left edge for the --left
+     block's numeral, right edge for --right's) with a small fixed
+     overlap (not em-relative -- at this font-size an em-based inset
+     swallowed almost the entire "2012"/"2018" behind the photo, since
+     shrink-to-fit width extends AWAY from the anchored edge, not toward
+     it -- verified live and fixed after catching it in Desktop review).
+     24px covers only a sliver of the nearest digit's stroke, so the
+     numeral reads fully while still visually layering with the photo. */
+  .about-year-numeral {
+    position: absolute;
+    top: 50%;
+    z-index: 0;
+    margin: 0;
+    transform: translateY(-50%);
+    font-size: clamp(80px, 8vw, 130px);
+  }
+
+  .about-year-block--left .about-year-numeral {
+    left: 100%;
+    margin-left: -24px;
+    text-align: left;
+  }
+
+  .about-year-block--right .about-year-numeral {
+    right: 100%;
+    margin-right: -24px;
+    text-align: right;
+  }
+
+  .about-year-photo {
+    z-index: 1;
+  }
+}
+
+.about-section--teacher {
+  background: #3a3a3a;
+  color: #faf8f3;
+  flex-direction: row;
+  gap: 48px;
+  text-align: left;
+  align-items: center;
+}
+
+.about-section--teacher .about-photo-placeholder {
+  flex-shrink: 0;
+  width: 320px;
+}
+
+.about-section--teacher .about-section-copy p {
+  line-height: 1.9;
+  margin: 0 0 16px;
+}
+
+.about-section--abc {
+  background: #faf8f3;
+}
+
+.about-kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #8a7b54;
+}
+
+.about-abc {
+  display: flex;
+  gap: clamp(20px, 6vw, 70px);
+}
+
+.about-abc-letter {
+  font-size: clamp(48px, 10vw, 96px);
+  font-weight: bold;
+  color: #d9c6a5;
+  line-height: 1;
+}
+
+.about-abc-labels {
+  display: flex;
+  gap: clamp(20px, 6vw, 70px);
+  font-size: 13px;
+  color: #6b6b6b;
+}
+
+.about-section--believes {
+  background: #3a3a3a;
+  color: #faf8f3;
+}
+
+.about-section--believes blockquote {
+  margin: 0;
+  font-size: clamp(20px, 3vw, 32px);
+  line-height: 1.9;
+  font-style: italic;
+}
+
+.about-section--name {
+  background: radial-gradient(ellipse at center, #f4e7a1 0%, #d9c6a5 65%, #cbb98f 100%);
+}
+
+.about-name {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 38px);
+  font-weight: bold;
+}
+
+.about-meaning {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(58, 58, 58, 0.7);
+}
+
+.about-meaning .about-line + .about-line {
+  margin-top: 8px;
+}
+
+.about-section--closing {
+  background: #faf8f3;
+}
+
+.about-cta-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .about-section--teacher {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .about-section--teacher .about-photo-placeholder {
+    width: 100%;
+  }
+}

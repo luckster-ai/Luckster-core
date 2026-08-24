@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 
 import HomePage from '../pages/HomePage'
+import AboutPage from '../pages/AboutPage'
 import FoundationLibraryPage from '../pages/FoundationLibraryPage'
 import FoundationPage from '../pages/FoundationPage'
 import LessonPage from '../pages/LessonPage'
@@ -17,6 +18,11 @@ function AppRouter() {
       <Route
         path="/"
         element={<HomePage />}
+      />
+
+      <Route
+        path="/about"
+        element={<AboutPage />}
       />
 
       <Route

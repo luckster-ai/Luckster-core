@@ -10,7 +10,7 @@ function Header() {
       <nav>
         <Link to="/foundations">新手必修</Link>
         <Link to="/practice">開始練習</Link>
-        <a href="/#about">關於 JOTI</a>
+        <Link to="/about">關於 JOTI</Link>
       </nav>
     </header>
   )
