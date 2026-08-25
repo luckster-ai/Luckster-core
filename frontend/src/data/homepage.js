@@ -11,8 +11,7 @@ const homepage = {
     title: "喚醒內在力量",
     subtitle: "昆達里尼 ABC 瑜伽",
     description:
-      "透過簡單、有系統的 ABC 學習法，幫助更多人認識昆達里尼瑜伽，建立穩定、覺察與充滿能量的人生。",
-    primaryButton: "進入課程"
+      "透過簡單、有系統的 ABC 學習法，幫助更多人認識昆達里尼瑜伽，建立穩定、覺察與充滿能量的人生。"
   },
 
   about: {

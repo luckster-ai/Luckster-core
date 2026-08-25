@@ -19,12 +19,6 @@ function HeroSection({ homepage }) {
       </p>
 
       <p>{homepage.hero.description}</p>
-
-      <div className="buttons">
-        <a href="/#courses" className="button">
-          {homepage.hero.primaryButton}
-        </a>
-      </div>
     </section>
   )
 }
