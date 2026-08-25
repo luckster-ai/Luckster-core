@@ -88,7 +88,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 2280,
     summary: '以太陽能量（Surya）命名，透過一系列體式與呼吸的結合，系統性地刺激陽性的普拉那能量與昆達里尼能量。這套奎亞有助於提升活力、淨化身心，並為日常薩達那練習注入穩定而充沛的能量。',
-    videoReference: { provider: 'youtube', videoId: 'BvcoNwATUW4' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/c5139a12-ecaa-4470-97e5-2ffcbe0f809c/playlist.m3u8' },
     tags: ['身體奎亞', '太陽能量', '減肥', '有活力'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008', 'FD008-L01', 'FD008-L07', 'FD009']
   },
@@ -165,7 +165,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 655,
     summary: '在整個奎亞或冥想結束後，要做一次8-15分鐘的深度放鬆，或瑜伽睡眠。',
-    videoReference: { provider: 'youtube', videoId: 'Gg5F3Py8un4' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/af964bfa-514b-48d4-a920-9b4b2da306ef/playlist.m3u8' },
     tags: ['深度放鬆', '神經系統調節', '攤屍式'],
     prerequisites: ['FD001']
   },
@@ -181,7 +181,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 1128,
     summary: 'Sa Ta Na Ma 唱誦冥想 + 詳細解說。',
-    videoReference: { provider: 'youtube', videoId: 'VDdVzux-7HY' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/78fb82b1-d8cc-4da3-be37-6d1ed002da24/playlist.m3u8' },
     tags: ['唱誦', '手印', '冥想', '專注力', '基礎'],
     prerequisites: ['FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04']
   },
@@ -340,7 +340,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 148,
     summary: '包含《Long Time Sun》英文版本歌曲、融入其中的三次 Sat Nam 唱誦作爲結尾。',
-    videoReference: { provider: 'youtube', videoId: 'sQ6KQU2wQ_k' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/a1fddad2-9e34-44f2-9f27-4838e56ccd48/playlist.m3u8' },
     tags: ['唱誦', '結尾儀式', '基礎'],
     prerequisites: ['FD005-L01', 'FD006', 'FD008-L05']
   }
