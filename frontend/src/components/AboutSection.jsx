@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 function AboutSection({ teacher }) {
   return (
     <section id="about" className="about">
@@ -5,7 +7,9 @@ function AboutSection({ teacher }) {
 
       <p>{teacher.description}</p>
 
-      <p>{teacher.mission}</p>
+      <Link to="/about" className="button secondary">
+        閱讀完整故事
+      </Link>
     </section>
   )
 }

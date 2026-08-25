@@ -1,12 +1,12 @@
+// Homepage teaser copy only (kept intentionally short — the full story
+// lives on /about, see data/about.js). Tone/facts must stay consistent
+// with that page's narrative, but this is original, condensed phrasing,
+// not a lifted sentence from any of its seven Sections.
 const teacher = {
-  name: "JOTI",
-  title: "Kundalini ABC Yoga Teacher",
+  name: "Joti Livdeep Kaur",
 
   description:
-    "透過簡單、有系統的 ABC 學習法，幫助更多人認識昆達里尼瑜伽。",
-
-  mission:
-    "讓昆達里尼瑜伽成為人人都能理解與實踐的日常工具。"
+    "從金融業到瑜伽老師，Joti 用十多年的時間，一步步找回屬於自己的力量與平靜。"
 }
 
 export default teacher
