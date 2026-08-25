@@ -77,10 +77,6 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
         <button onClick={() => playerRef.current?.pause()}>
           暫停
         </button>
-
-        <button onClick={() => playerRef.current?.requestFullscreen()}>
-          全螢幕
-        </button>
       </div>
     </div>
   )
