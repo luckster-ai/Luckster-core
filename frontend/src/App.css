@@ -1337,6 +1337,19 @@ footer {
   .overview-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  /* M2 (2026-08-25): Tablet now shares Desktop's Level 1 grid + inline
+     Picker as its only editing surface (see PracticeCompositionOverview.jsx
+     and DesktopActivePicker.jsx), instead of also keeping the Level 2
+     accordion (.builder-sections) simultaneously reachable -- the two
+     used to show duplicate "選擇 X 影片" pickers for the same Section at
+     once at this width. This query already matches Mobile widths too, so
+     the max-width:767px block's own .builder-sections rule below is now
+     redundant but left untouched (still correct, just no longer the only
+     rule doing the hiding). */
+  .builder-sections {
+    display: none;
+  }
 }
 
 @media (max-width: 767px) {
