@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import about from '../data/about'
+import homepage from '../data/homepage'
 import openingImage from '../assets/about/about-hero-triptych.png.png'
 import yoga2012Image from '../assets/about/about-2012-yoga.png'
 import yoga2018Image from '../assets/about/about-2018-yoga.png'
+import teacherImage from '../assets/about/about-teacher-journey.png'
 
 const YEAR_IMAGES = {
   2012: { src: yoga2012Image, alt: '2012 年，一次安靜的伸展練習，晨光灑落在室內' },
@@ -10,15 +12,15 @@ const YEAR_IMAGES = {
 }
 
 // Structural/visual reference: docs/design/about-page/about-mockup.html.
-// Deliberately NOT porting its IntersectionObserver scroll-reveal or its
-// serif/Google Fonts pairing (first-phase scope, see checkpoint notes) --
-// but the one-Section-per-screen pacing and generous whitespace are kept,
-// just expressed with the site's existing Arial-based type scale and
-// hardcoded brand hex values (no new CSS variables), same convention as
-// the rest of App.css. Photo areas render as labelled placeholder blocks
-// (no photography exists in the repo yet) rather than being skipped, so
-// swapping in real images later is a single prop/asset change, not a
-// layout change.
+// Deliberately NOT ported from the mockup: its serif/Google Fonts pairing
+// (site-wide type stays Arial, see body{} at the top of App.css) and its
+// IntersectionObserver scroll-reveal animation -- both stay out-of-scope
+// by design, not an oversight. What IS kept from the mockup is the
+// editorial spirit: every Section reads as its own full-screen magazine
+// page (own photo treatment, own type hierarchy, own background), but
+// the seven read as one continuous story, in the original about.md
+// order. All photography is real now (four assets in
+// src/assets/about/) -- no placeholders remain anywhere on this page.
 function AboutPage() {
   const [opening, turningPoint, becomingATeacher, whyAbc, sheBelieves, theName, closing] = about
 
@@ -62,37 +64,37 @@ function AboutPage() {
       </section>
 
       <section className="about-section about-section--teacher" id={becomingATeacher.id}>
-        <div className="about-photo-placeholder">
-          <span>{becomingATeacher.photoPlaceholder}</span>
+        <div className="about-teacher-photo">
+          <img src={teacherImage} alt="她多年來研讀的書籍、教材與完成教師培訓的證書，靜靜放在自然光下的桌面上" />
         </div>
 
-        <div className="about-section-copy">
-          {becomingATeacher.lines.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
+        <div className="about-teacher-copy">
+          <p className="about-teacher-context">{becomingATeacher.context}</p>
+          <p className="about-teacher-quote">{becomingATeacher.pullQuote}</p>
+          <p className="about-teacher-credential">{becomingATeacher.credential}</p>
         </div>
       </section>
 
       <section className="about-section about-section--abc" id={whyAbc.id}>
+        <p className="about-intro">{whyAbc.intro}</p>
+
         <p className="about-kicker">{whyAbc.kicker}</p>
 
         <div className="about-abc">
           {whyAbc.abc.map((item) => (
-            <span className="about-abc-letter" key={item.letter}>{item.letter}</span>
+            <div className="about-abc-item" key={item.letter}>
+              <span className="about-abc-letter">{item.letter}</span>
+              <span className="about-abc-label">{item.label}</span>
+            </div>
           ))}
         </div>
 
-        <div className="about-abc-labels">
-          {whyAbc.abc.map((item) => (
-            <span key={item.letter}>{item.label}</span>
-          ))}
-        </div>
-
-        <p className="about-intro">{whyAbc.intro}</p>
         <p className="about-note">{whyAbc.note}</p>
       </section>
 
       <section className="about-section about-section--believes" id={sheBelieves.id}>
+        <span className="about-believes-mark" aria-hidden="true">“</span>
+
         <blockquote>
           {sheBelieves.quote.map((line) => (
             <span className="about-line" key={line}>{line}</span>
@@ -117,6 +119,8 @@ function AboutPage() {
           <Link to="/" className="button secondary">回到首頁</Link>
           <Link to="/practice" className="button">開始練習</Link>
         </div>
+
+        <p className="about-colophon">{homepage.brand.name} {homepage.brand.subtitleEn}</p>
       </section>
     </div>
   )

@@ -22,12 +22,9 @@ const about = [
   {
     id: 'becoming-a-teacher',
     kicker: null,
-    lines: [
-      '離開上海，也離開了熟悉的老師與教室。',
-      '於是決定，成為自己最好的老師。',
-      '2023 年，完成 KRI 國際昆達里尼瑜伽一級教師培訓。'
-    ],
-    photoPlaceholder: '照片預留 — Joti 練習／授課影像'
+    context: '離開上海，也離開了熟悉的老師與教室。',
+    pullQuote: '於是決定，成為自己最好的老師。',
+    credential: '2023 年，完成 KRI 國際昆達里尼瑜伽一級教師培訓。'
   },
   {
     id: 'why-abc',
