@@ -74,6 +74,15 @@ Selecting this CTA should smoothly scroll the learner to the Courses section on 
 
 It is **not** a separate route.
 
+> **Amendment (2026-08-25):** The Hero's primary CTA described above has
+> since been removed as a formal product decision, independent of this
+> Sprint's original scope. The Courses section itself is unaffected and
+> remains reachable further down the homepage (see `CoursesSection.jsx`,
+> `id="courses"`) — only the Hero-level entry point into it no longer
+> exists. This note preserves the original Sprint 6 decision as historical
+> context rather than rewriting it; see the Acceptance Criteria section
+> below for the corresponding update.
+
 ---
 
 ## Courses Section
@@ -266,9 +275,15 @@ Sprint 6 is complete when:
 
 ✓ The homepage clearly introduces JOTI.
 
-✓ Hero provides a clear entry into Courses.
+~~✓ Hero provides a clear entry into Courses.~~
 
-✓ Enter Courses scrolls to the Courses section.
+~~✓ Enter Courses scrolls to the Courses section.~~
+
+> **Amendment (2026-08-25):** The two criteria above are superseded — the
+> Hero CTA was formally removed after this Sprint. Struck through rather
+> than deleted, to preserve what was originally decided and accepted. The
+> Courses section itself still satisfies the next criterion below; the
+> homepage simply no longer offers a Hero-level shortcut into it.
 
 ✓ Courses provides Foundation and Start Practice as the two primary learning paths.
 
