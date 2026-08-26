@@ -1,4 +1,4 @@
-import { SECTIONS, sectionsForPracticeType, derivePracticeType, PRACTICE_TYPES } from './practiceStructure'
+import { SECTIONS, sectionsForPracticeType, derivePracticeType, PRACTICE_TYPES } from './practiceStructure.js'
 
 // Builder state shape:
 // {

@@ -60,6 +60,47 @@ Practice 可以由官方建立，也可以由 AI 或學員依照課程規則自�
 
 ---
 
+# Official Practice Lifecycle & Validation
+
+Official Practice 除了遵循下方的 Practice Structure 規則，另外具備狀態與驗證機制，確保「新增一個 Official Practice」能夠低成本、可重複，同時不會把未完成或有問題的內容公開給學員。
+
+## Draft / Published
+
+每一個 Official Practice 都有一個狀態：
+
+* `draft` — 尚未準備好公開。可以存在於資料中、可以不完整，但不會出現在 Practice Hub 的官方練習清單，也不會被首頁選為精選練習。
+* `published`（預設）— 正式對學員開放，會出現在上述所有一般瀏覽入口。
+
+狀態欄位為選填，缺省即視為 `published`——既有的 Official Practice 不需要因為這個機制而修改資料。
+
+## Validation
+
+一個 Official Practice 在被標記為 `published` 之前，應通過以下檢查：
+
+* 所包含的 Module 皆確實存在。
+* Section 結構合法：符合下方 Practice Structure 所定義的必要／可選、數量上下限規則。
+* Module 順序與所組成的 Section 內容一致。
+* Bunny-ready（見下方）。
+
+驗證邏輯重用 Practice Builder 既有的組課規則，不是另外一套獨立標準——Official Practice 與 Custom Practice 遵循同一份 Section 規則。
+
+## Bunny-ready：Published Official Practice 的發布條件
+
+一個 Official Practice 若要正式 `published`，並承諾完整的連續沉浸式播放體驗，其所包含的**每一個 Module** 都必須已經是 Bunny 影片。連續沉浸式播放（跨 Module 不中斷、原生全螢幕可靠）目前僅在 Bunny 影片上被驗證過；若 Practice 中混有其他影片來源，就無法保證同樣的體驗。
+
+**此規則的適用範圍僅限於「Published 的 Official Practice」，不是全站規則：**
+
+* 單一 Module 頁面——不論影片來源為何，都能被正常瀏覽與播放，不受此規則影響。
+* 學員自行建立的 Custom Practice——可以自由混合使用任何現有 Module，不因這項 Official Practice 的發布政策而被限制。
+
+Bunny-ready 不是手動維護的欄位，而是每次驗證時，依 Practice 實際使用到的 Module 目前的影片來源即時判斷——Module 之後遷移到 Bunny，不需要回頭修改任何 Practice 資料。
+
+## Module 可重複使用
+
+Module 是可以被多個 Practice 重複引用的積木：同一個 Module 可以同時出現在不同的 Official Practice、或被學員用於各自的 Custom Practice 中，不需要為了讓內容出現在新的 Practice 而複製或建立新的 Module。
+
+---
+
 # Practice Structure
 
 JOTI 目前支援兩種 Practice 結構：Full Practice 與 Meditation Practice。
