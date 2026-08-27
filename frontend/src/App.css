@@ -2176,3 +2176,52 @@ footer {
     padding: 48px 64px 48px 56px;
   }
 }
+
+/* ============================================================
+   Membership / Authentication Foundation (Phase 2A)
+   LoginPage / AccountPage / AuthCallbackPage. Reuses .button/
+   .button.secondary as-is (no new button style) and follows the same
+   input styling already established by .builder-name-field.
+   ============================================================ */
+
+.auth-page {
+  padding: 80px 24px;
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.auth-field {
+  display: block;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.auth-field label {
+  display: block;
+  font-weight: bold;
+}
+
+.auth-field input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d9c6a5;
+  font: inherit;
+}
+
+.auth-field .button {
+  margin: 16px 0 0;
+}
+
+.auth-consent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0;
+  text-align: left;
+  cursor: pointer;
+}

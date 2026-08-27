@@ -11,6 +11,9 @@ import PracticeHubPage from '../pages/PracticeHubPage'
 import PracticeBuilderPage from '../pages/PracticeBuilderPage'
 import PracticePage from '../pages/PracticePage'
 import PracticePlayerPage from '../pages/PracticePlayerPage'
+import LoginPage from '../pages/LoginPage'
+import AccountPage from '../pages/AccountPage'
+import AuthCallbackPage from '../pages/AuthCallbackPage'
 
 function AppRouter() {
   return (
@@ -68,6 +71,21 @@ function AppRouter() {
       <Route
         path="/practices/:slug/play"
         element={<PracticePlayerPage />}
+      />
+
+      <Route
+        path="/login"
+        element={<LoginPage />}
+      />
+
+      <Route
+        path="/account"
+        element={<AccountPage />}
+      />
+
+      <Route
+        path="/auth/callback"
+        element={<AuthCallbackPage />}
       />
     </Routes>
   )
