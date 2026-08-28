@@ -2,10 +2,14 @@ import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import practices from '../data/practices'
 import modules from '../data/modules'
+import foundations from '../data/foundations'
 import formatDuration from '../utils/formatDuration'
 import { calculatePracticeDuration } from '../utils/calculatePracticeDuration'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
 import { getCustomPractice } from '../state/customPracticeStore'
+import { useLearnerStatus } from '../hooks/useLearnerStatus'
+import { collectPracticePrerequisites } from '../utils/prerequisiteEngine'
+import { getMissingPrerequisites } from '../utils/learnerStatus'
 import PracticeStep from '../components/PracticeStep'
 
 const markdownModules = import.meta.glob(
@@ -23,6 +27,8 @@ function PracticePage() {
   const practice =
     practices.find((item) => item.slug === slug) || getCustomPractice(slug)
 
+  const { isLoggedIn, learnerStatusMap } = useLearnerStatus()
+
   if (!practice) {
     return (
       <div className="practice-page">
@@ -37,6 +43,11 @@ function PracticePage() {
 
   const orderedModules = resolvePracticeModules(practice, modules)
   const totalDuration = calculatePracticeDuration(practice, modules)
+
+  const missingPrerequisites = getMissingPrerequisites(
+    collectPracticePrerequisites(practice, { foundations, modules }),
+    learnerStatusMap
+  )
 
   return (
     <div className="practice-page">
@@ -54,6 +65,24 @@ function PracticePage() {
         </p>
 
         <p>{practice.description}</p>
+
+        {isLoggedIn && missingPrerequisites.length > 0 && (
+          <div className="prerequisite-notice">
+            <p>建議先完成以下先備知識，再開始這堂 Practice：</p>
+
+            <ul>
+              {missingPrerequisites.map((item) => (
+                <li key={item.id}>
+                  {item.type === 'lesson' ? (
+                    <Link to={`/foundations/${item.foundationSlug}/${item.slug}`}>{item.chineseTitle}</Link>
+                  ) : (
+                    <Link to={`/modules/${item.slug}`}>{item.chineseTitle}</Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {practice.isCustom && (
           <p className="practice-custom-note">

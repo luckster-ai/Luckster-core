@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown'
 import { formatVideoDuration } from '../utils/formatDuration'
 import { stripMarkdownSection, stripSectionIfEmpty } from '../utils/stripMarkdownSection'
 import VideoPlayer from './VideoPlayer'
+import { useLearnerStatus } from '../hooks/useLearnerStatus'
+import { LEARNER_STATUS } from '../utils/learnerStatus'
 
 function toLessonContent(markdown) {
   let result = markdown.replace(/^#\s+.+\n+/, '')
@@ -19,6 +21,15 @@ function toLessonContent(markdown) {
 function LessonDetail({ lesson, markdown }) {
   const playerRef = useRef(null)
   const lessonContent = toLessonContent(markdown)
+  const { isLoggedIn, learnerStatusMap, markCompleted } = useLearnerStatus()
+
+  // Phase 3 (Learning Data): 'already_learned' isn't offered as a
+  // choice from this button yet (see the Phase 3 analysis) -- it still
+  // counts as done here in case a future admin/import path ever sets it
+  // directly, so this stays consistent with isPrerequisiteSatisfied.
+  const lessonStatus = learnerStatusMap[lesson.id]
+  const isLessonComplete =
+    lessonStatus === LEARNER_STATUS.COMPLETED || lessonStatus === LEARNER_STATUS.ALREADY_LEARNED
 
   return (
     <>
@@ -50,6 +61,22 @@ function LessonDetail({ lesson, markdown }) {
       )}
 
       <p>{lesson.summary}</p>
+
+      {isLoggedIn && (
+        <p className="learning-status">
+          {isLessonComplete ? (
+            '✓ 已完成'
+          ) : (
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => markCompleted('lesson', lesson.id)}
+            >
+              標記完成
+            </button>
+          )}
+        </p>
+      )}
 
       <ReactMarkdown>{lessonContent}</ReactMarkdown>
     </>

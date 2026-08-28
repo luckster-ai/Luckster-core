@@ -1,8 +1,12 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import modules from '../data/modules'
+import foundations from '../data/foundations'
 import { formatVideoDuration } from '../utils/formatDuration'
 import VideoPlayer from '../components/VideoPlayer'
+import { useLearnerStatus } from '../hooks/useLearnerStatus'
+import { collectModulePrerequisites } from '../utils/prerequisiteEngine'
+import { getMissingPrerequisites, LEARNER_STATUS } from '../utils/learnerStatus'
 
 const markdownModules = import.meta.glob(
   '../content/modules/*.md',
@@ -20,6 +24,8 @@ function ModulePage() {
     (item) => item.slug === slug
   )
 
+  const { isLoggedIn, learnerStatusMap, markCompleted } = useLearnerStatus()
+
   if (!module) {
     return (
       <div className="module-page">
@@ -31,6 +37,15 @@ function ModulePage() {
 
   const markdownPath = `../content/modules/${slug}.md`
   const markdown = markdownModules[markdownPath] || ''
+
+  const moduleStatus = learnerStatusMap[module.id]
+  const isModuleComplete =
+    moduleStatus === LEARNER_STATUS.COMPLETED || moduleStatus === LEARNER_STATUS.ALREADY_LEARNED
+
+  const missingPrerequisites = getMissingPrerequisites(
+    collectModulePrerequisites(module, { foundations, modules }),
+    learnerStatusMap
+  )
 
   return (
     <div className="module-page">
@@ -45,6 +60,40 @@ function ModulePage() {
       </p>
 
       <p>{module.summary}</p>
+
+      {isLoggedIn && missingPrerequisites.length > 0 && (
+        <div className="prerequisite-notice">
+          <p>建議先完成以下先備知識：</p>
+
+          <ul>
+            {missingPrerequisites.map((item) => (
+              <li key={item.id}>
+                {item.type === 'lesson' ? (
+                  <Link to={`/foundations/${item.foundationSlug}/${item.slug}`}>{item.chineseTitle}</Link>
+                ) : (
+                  <Link to={`/modules/${item.slug}`}>{item.chineseTitle}</Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {isLoggedIn && (
+        <p className="learning-status">
+          {isModuleComplete ? (
+            '✓ 已完成'
+          ) : (
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => markCompleted('module', module.id)}
+            >
+              標記完成
+            </button>
+          )}
+        </p>
+      )}
 
       {module.videoReference?.provider === 'youtube' && module.videoReference?.videoId && (
         <p>

@@ -30,6 +30,8 @@ function resolveAsset(id, { foundations, modules }) {
       type: 'lesson',
       id: lessonMatch.lesson.id,
       slug: lessonMatch.lesson.slug,
+      title: lessonMatch.lesson.title,
+      chineseTitle: lessonMatch.lesson.chineseTitle,
       foundationSlug: lessonMatch.foundationSlug,
       prerequisites: lessonMatch.lesson.prerequisites || []
     }
@@ -42,6 +44,8 @@ function resolveAsset(id, { foundations, modules }) {
       type: 'module',
       id: module.id,
       slug: module.slug,
+      title: module.title,
+      chineseTitle: module.chineseTitle,
       foundationSlug: null,
       prerequisites: module.prerequisites || []
     }
@@ -66,7 +70,19 @@ function collectRecursive(id, assets, visited, results) {
     type: asset.type,
     id: asset.id,
     slug: asset.slug,
+    title: asset.title,
+    chineseTitle: asset.chineseTitle,
     foundationSlug: asset.foundationSlug
+  })
+}
+
+function dedupeById(results) {
+  const seen = new Set()
+
+  return results.filter((item) => {
+    if (seen.has(item.id)) return false
+    seen.add(item.id)
+    return true
   })
 }
 
@@ -84,11 +100,22 @@ export function collectPracticePrerequisites(practice, { foundations, modules })
     }
   }
 
-  const seen = new Set()
+  return dedupeById(results)
+}
 
-  return results.filter((item) => {
-    if (seen.has(item.id)) return false
-    seen.add(item.id)
-    return true
-  })
+// Phase 3 (Learning Data): same recursive resolution as
+// collectPracticePrerequisites, but starting from a single Module's own
+// `prerequisites` instead of iterating a whole Practice's Module list --
+// lets a single Module page show what it needs without going through a
+// Practice at all. Reuses collectRecursive/resolveAsset unchanged; no
+// new resolution logic.
+export function collectModulePrerequisites(module, { foundations, modules }) {
+  const visited = new Set()
+  const results = []
+
+  for (const prerequisiteId of module.prerequisites || []) {
+    collectRecursive(prerequisiteId, { foundations, modules }, visited, results)
+  }
+
+  return dedupeById(results)
 }
