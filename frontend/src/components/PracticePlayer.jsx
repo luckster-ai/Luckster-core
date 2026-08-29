@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ModuleRenderer from './ModuleRenderer'
+import { useAuth } from '../state/useAuth'
+import { startPracticeSession, completePracticeSession } from '../state/practiceActivityStore'
 
 function PracticePlayer({ practice, modules }) {
+  const { user } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(0)
   // Practice-level, presentation-only state — deliberately not the same
   // thing as the browser's real Fullscreen API. Entered once, from the
@@ -14,6 +17,35 @@ function PracticePlayer({ practice, modules }) {
 
   const isComplete = currentIndex >= modules.length
 
+  // Practice Activity (Phase 5B). One session per genuine attempt --
+  // started once from the same real-first-play gesture that already
+  // enters immersive mode (VideoModule.jsx's onImmersiveStart, which is
+  // itself only ever called once per VideoModule mount), and explicitly
+  // again from restart() below, since VideoModule stays mounted across
+  // the whole Practice and never resets its own hasStarted guard on a
+  // restart -- onImmersiveStart alone would never fire a second time for
+  // a "再練習一次" attempt. The ref (not state) holds whichever session
+  // is currently open; completing consumes it (sets back to null) so a
+  // stray extra isComplete transition (e.g. 上一個 Module after finishing,
+  // then 下一個 Module again, without an explicit restart) can't try to
+  // complete an already-finished or nonexistent session.
+  const sessionIdRef = useRef(null)
+
+  const startSession = () => {
+    if (!user) return
+    startPracticeSession(user.id, practice.id, modules.map((module) => module.id)).then(
+      (sessionId) => {
+        sessionIdRef.current = sessionId
+      }
+    )
+  }
+
+  useEffect(() => {
+    if (!isComplete || !sessionIdRef.current) return
+    completePracticeSession(sessionIdRef.current)
+    sessionIdRef.current = null
+  }, [isComplete])
+
   const goNext = () => {
     setCurrentIndex((index) => Math.min(index + 1, modules.length))
   }
@@ -24,6 +56,7 @@ function PracticePlayer({ practice, modules }) {
 
   const restart = () => {
     setCurrentIndex(0)
+    startSession()
   }
 
   return (
@@ -90,7 +123,10 @@ function PracticePlayer({ practice, modules }) {
           <ModuleRenderer
             module={modules[currentIndex]}
             onEnded={goNext}
-            onImmersiveStart={() => setImmersiveMode(true)}
+            onImmersiveStart={() => {
+              setImmersiveMode(true)
+              startSession()
+            }}
           />
         </section>
       )}
