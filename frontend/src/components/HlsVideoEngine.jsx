@@ -38,7 +38,7 @@ const isRealSafari = /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(na
 // imported so its ~200KB isn't shipped to users who only ever play
 // YouTube-provider content (same lazy-loading spirit as
 // loadYouTubeIframeAPI.js).
-const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed }, ref) {
+const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed, onPlayStateChange }, ref) {
   const wrapperRef = useRef(null)
   const videoRef = useRef(null)
   const hlsRef = useRef(null)
@@ -51,6 +51,11 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
   const onEndedRef = useRef(onEnded)
   const onAutoplayBlockedRef = useRef(onAutoplayBlocked)
   const onPlaybackResumedRef = useRef(onPlaybackResumed)
+  // Phase 4C: reports actual play/stop state (true only while genuinely
+  // playing -- not paused, not buffering, not ended), independent of the
+  // autoplay-watchdog machinery above. Optional -- no caller passes this
+  // yet, so it's inert until a future phase wires a consumer.
+  const onPlayStateChangeRef = useRef(onPlayStateChange)
   // Same role as YouTubeVideoEngine's watchingAutoplayRef: armed right
   // before a src swap (never on first load), cleared by whichever comes
   // first — a real `playing`/`pause` event, or the watchdog backstop.
@@ -75,6 +80,10 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
   useEffect(() => {
     onPlaybackResumedRef.current = onPlaybackResumed
   }, [onPlaybackResumed])
+
+  useEffect(() => {
+    onPlayStateChangeRef.current = onPlayStateChange
+  }, [onPlayStateChange])
 
   const clearAutoplayWatchdog = () => {
     if (watchdogTimerRef.current !== null) {
@@ -214,10 +223,13 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
     function handleEnded() {
       watchingAutoplayRef.current = false
       clearAutoplayWatchdog()
+      onPlayStateChangeRef.current?.(false)
       onEndedRef.current()
     }
 
     function handlePlaying() {
+      onPlayStateChangeRef.current?.(true)
+
       if (!watchingAutoplayRef.current) return
       watchingAutoplayRef.current = false
       clearAutoplayWatchdog()
@@ -225,20 +237,32 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
     }
 
     function handlePause() {
+      onPlayStateChangeRef.current?.(false)
+
       if (!watchingAutoplayRef.current) return
       watchingAutoplayRef.current = false
       clearAutoplayWatchdog()
       onAutoplayBlockedRef.current?.()
     }
 
+    // Phase 4C: buffering counts as "not playing" for onPlayStateChange
+    // (matches the confirmed Trial usage rule -- buffering never counts),
+    // even though the video isn't paused. Doesn't touch the autoplay-
+    // watchdog machinery, which has no equivalent concern.
+    function handleWaiting() {
+      onPlayStateChangeRef.current?.(false)
+    }
+
     video.addEventListener('ended', handleEnded)
     video.addEventListener('playing', handlePlaying)
     video.addEventListener('pause', handlePause)
+    video.addEventListener('waiting', handleWaiting)
 
     return () => {
       video.removeEventListener('ended', handleEnded)
       video.removeEventListener('playing', handlePlaying)
       video.removeEventListener('pause', handlePause)
+      video.removeEventListener('waiting', handleWaiting)
     }
   }, [])
 

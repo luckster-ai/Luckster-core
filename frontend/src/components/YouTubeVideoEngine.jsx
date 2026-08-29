@@ -14,7 +14,7 @@ const AUTOPLAY_WATCHDOG_MS = 6000
 // so VideoPlayer.jsx can dispatch between this and HlsVideoEngine.jsx by
 // provider. No behavior changed in this file — same YT.Player calls, same
 // watchdog logic, same imperative handle shape as before the split.
-const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed }, ref) {
+const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed, onPlayStateChange }, ref) {
   const wrapperRef = useRef(null)
   const containerRef = useRef(null)
   const playerRef = useRef(null)
@@ -25,6 +25,11 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
   const onEndedRef = useRef(onEnded)
   const onAutoplayBlockedRef = useRef(onAutoplayBlocked)
   const onPlaybackResumedRef = useRef(onPlaybackResumed)
+  // Phase 4C: reports actual play/stop state (true only while genuinely
+  // PLAYING -- PAUSED/ENDED/BUFFERING/CUED all report false), independent
+  // of the autoplay-watchdog machinery below. Optional -- no caller
+  // passes this yet, so it's inert until a future phase wires a consumer.
+  const onPlayStateChangeRef = useRef(onPlayStateChange)
   // Set right before loadVideoById() on a Module transition (never on the
   // very first cued video, where "not yet playing" is expected until the
   // user clicks 播放). Cleared as soon as we know the outcome: a real
@@ -51,6 +56,10 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
   useEffect(() => {
     onPlaybackResumedRef.current = onPlaybackResumed
   }, [onPlaybackResumed])
+
+  useEffect(() => {
+    onPlayStateChangeRef.current = onPlayStateChange
+  }, [onPlayStateChange])
 
   useEffect(() => {
     if (playerRef.current) {
@@ -81,6 +90,12 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
         playerVars: autoplayRef.current ? { autoplay: 1 } : undefined,
         events: {
           onStateChange(event) {
+            // Phase 4C: unconditional, unlike the watchdog-gated logic
+            // below -- PLAYING is the only state that counts as "playing"
+            // (PAUSED/ENDED/BUFFERING/CUED all correctly fall through to
+            // false as one single check, no per-state branching needed).
+            onPlayStateChangeRef.current?.(event.data === YT.PlayerState.PLAYING)
+
             if (event.data === YT.PlayerState.ENDED) {
               watchingAutoplayRef.current = false
               clearAutoplayWatchdog()
