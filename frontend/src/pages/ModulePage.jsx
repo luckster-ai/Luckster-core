@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import modules from '../data/modules'
@@ -5,6 +6,7 @@ import foundations from '../data/foundations'
 import { formatVideoDuration } from '../utils/formatDuration'
 import VideoPlayer from '../components/VideoPlayer'
 import { useLearnerStatus } from '../hooks/useLearnerStatus'
+import { useModuleUsageTracking } from '../hooks/useModuleUsageTracking'
 import { collectModulePrerequisites } from '../utils/prerequisiteEngine'
 import { getMissingPrerequisites, LEARNER_STATUS } from '../utils/learnerStatus'
 
@@ -25,6 +27,26 @@ function ModulePage() {
   )
 
   const { isLoggedIn, learnerStatusMap, markCompleted } = useLearnerStatus()
+
+  // Phase 4D: this page's VideoPlayer instance can survive a route param
+  // change (React Router reuses the same ModulePage instance across
+  // /modules/:slug navigations), so a stale isPlaying=true from whatever
+  // Module was open before must not leak into the next one. Render-time
+  // reset (same pattern as VideoModule.jsx's trackedSlug), not a
+  // useEffect -- keeps the reset in the same render/commit as the
+  // module.id change instead of one commit behind it.
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [trackedModuleId, setTrackedModuleId] = useState(module?.id)
+  if (trackedModuleId !== module?.id) {
+    setTrackedModuleId(module?.id)
+    setIsPlaying(false)
+  }
+
+  useModuleUsageTracking({
+    moduleId: module?.id,
+    provider: module?.videoReference?.provider,
+    isPlaying
+  })
 
   if (!module) {
     return (
@@ -120,6 +142,7 @@ function ModulePage() {
           provider="bunny"
           videoId={module.videoReference.videoId}
           onEnded={() => {}}
+          onPlayStateChange={setIsPlaying}
         />
       )}
 

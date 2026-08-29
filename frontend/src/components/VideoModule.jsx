@@ -1,10 +1,16 @@
 import { useRef, useState } from 'react'
 import VideoPlayer from './VideoPlayer'
+import { useModuleUsageTracking } from '../hooks/useModuleUsageTracking'
 
 function VideoModule({ module, onEnded, onImmersiveStart }) {
   const playerRef = useRef(null)
   const [showResumePrompt, setShowResumePrompt] = useState(false)
   const [trackedSlug, setTrackedSlug] = useState(module.slug)
+  // Phase 4D: mirrors the player's real play/stop state so
+  // useModuleUsageTracking below always sees the current Module's actual
+  // state, never a stale one left over from whichever Module played
+  // before it -- see the trackedSlug reset block a few lines down.
+  const [isPlaying, setIsPlaying] = useState(false)
   // Real browser Fullscreen API + the Practice-level immersive
   // presentation are both only ever requested from this one first-play
   // click — never re-requested automatically on later Modules (see
@@ -29,7 +35,21 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
   if (trackedSlug !== module.slug) {
     setTrackedSlug(module.slug)
     setShowResumePrompt(false)
+    // Without this, a manual Module switch while still playing (the
+    // "下一個 Module" button, not a natural onEnded) would briefly pair
+    // the NEW module.id with the OLD isPlaying=true from this same
+    // render -- useModuleUsageTracking would start a session for a
+    // Module that hasn't actually started playing yet. Resetting here,
+    // at render time rather than in an effect, means the pairing is
+    // never even momentarily wrong.
+    setIsPlaying(false)
   }
+
+  useModuleUsageTracking({
+    moduleId: module.id,
+    provider: module.videoReference.provider,
+    isPlaying
+  })
 
   return (
     <div className="module-playback">
@@ -45,6 +65,7 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
         onEnded={onEnded}
         onAutoplayBlocked={() => setShowResumePrompt(true)}
         onPlaybackResumed={() => setShowResumePrompt(false)}
+        onPlayStateChange={setIsPlaying}
       />
 
       {showResumePrompt && (
