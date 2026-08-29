@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../state/useAuth'
-import { getMembershipStatus, MEMBERSHIP_STATUS } from '../utils/membershipStatus'
+import { getMembershipStatus, getTrialUsageSummary, MEMBERSHIP_STATUS } from '../utils/membershipStatus'
+import { formatVideoDuration } from '../utils/formatDuration'
 
 const STATUS_LABEL = {
   [MEMBERSHIP_STATUS.ADMIN]: 'Admin',
@@ -8,11 +9,11 @@ const STATUS_LABEL = {
   [MEMBERSHIP_STATUS.TRIAL_EXPIRED]: '免費體驗已結束'
 }
 
-// Membership / Authentication Foundation (Phase 2A). Minimal on purpose
-// -- just enough to prove login/profile/consent actually work end to
-// end. No trial countdown UI, no usage-time display, no upgrade CTA:
-// none of that is wired to anything real yet (see membershipStatus.js),
-// so showing it here would be decoration, not information.
+// Membership / Authentication Foundation (Phase 2A). Trial usage/
+// remaining-time display added Phase 4E -- a static snapshot of
+// profile.module_usage_seconds / trial_started_at (see
+// getTrialUsageSummary()'s own comment for why a static snapshot,
+// not a live countdown, is the right amount of precision here).
 function AccountPage() {
   const { loading, user, profile, signOut, setMarketingConsent } = useAuth()
 
@@ -20,6 +21,10 @@ function AccountPage() {
   if (!user) return <Navigate to="/login" replace />
 
   const status = getMembershipStatus(profile)
+  const usageSummary =
+    status === MEMBERSHIP_STATUS.TRIAL || status === MEMBERSHIP_STATUS.TRIAL_EXPIRED
+      ? getTrialUsageSummary(profile)
+      : null
 
   return (
     <div className="auth-page">
@@ -35,6 +40,25 @@ function AccountPage() {
           <strong>會員狀態：</strong>
           {STATUS_LABEL[status]}
         </p>
+      )}
+
+      {usageSummary && (
+        <>
+          {/* Trial ends at 30 days OR 30 hours of Bunny usage, whichever
+              first -- these two numbers are shown side by side, neither
+              labeled as "the reason," since either one alone could be
+              what actually ended it and this page has no way to know
+              which. */}
+          <p>
+            <strong>Bunny Module 使用時間：</strong>
+            {formatVideoDuration(usageSummary.usedSeconds)} / {formatVideoDuration(usageSummary.totalSeconds)}
+          </p>
+
+          <p>
+            <strong>Trial 30 天期限：</strong>
+            {usageSummary.trialEndsAt.toLocaleDateString('zh-TW')}
+          </p>
+        </>
       )}
 
       <label className="auth-consent">

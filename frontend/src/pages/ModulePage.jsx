@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import modules from '../data/modules'
 import foundations from '../data/foundations'
 import { formatVideoDuration } from '../utils/formatDuration'
 import VideoPlayer from '../components/VideoPlayer'
+import { useAuth } from '../state/useAuth'
 import { useLearnerStatus } from '../hooks/useLearnerStatus'
 import { useModuleUsageTracking } from '../hooks/useModuleUsageTracking'
+import { getMembershipStatus } from '../utils/membershipStatus'
+import { getModuleCapSeconds } from '../utils/playbackEntitlement'
 import { collectModulePrerequisites } from '../utils/prerequisiteEngine'
 import { getMissingPrerequisites, LEARNER_STATUS } from '../utils/learnerStatus'
 
@@ -27,6 +30,9 @@ function ModulePage() {
   )
 
   const { isLoggedIn, learnerStatusMap, markCompleted } = useLearnerStatus()
+  const { profile, refreshProfile } = useAuth()
+  const membershipStatus = getMembershipStatus(profile)
+  const capSeconds = getModuleCapSeconds({ membershipStatus, provider: module?.videoReference?.provider })
 
   // Phase 4D: this page's VideoPlayer instance can survive a route param
   // change (React Router reuses the same ModulePage instance across
@@ -36,11 +42,25 @@ function ModulePage() {
   // useEffect -- keeps the reset in the same render/commit as the
   // module.id change instead of one commit behind it.
   const [isPlaying, setIsPlaying] = useState(false)
+  const [showCappedNotice, setShowCappedNotice] = useState(false)
   const [trackedModuleId, setTrackedModuleId] = useState(module?.id)
   if (trackedModuleId !== module?.id) {
     setTrackedModuleId(module?.id)
     setIsPlaying(false)
+    setShowCappedNotice(false)
   }
+
+  // Phase 4E: same "catch a Trial that expired while idle" refresh as
+  // VideoModule.jsx -- see that file's comment for why this needs a ref
+  // and why it's keyed on module?.id rather than including refreshProfile
+  // itself in the dependency array.
+  const refreshProfileRef = useRef(refreshProfile)
+  useEffect(() => {
+    refreshProfileRef.current = refreshProfile
+  }, [refreshProfile])
+  useEffect(() => {
+    refreshProfileRef.current()
+  }, [module?.id])
 
   useModuleUsageTracking({
     moduleId: module?.id,
@@ -143,7 +163,16 @@ function ModulePage() {
           videoId={module.videoReference.videoId}
           onEnded={() => {}}
           onPlayStateChange={setIsPlaying}
+          capSeconds={capSeconds}
+          onPlaybackCapped={() => setShowCappedNotice(true)}
         />
+      )}
+
+      {showCappedNotice && (
+        <div className="video-capped-notice">
+          <p>訪客與試用期已結束的會員，每個 Module 僅能試看 10 秒。</p>
+          <Link to="/account">登入或查看會員狀態</Link>
+        </div>
       )}
 
       <hr />

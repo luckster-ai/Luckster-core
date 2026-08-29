@@ -10,11 +10,19 @@ import loadYouTubeIframeAPI from '../utils/loadYouTubeIframeAPI'
 // trigger-happy.
 const AUTOPLAY_WATCHDOG_MS = 6000
 
+// Trial / Visitor Gating (Phase 4E). The YT IFrame API has no native
+// per-frame position event (unlike <video>'s timeupdate in
+// HlsVideoEngine.jsx), so position is polled at this interval while
+// PLAYING -- tight enough that overshoot past capSeconds is never
+// visually noticeable, far coarser than anything that would matter for
+// request volume (it's a local getCurrentTime() call, not network).
+const CAP_POLL_MS = 250
+
 // Extracted from VideoPlayer.jsx unchanged (2026-08-21, Bunny-ready prep)
 // so VideoPlayer.jsx can dispatch between this and HlsVideoEngine.jsx by
 // provider. No behavior changed in this file — same YT.Player calls, same
 // watchdog logic, same imperative handle shape as before the split.
-const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed, onPlayStateChange }, ref) {
+const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed, onPlayStateChange, capSeconds, onPlaybackCapped }, ref) {
   const wrapperRef = useRef(null)
   const containerRef = useRef(null)
   const playerRef = useRef(null)
@@ -30,6 +38,16 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
   // of the autoplay-watchdog machinery below. Optional -- no caller
   // passes this yet, so it's inert until a future phase wires a consumer.
   const onPlayStateChangeRef = useRef(onPlayStateChange)
+  // Trial / Visitor Gating (Phase 4E) -- see the equivalent refs/comment
+  // in HlsVideoEngine.jsx. In practice this engine only ever receives an
+  // actual (non-undefined) capSeconds if a future product decision caps
+  // YouTube content too -- today every caller resolves capSeconds from
+  // provider, and YouTube is never gated (Phase 4A) -- but the engine
+  // implements it for real, the same way onPlayStateChange existed here
+  // since Phase 4C before any caller passed it.
+  const capSecondsRef = useRef(capSeconds)
+  const onPlaybackCappedRef = useRef(onPlaybackCapped)
+  const capPollTimerRef = useRef(null)
   // Set right before loadVideoById() on a Module transition (never on the
   // very first cued video, where "not yet playing" is expected until the
   // user clicks 播放). Cleared as soon as we know the outcome: a real
@@ -60,6 +78,40 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
   useEffect(() => {
     onPlayStateChangeRef.current = onPlayStateChange
   }, [onPlayStateChange])
+
+  useEffect(() => {
+    capSecondsRef.current = capSeconds
+  }, [capSeconds])
+
+  useEffect(() => {
+    onPlaybackCappedRef.current = onPlaybackCapped
+  }, [onPlaybackCapped])
+
+  const clearCapPoll = () => {
+    if (capPollTimerRef.current !== null) {
+      clearInterval(capPollTimerRef.current)
+      capPollTimerRef.current = null
+    }
+  }
+
+  // Same reasoning as HlsVideoEngine.jsx's enforceCap(): position-based,
+  // re-checked continuously while PLAYING (started/stopped below) so a
+  // capSeconds change landing mid-playback (Trial expiring) is caught
+  // within one poll tick, and seekTo(...) clamping (not just pauseVideo())
+  // closes the "scrub within an already-buffered/cached range" hole the
+  // same way currentTime-clamping does for the HLS engine.
+  function enforceCap() {
+    const cap = capSecondsRef.current
+    const player = playerRef.current
+    if (cap == null || !player) return
+
+    const current = player.getCurrentTime()
+    if (current < cap) return
+
+    if (current > cap) player.seekTo(cap, true)
+    player.pauseVideo()
+    onPlaybackCappedRef.current?.()
+  }
 
   useEffect(() => {
     if (playerRef.current) {
@@ -96,6 +148,20 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
             // false as one single check, no per-state branching needed).
             onPlayStateChangeRef.current?.(event.data === YT.PlayerState.PLAYING)
 
+            // Trial / Visitor Gating (Phase 4E): poll only while actually
+            // PLAYING (any other state has nothing new to enforce, and
+            // getCurrentTime() during BUFFERING/CUED isn't meaningful).
+            // enforceCap() runs once immediately on entering PLAYING too,
+            // not just on the first poll tick, so a replay that starts
+            // already at/past capSeconds (pausing right at the cap, then
+            // pressing play again) is caught without a visible flash of
+            // forward progress.
+            clearCapPoll()
+            if (event.data === YT.PlayerState.PLAYING) {
+              enforceCap()
+              capPollTimerRef.current = setInterval(enforceCap, CAP_POLL_MS)
+            }
+
             if (event.data === YT.PlayerState.ENDED) {
               watchingAutoplayRef.current = false
               clearAutoplayWatchdog()
@@ -130,6 +196,7 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
   useEffect(() => {
     return () => {
       clearAutoplayWatchdog()
+      clearCapPoll()
       if (playerRef.current) {
         playerRef.current.destroy()
         playerRef.current = null

@@ -7,10 +7,10 @@ import { AuthContext } from './authContext'
 // `profile` mirrors the public.profiles row (role, trial_started_at,
 // module_usage_seconds, marketing_consent) -- see supabase/schema.sql
 // for the source of truth and the trigger that creates this row
-// automatically on signup, via any method. This context only reads/
-// displays it; nothing here enforces access -- see
-// utils/membershipStatus.js for the derived status this data supports,
-// not yet wired into any gating.
+// automatically on signup, via any method. See utils/membershipStatus.js
+// for the derived status Phase 4E's playback gating reads from this
+// value, and refreshProfile() below for how that value is kept
+// reasonably current during an active session.
 //
 // isConfigured is false whenever Supabase env vars aren't set (see
 // lib/supabaseClient.js) -- lets every page that uses useAuth() render
@@ -92,6 +92,20 @@ export function AuthProvider({ children }) {
     async signOut() {
       if (!supabase) return
       await supabase.auth.signOut()
+    },
+
+    // Phase 4E: re-fetches the caller's own profile row without a full
+    // page reload/re-login -- module_usage_seconds and trial_started_at
+    // are otherwise only ever loaded once per session (above), so
+    // nothing would notice a Trial crossing its 30-day/30-hour line
+    // mid-session without this. useModuleUsageTracking calls this after
+    // every heartbeat that actually credits time; playback entry points
+    // also call it once when a Bunny Module mounts, to catch the
+    // "30 days passed while idle" case that has no heartbeat to hang off
+    // of. A no-op when logged out.
+    async refreshProfile() {
+      if (!session?.user) return
+      await loadProfile(session.user.id)
     },
 
     // Deliberately separate from account creation/login -- marketing

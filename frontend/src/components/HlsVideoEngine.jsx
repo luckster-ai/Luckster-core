@@ -38,7 +38,7 @@ const isRealSafari = /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(na
 // imported so its ~200KB isn't shipped to users who only ever play
 // YouTube-provider content (same lazy-loading spirit as
 // loadYouTubeIframeAPI.js).
-const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed, onPlayStateChange }, ref) {
+const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed, onPlayStateChange, capSeconds, onPlaybackCapped }, ref) {
   const wrapperRef = useRef(null)
   const videoRef = useRef(null)
   const hlsRef = useRef(null)
@@ -56,6 +56,14 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
   // autoplay-watchdog machinery above. Optional -- no caller passes this
   // yet, so it's inert until a future phase wires a consumer.
   const onPlayStateChangeRef = useRef(onPlayStateChange)
+  // Trial / Visitor Gating (Phase 4E). capSeconds undefined/null means
+  // "no cap, full playback" -- the common case (Trial member, admin, or
+  // any YouTube-provider Module, which never reaches this engine's
+  // sibling at all). Set means "pause and clamp at this position,"
+  // enforced below purely from the <video> element's own position, not
+  // from anything time-based -- see enforceCap().
+  const capSecondsRef = useRef(capSeconds)
+  const onPlaybackCappedRef = useRef(onPlaybackCapped)
   // Same role as YouTubeVideoEngine's watchingAutoplayRef: armed right
   // before a src swap (never on first load), cleared by whichever comes
   // first — a real `playing`/`pause` event, or the watchdog backstop.
@@ -84,6 +92,14 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
   useEffect(() => {
     onPlayStateChangeRef.current = onPlayStateChange
   }, [onPlayStateChange])
+
+  useEffect(() => {
+    capSecondsRef.current = capSeconds
+  }, [capSeconds])
+
+  useEffect(() => {
+    onPlaybackCappedRef.current = onPlaybackCapped
+  }, [onPlaybackCapped])
 
   const clearAutoplayWatchdog = () => {
     if (watchdogTimerRef.current !== null) {
@@ -253,16 +269,45 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
       onPlayStateChangeRef.current?.(false)
     }
 
+    // Trial / Visitor Gating (Phase 4E). Position-based, not time-based
+    // -- capSecondsRef reaching or being exceeded by currentTime is the
+    // only condition checked, regardless of how currentTime got there
+    // (normal playback, a drag on the native seek bar, or capSeconds
+    // itself just changing out from under an already-playing video, e.g.
+    // a Trial expiring mid-Module -- see useModuleUsageTracking's
+    // refreshProfile() call). Always clamping back to exactly capSeconds
+    // (not just pausing) closes the seek-within-buffered-range hole: a
+    // native <video> lets you scrub freely inside whatever's already
+    // downloaded without a new network request, so pausing alone
+    // wouldn't stop rewatching/skipping around inside the first 10s or
+    // (right after a Trial expires) inside whatever was already buffered
+    // past it.
+    function enforceCap() {
+      const cap = capSecondsRef.current
+      if (cap == null || video.currentTime < cap) return
+
+      if (video.currentTime > cap) video.currentTime = cap
+
+      if (!video.paused) {
+        video.pause()
+        onPlaybackCappedRef.current?.()
+      }
+    }
+
     video.addEventListener('ended', handleEnded)
     video.addEventListener('playing', handlePlaying)
     video.addEventListener('pause', handlePause)
     video.addEventListener('waiting', handleWaiting)
+    video.addEventListener('timeupdate', enforceCap)
+    video.addEventListener('seeked', enforceCap)
 
     return () => {
       video.removeEventListener('ended', handleEnded)
       video.removeEventListener('playing', handlePlaying)
       video.removeEventListener('pause', handlePause)
       video.removeEventListener('waiting', handleWaiting)
+      video.removeEventListener('timeupdate', enforceCap)
+      video.removeEventListener('seeked', enforceCap)
     }
   }, [])
 

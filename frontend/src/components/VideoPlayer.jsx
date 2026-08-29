@@ -13,7 +13,17 @@ import HlsVideoEngine from './HlsVideoEngine'
 // to pass it keeps working exactly as before — matters today because all
 // 43 existing videoReferences are `{ provider: 'youtube', videoId }`.
 const VideoPlayer = forwardRef(function VideoPlayer(
-  { provider = 'youtube', videoId, autoplay = false, onEnded, onAutoplayBlocked, onPlaybackResumed, onPlayStateChange },
+  {
+    provider = 'youtube',
+    videoId,
+    autoplay = false,
+    onEnded,
+    onAutoplayBlocked,
+    onPlaybackResumed,
+    onPlayStateChange,
+    capSeconds,
+    onPlaybackCapped
+  },
   ref
 ) {
   const Engine = provider === 'bunny' ? HlsVideoEngine : YouTubeVideoEngine
@@ -27,6 +37,8 @@ const VideoPlayer = forwardRef(function VideoPlayer(
       onAutoplayBlocked={onAutoplayBlocked}
       onPlaybackResumed={onPlaybackResumed}
       onPlayStateChange={onPlayStateChange}
+      capSeconds={capSeconds}
+      onPlaybackCapped={onPlaybackCapped}
     />
   )
 })

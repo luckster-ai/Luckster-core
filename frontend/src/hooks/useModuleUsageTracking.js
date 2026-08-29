@@ -1,15 +1,18 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAuth } from '../state/useAuth'
 import { recordModuleUsage } from '../state/moduleUsageStore'
+import { getMembershipStatus } from '../utils/membershipStatus'
+import { shouldTrackModuleUsage } from '../utils/playbackEntitlement'
 
-// Trial / Module Usage Tracking client wiring (Phase 4D). Turns the
-// player's onPlayStateChange (Phase 4C) + document visibility into
-// heartbeat calls against record_module_usage() (Phase 4B). Deliberately
-// does NOT try to track "foreground" itself -- the server already
-// bounds every heartbeat to LEAST(what we claim, real wall-clock gap
-// since the last heartbeat), so all this hook has to get right is: only
-// count seconds while genuinely playing AND visible, and never let one
-// call's claimed seconds cross a Module boundary.
+// Trial / Module Usage Tracking client wiring (Phase 4D, gated by
+// membershipStatus since Phase 4E). Turns the player's onPlayStateChange
+// (Phase 4C) + document visibility into heartbeat calls against
+// record_module_usage() (Phase 4B). Deliberately does NOT try to track
+// "foreground" itself -- the server already bounds every heartbeat to
+// LEAST(what we claim, real wall-clock gap since the last heartbeat), so
+// all this hook has to get right is: only count seconds while genuinely
+// playing AND visible, and never let one call's claimed seconds cross a
+// Module boundary.
 //
 // 20s heartbeat / 60s per-flush cap (both below): chosen for this app,
 // not hardcoded from a general rule --
@@ -28,14 +31,21 @@ import { recordModuleUsage } from '../state/moduleUsageStore'
 const HEARTBEAT_INTERVAL_MS = 20000
 const MAX_FLUSH_SECONDS = 60
 
-// Only Bunny/HLS Modules count toward Trial usage -- YouTube-provider
-// Modules are free-to-watch content and must never reach this hook's
-// counting logic (Phase 4A decision, reaffirmed for Phase 4D).
-const TRACKED_PROVIDER = 'bunny'
-
 export function useModuleUsageTracking({ moduleId, provider, isPlaying }) {
-  const { user } = useAuth()
-  const eligible = provider === TRACKED_PROVIDER && Boolean(user) && Boolean(moduleId)
+  const { profile, refreshProfile } = useAuth()
+  const membershipStatus = getMembershipStatus(profile)
+  const eligible = shouldTrackModuleUsage({ membershipStatus, provider }) && Boolean(moduleId)
+
+  // Ref, not a direct closure capture -- refreshProfile is a fresh
+  // function identity every AuthProvider render (not memoized), but this
+  // effect only re-runs when [eligible, isPlaying, moduleId] change, so
+  // without this it could call a stale closure. Same ref-sync pattern as
+  // every other callback prop in this codebase (see VideoPlayer.jsx's
+  // engines).
+  const refreshProfileRef = useRef(refreshProfile)
+  useEffect(() => {
+    refreshProfileRef.current = refreshProfile
+  }, [refreshProfile])
 
   useEffect(() => {
     if (!eligible || !isPlaying) return undefined
@@ -71,7 +81,12 @@ export function useModuleUsageTracking({ moduleId, provider, isPlaying }) {
 
       const seconds = Math.floor(accumulated)
       if (seconds >= 1) {
-        recordModuleUsage(moduleId, seconds)
+        // Phase 4E: re-checking membership status only after a heartbeat
+        // that actually credited something (not on every tick) is what
+        // lets gating notice "just crossed 30 hours" within one
+        // heartbeat interval, without polling separately from the
+        // heartbeat that's already the thing moving the number.
+        recordModuleUsage(moduleId, seconds).then(() => refreshProfileRef.current())
       }
       accumulated -= seconds
     }

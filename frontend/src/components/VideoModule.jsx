@@ -1,10 +1,36 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import VideoPlayer from './VideoPlayer'
 import { useModuleUsageTracking } from '../hooks/useModuleUsageTracking'
+import { useAuth } from '../state/useAuth'
+import { getMembershipStatus } from '../utils/membershipStatus'
+import { getModuleCapSeconds } from '../utils/playbackEntitlement'
 
 function VideoModule({ module, onEnded, onImmersiveStart }) {
+  const { profile, refreshProfile } = useAuth()
+  const membershipStatus = getMembershipStatus(profile)
+  const capSeconds = getModuleCapSeconds({ membershipStatus, provider: module.videoReference.provider })
+
+  // Phase 4E: catches a Trial that expired purely from the 30-day clock
+  // while this member was doing something other than watching a Bunny
+  // Module (browsing Foundations, idle) -- there's no heartbeat to hang
+  // this off of in that case, so it's checked once per Module instead,
+  // here at the point a fresh capSeconds decision is about to be made.
+  // Ref, not a direct dependency -- refreshProfile is a new function
+  // identity every AuthProvider render; without the ref this would
+  // refire on every VideoModule render, not just on a real Module
+  // change (see useModuleUsageTracking.js for the identical reasoning).
+  const refreshProfileRef = useRef(refreshProfile)
+  useEffect(() => {
+    refreshProfileRef.current = refreshProfile
+  }, [refreshProfile])
+  useEffect(() => {
+    refreshProfileRef.current()
+  }, [module.id])
+
   const playerRef = useRef(null)
   const [showResumePrompt, setShowResumePrompt] = useState(false)
+  const [showCappedNotice, setShowCappedNotice] = useState(false)
   const [trackedSlug, setTrackedSlug] = useState(module.slug)
   // Phase 4D: mirrors the player's real play/stop state so
   // useModuleUsageTracking below always sees the current Module's actual
@@ -43,6 +69,10 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
     // at render time rather than in an effect, means the pairing is
     // never even momentarily wrong.
     setIsPlaying(false)
+    // Same reasoning, Phase 4E: a capped notice left over from the
+    // previous (visitor/expired-access) Module must not silently carry
+    // into a new one this member DOES have full access to.
+    setShowCappedNotice(false)
   }
 
   useModuleUsageTracking({
@@ -66,6 +96,8 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
         onAutoplayBlocked={() => setShowResumePrompt(true)}
         onPlaybackResumed={() => setShowResumePrompt(false)}
         onPlayStateChange={setIsPlaying}
+        capSeconds={capSeconds}
+        onPlaybackCapped={() => setShowCappedNotice(true)}
       />
 
       {showResumePrompt && (
@@ -78,6 +110,13 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
           >
             繼續播放
           </button>
+        </div>
+      )}
+
+      {showCappedNotice && (
+        <div className="video-capped-notice">
+          <p>訪客與試用期已結束的會員，每個 Module 僅能試看 10 秒。</p>
+          <Link to="/account">登入或查看會員狀態</Link>
         </div>
       )}
 
