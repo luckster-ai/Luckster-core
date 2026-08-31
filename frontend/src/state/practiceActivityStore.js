@@ -28,3 +28,21 @@ export async function completePracticeSession(sessionId) {
 
   await supabase.rpc('complete_practice_session', { p_session_id: sessionId })
 }
+
+// Phase 5D: History reads. RLS ("practice_sessions: read own") already
+// restricts this to the caller's own rows regardless of the .eq() below
+// -- that filter is a query-efficiency choice, not the security
+// boundary. No limit/pagination -- current data volume doesn't need it
+// yet (see the Phase 5D discovery for why that's deliberately deferred,
+// not an oversight).
+export async function getOwnPracticeSessions(userId) {
+  if (!supabase || !userId) return []
+
+  const { data, error } = await supabase
+    .from('practice_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('started_at', { ascending: false })
+
+  return error || !data ? [] : data
+}

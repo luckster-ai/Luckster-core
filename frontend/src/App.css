@@ -2230,6 +2230,44 @@ footer {
   cursor: pointer;
 }
 
+.practice-history {
+  margin: 32px 0;
+  text-align: left;
+}
+
+.practice-history-day {
+  margin: 16px 0;
+}
+
+.practice-history-day h3 {
+  margin-bottom: 8px;
+}
+
+.practice-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.practice-history-session {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.practice-history-time {
+  color: #8a7b54;
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-history-status {
+  margin-left: auto;
+  font-size: 0.9em;
+  color: #8a7b54;
+}
+
 /* ============================================================
    Learning Data (Phase 3)
    Lesson/Module completion status + Prerequisite notices --

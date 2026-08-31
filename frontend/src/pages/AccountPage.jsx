@@ -2,6 +2,8 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../state/useAuth'
 import { getMembershipStatus, getTrialUsageSummary, MEMBERSHIP_STATUS } from '../utils/membershipStatus'
 import { formatVideoDuration } from '../utils/formatDuration'
+import { usePracticeHistory } from '../hooks/usePracticeHistory'
+import PracticeHistory from '../components/PracticeHistory'
 
 const STATUS_LABEL = {
   [MEMBERSHIP_STATUS.ADMIN]: 'Admin',
@@ -16,6 +18,7 @@ const STATUS_LABEL = {
 // not a live countdown, is the right amount of precision here).
 function AccountPage() {
   const { loading, user, profile, signOut, setMarketingConsent } = useAuth()
+  const { sessions, loading: historyLoading } = usePracticeHistory()
 
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
@@ -60,6 +63,8 @@ function AccountPage() {
           </p>
         </>
       )}
+
+      <PracticeHistory sessions={sessions} loading={historyLoading} />
 
       <label className="auth-consent">
         <input
