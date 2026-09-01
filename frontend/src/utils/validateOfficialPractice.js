@@ -18,8 +18,13 @@ import {
   assemblePracticeOrder
 } from './validatePracticeBuilder.js'
 
+// ID first, slug second (Phase 6B) -- see resolvePracticeModules.js's
+// findModuleByRef for why this is unambiguous. Field name kept as
+// missingModuleSlugs (not renamed) since it's already part of this
+// function's and validate-official-practices.mjs's public output shape;
+// a missing entry can now be either an ID or a slug.
 function getMissingModuleSlugs(practice, modules) {
-  return practice.modules.filter((slug) => !modules.some((module) => module.slug === slug))
+  return practice.modules.filter((ref) => !modules.some((module) => module.id === ref || module.slug === ref))
 }
 
 // builderSections stores Module IDs (see validatePracticeBuilder.js) --

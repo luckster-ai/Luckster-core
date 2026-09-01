@@ -79,8 +79,10 @@ export function buildBuilderStateFromPractice(practice, modules) {
     return state
   }
 
+  // ID first, slug second (Phase 6B) -- see resolvePracticeModules.js's
+  // findModuleByRef for why this is unambiguous.
   const resolved = (practice.modules || [])
-    .map((slug) => modules.find((module) => module.slug === slug))
+    .map((ref) => modules.find((module) => module.id === ref || module.slug === ref))
     .filter(Boolean)
 
   resolved.forEach((module) => {

@@ -98,7 +98,14 @@ create table if not exists public.practices (
   -- Relaxation must follow Asana, etc.) are validated by the existing
   -- JS rule engine (utils/validatePracticeBuilder.js /
   -- utils/validateOfficialPractice.js), not re-implemented here.
-  modules text[] not null check (array_length(modules, 1) > 0),
+  --
+  -- cardinality(), not array_length(modules, 1) -- confirmed live
+  -- (Phase 6B, 2026-09-01) that array_length() of an empty array
+  -- returns NULL, not 0, and a CHECK constraint treats a NULL result as
+  -- passing (not failing) -- so array_length(modules, 1) > 0 silently
+  -- allowed an empty array through. cardinality() returns 0 for an
+  -- empty array, so the same check with it actually rejects one.
+  modules text[] not null constraint practices_modules_not_empty check (cardinality(modules) > 0),
   tags text[] not null default '{}',
   status text not null default 'draft' check (status in ('draft', 'published', 'archived')),
   created_at timestamptz not null default now(),
