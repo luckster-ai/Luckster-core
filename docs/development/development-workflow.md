@@ -372,6 +372,19 @@ The goal is sustainable long-term development.
 
 ---
 
+# Known Issues / Technical Debt
+
+- ESLint currently scans the Vercel prebuilt output directory (`.vercel/`), so `npm run lint` reports errors from `.vercel/output/static/assets/*.js` (pre-built, minified deployment artifacts — not source code, not maintained by this project).
+- When doing CI / lint / build workflow cleanup in the future, explicitly add `.vercel/` to ESLint's ignore configuration.
+- After that fix, re-confirm all of the following pass:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run validate:practices`
+  - `npm run validate:module-video`
+- Not a current product blocker. Do not fix opportunistically as part of an unrelated checkpoint.
+
+---
+
 # Version History
 
 ## v1.0

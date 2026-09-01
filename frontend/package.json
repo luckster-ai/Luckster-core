@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "validate:practices": "node scripts/validate-official-practices.mjs"
+    "validate:practices": "node scripts/validate-official-practices.mjs",
+    "validate:module-video": "node scripts/validate-module-video-sync.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

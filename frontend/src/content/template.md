@@ -139,6 +139,18 @@ Do not use:
 
 ### Video
 
+Primary Video：
+
+（目前唯一有效的影片來源。`data/modules.js`／`data/foundations.js` 的 `videoReference.provider`/`videoId` 應與這裡一致。完整規則見 `docs/course-system/content-schema.md`。）
+
+Provider:
+
+URL:
+
+（若此 Learning Asset 曾經更換過影片來源，例如從 YouTube 遷移到 Bunny，舊來源不要刪除，改放進下方 Previous Source。若從未更換過來源，省略 Previous Source 即可。）
+
+Previous Source（歷史來源，僅供追溯，不作為目前播放依據）：
+
 Provider:
 
 URL:

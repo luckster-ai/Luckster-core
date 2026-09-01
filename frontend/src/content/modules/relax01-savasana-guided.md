@@ -85,6 +85,16 @@ Primary Video：
 
 Provider:
 
+Bunny
+
+URL:
+
+https://vz-c3c60b7e-4d4.b-cdn.net/af964bfa-514b-48d4-a920-9b4b2da306ef/playlist.m3u8
+
+Previous Source（歷史來源，僅供追溯，不作為目前播放依據）：
+
+Provider:
+
 YouTube
 
 URL:

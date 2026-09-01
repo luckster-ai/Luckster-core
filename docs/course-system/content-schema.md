@@ -78,7 +78,39 @@ This standard allows Runtime synchronization and future prerequisite parsing to 
 { provider: 'youtube', videoId: 'abc123XYZ' }
 ```
 
-此格式為 Foundation 與 Module 共同採用的目標結構。Module（`data/modules.js`）已全數完成同步；Foundation（`data/foundations.js`）目前僅部分完成同步，其餘將隨 Learning Asset 逐一同步。
+此格式為 Foundation 與 Module 共同採用的目標結構。
+
+**Markdown 中的來源標示（Primary Video / Previous Source）**：Learning Asset 的 `.md` 檔案在 `## Sources / ### Video` 底下，以 `Primary Video：` 標籤標示目前有效的影片來源：
+
+```
+Primary Video：
+
+Provider:
+
+Bunny
+
+URL:
+
+https://vz-c3c60b7e-4d4.b-cdn.net/{guid}/playlist.m3u8
+```
+
+**`Primary Video` 底下的第一組 `Provider:` / `URL:` 是目前唯一具權威性的來源，`videoReference.provider` / `videoId` 應與其一致。** 影片來源變更時（例如從 YouTube 遷移到 Bunny），舊來源不得刪除，而是移到獨立的 `Previous Source` 區塊，格式相同、標籤不同：
+
+```
+Previous Source（歷史來源，僅供追溯，不作為目前播放依據）：
+
+Provider:
+
+YouTube
+
+URL:
+
+https://www.youtube.com/watch?v=xxxxxxxxxxx
+```
+
+`Previous Source` 僅供人工追溯歷史，不參與任何同步或驗證比對，且不得被誤判為目前的播放來源。一個 Learning Asset 目前只會有一個 `Previous Source`（即上一個來源），不建立多層版本歷史。
+
+**同步狀態（已確認事實，非目標陳述）**：Module（`data/modules.js`）**尚未全數與 `.md` 的 `Primary Video` 同步**——多次遷移到 Bunny 的 Module，其 `.md` 檔案在遷移當下未必同步更新。`data/modules.js` 的 `videoReference` 才是 Runtime 實際讀取、決定播放行為的值；`.md` 的 `Primary Video` 落後時，以 `data/modules.js` 為準，並應盡快回填 `.md`。`npm run validate:module-video`（見 `frontend/scripts/validate-module-video-sync.mjs`）會比對兩者是否一致。Foundation（`data/foundations.js`）目前僅部分完成同步，其餘將隨 Learning Asset 逐一同步。
 
 * **tags**（選填）— 描述性關鍵字，用於搜尋、篩選與 AI 推薦。Foundation 與 Module 皆可使用，定義統一於本文件，`module-metadata.md` 不再重複定義。
 
