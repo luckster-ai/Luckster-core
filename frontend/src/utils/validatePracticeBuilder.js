@@ -274,7 +274,12 @@ export function getTotalDuration(state, modules) {
 // Meditation in either order (learner's choice via relaxationPosition), then
 // Ending. Within Warm Up / Meditation, module order is whatever the learner
 // arranged via the up/down controls.
-export function assemblePracticeOrder(state, modules) {
+// The ID-ordered list itself, before any Module lookup/slug conversion --
+// pure state derivation, no `modules` needed. Phase 6C (Admin Official
+// Practice) saves this directly as the Supabase `modules` column (Module
+// ID array, per Phase 6A/6B); assemblePracticeOrder below still exists
+// unchanged for the slug-based Custom Practice / P001 save path.
+export function assemblePracticeModuleIds(state) {
   const { sections, relaxationPosition } = state
 
   const middle =
@@ -282,15 +287,17 @@ export function assemblePracticeOrder(state, modules) {
       ? [...sections.meditation, ...sections.relaxation]
       : [...sections.relaxation, ...sections.meditation]
 
-  const orderedIds = [
+  return [
     ...sections.tuningIn,
     ...sections.warmup,
     ...sections.asana,
     ...middle,
     ...sections.ending
   ]
+}
 
-  return orderedIds
+export function assemblePracticeOrder(state, modules) {
+  return assemblePracticeModuleIds(state)
     .map((id) => findModuleById(modules, id))
     .filter(Boolean)
     .map((module) => module.slug)

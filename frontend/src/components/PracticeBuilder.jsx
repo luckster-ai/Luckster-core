@@ -9,6 +9,7 @@ import {
   getSectionDuration,
   getTotalDuration,
   assemblePracticeOrder,
+  assemblePracticeModuleIds,
   buildBuilderStateFromPractice
 } from '../utils/validatePracticeBuilder'
 import { sectionsForPracticeType, derivePracticeType, PRACTICE_TYPES, getSection } from '../utils/practiceStructure'
@@ -19,17 +20,31 @@ import MobileSectionOverview from './MobileSectionOverview'
 import MobileSectionNav from './MobileSectionNav'
 import MobileModulePanel from './MobileModulePanel'
 
-function PracticeBuilder() {
+// Phase 6C — Admin Official Practice reuses this exact component instead
+// of a second course-composition system. `initialPractice`/`onSave` are
+// the only two new, optional props: when `onSave` is provided (the
+// AdminPracticeEditPage.jsx wrapper always provides it), this becomes
+// "official mode" -- an extra id/slug/difficulty/description fieldset
+// renders (Official Practice's own required columns, none of which
+// Custom Practice has ever needed an input for), and Save calls `onSave`
+// with the composed payload instead of writing to customPracticeStore.
+// Every Section/Picker/validation/responsive-layout piece below this
+// point is 100% unchanged and shared by both modes.
+function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const isOfficialMode = Boolean(onSave)
 
   // Sprint 1E — Part C: /practice/build?edit={slug} reopens an existing
   // saved Practice for editing instead of always starting a blank one.
   // Read once per mount (editSlug/existingPractice don't need to be
   // reactive to further state changes — the Builder owns the state from
   // here on, same as usePracticeBuilder's own lazy-init contract).
+  // `initialPractice` (Phase 6C, official mode) takes priority when
+  // given -- the Admin page has already fetched it from Supabase; this
+  // component never fetches Official Practice data itself.
   const editSlug = searchParams.get('edit')
-  const existingPractice = editSlug ? getCustomPractice(editSlug) : null
+  const existingPractice = initialPractice || (editSlug ? getCustomPractice(editSlug) : null)
 
   const [state, actions] = usePracticeBuilder(
     existingPractice ? buildBuilderStateFromPractice(existingPractice, modules) : undefined
@@ -46,6 +61,18 @@ function PracticeBuilder() {
   const [activeWorkbenchSection, setActiveWorkbenchSection] = useState(null)
   const [practiceName, setPracticeName] = useState(existingPractice?.chineseTitle || '')
   const [hasAttemptedSave, setHasAttemptedSave] = useState(false)
+
+  // Official-mode-only fields (Phase 6C) -- Official Practice's own
+  // required columns (supabase/schema_practices.sql) that Custom
+  // Practice has never needed an input for (it hardcodes difficulty and
+  // a generic description, and generates its own opaque slug). Harmless
+  // to declare unconditionally; only rendered/used when isOfficialMode.
+  const [practiceId, setPracticeId] = useState(initialPractice?.id || '')
+  const [practiceSlug, setPracticeSlug] = useState(initialPractice?.slug || '')
+  const [difficulty, setDifficulty] = useState(initialPractice?.difficulty || 'Beginner')
+  const [description, setDescription] = useState(initialPractice?.description || '')
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
 
   const composition = validatePracticeComposition(state)
   const practiceType = derivePracticeType(state)
@@ -67,7 +94,8 @@ function PracticeBuilder() {
   }, {})
 
   const isNameValid = practiceName.trim().length > 0
-  const canSave = composition.isStructurallyValid && isNameValid
+  const isOfficialFieldsValid = !isOfficialMode || (practiceId.trim().length > 0 && practiceSlug.trim().length > 0)
+  const canSave = composition.isStructurallyValid && isNameValid && isOfficialFieldsValid
 
   function handleAdd(sectionConfig, moduleId) {
     actions.addModule(sectionConfig.key, moduleId)
@@ -108,10 +136,39 @@ function PracticeBuilder() {
     }
   }
 
-  function handleSave() {
+  async function handleSave() {
     setHasAttemptedSave(true)
+    setSaveError(null)
 
     if (!canSave) return
+
+    // Phase 6C: official mode never touches customPracticeStore -- the
+    // Admin page's onSave decides create vs. update (it already knows
+    // which, from whether initialPractice existed) and calls
+    // createOfficialPractice/updateOfficialPractice (Phase 6B), which
+    // validate via the same validateOfficialPracticeStructure and never
+    // bypass RLS. modules is the ID-ordered list directly (no slug
+    // conversion -- Official Practice stores Module ID, Phase 6A/6B).
+    // onSave returns an error object on failure (shown inline here,
+    // save stays on this page) or null on success (onSave itself
+    // navigates away, e.g. back to the Admin list).
+    if (onSave) {
+      setIsSaving(true)
+
+      const error = await onSave({
+        id: practiceId.trim(),
+        slug: practiceSlug.trim(),
+        title: practiceName.trim(),
+        chineseTitle: practiceName.trim(),
+        description: description.trim(),
+        difficulty,
+        modules: assemblePracticeModuleIds(state)
+      })
+
+      setIsSaving(false)
+      if (error) setSaveError(error.message || '儲存失敗，請稍後再試。')
+      return
+    }
 
     // Sprint 1E — Part C: editing an existing saved Practice reuses its
     // slug, so saveCustomPractice's existing overwrite-by-slug behavior
@@ -216,7 +273,55 @@ function PracticeBuilder() {
 
   return (
     <div className="practice-builder">
-      <h1>{existingPractice ? '編輯課程' : '建立新課程'}</h1>
+      <h1>{heading || (existingPractice ? '編輯課程' : '建立新課程')}</h1>
+
+      {/* Phase 6C, official mode only -- Official Practice's own
+          required columns. id is only editable while creating (it's the
+          primary key; the input is hidden once initialPractice exists so
+          an already-created row's id can never be changed from here). */}
+      {isOfficialMode && (
+        <div className="builder-official-fields">
+          {!initialPractice && (
+            <label className="builder-name-field">
+              Practice ID
+              <input
+                type="text"
+                value={practiceId}
+                onChange={(event) => setPracticeId(event.target.value)}
+                placeholder="例如：P002"
+              />
+            </label>
+          )}
+
+          <label className="builder-name-field">
+            Slug（URL）
+            <input
+              type="text"
+              value={practiceSlug}
+              onChange={(event) => setPracticeSlug(event.target.value)}
+              placeholder="例如：morning-energy-practice"
+            />
+          </label>
+
+          <label className="builder-name-field">
+            難度 Difficulty
+            <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </label>
+
+          <label className="builder-name-field">
+            Description
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={3}
+            />
+          </label>
+        </div>
+      )}
 
       {/* Level 1 "Practice Composition Overview" (Project Master Review's
           Level 1 / Level 2 distinction) — replaces the Sprint 8.8
@@ -337,12 +442,19 @@ function PracticeBuilder() {
         <p className={hasAttemptedSave ? 'builder-errors' : 'builder-progress'}>請輸入 Practice 名稱。</p>
       )}
 
+      {isOfficialMode && !isOfficialFieldsValid && hasAttemptedSave && (
+        <p className="builder-errors">請填寫 Practice ID 與 Slug。</p>
+      )}
+
+      {saveError && <p className="builder-errors">{saveError}</p>}
+
       <button
         type="button"
         className={`builder-save${canSave ? '' : ' builder-save-pending'}`}
         onClick={handleSave}
+        disabled={isSaving}
       >
-        儲存 Practice
+        {isSaving ? '儲存中…' : saveLabel || '儲存 Practice'}
       </button>
     </div>
   )

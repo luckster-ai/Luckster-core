@@ -391,7 +391,9 @@ footer {
   font-weight: bold;
 }
 
-.builder-name-field input {
+.builder-name-field input,
+.builder-name-field select,
+.builder-name-field textarea {
   display: block;
   width: 100%;
   box-sizing: border-box;
@@ -400,6 +402,20 @@ footer {
   border-radius: 10px;
   border: 1px solid #d9c6a5;
   font: inherit;
+}
+
+/* Phase 6C — Admin Official Practice. id/slug/difficulty/description
+   fieldset PracticeBuilder.jsx renders in official mode -- fields reuse
+   .builder-name-field's existing input styling above; this only adds
+   the grouping layout around them. */
+.builder-official-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 10px;
 }
 
 .link-button {
@@ -2266,6 +2282,43 @@ footer {
   margin-left: auto;
   font-size: 0.9em;
   color: #8a7b54;
+}
+
+/* Phase 6C — Admin Official Practice list. Same row-list pattern as
+   .practice-history-session above (flexbox + flex-wrap, no dedicated
+   breakpoints needed for basic usability at narrow widths). */
+.admin-practice-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0;
+}
+
+.admin-practice-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-practice-row-id {
+  color: #8a7b54;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-practice-row-status {
+  margin-left: auto;
+  font-size: 0.9em;
+  color: #8a7b54;
+}
+
+.admin-practice-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 /* ============================================================

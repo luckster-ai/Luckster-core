@@ -14,6 +14,8 @@ import PracticePlayerPage from '../pages/PracticePlayerPage'
 import LoginPage from '../pages/LoginPage'
 import AccountPage from '../pages/AccountPage'
 import AuthCallbackPage from '../pages/AuthCallbackPage'
+import AdminPracticeListPage from '../pages/AdminPracticeListPage'
+import AdminPracticeEditPage from '../pages/AdminPracticeEditPage'
 
 function AppRouter() {
   return (
@@ -86,6 +88,21 @@ function AppRouter() {
       <Route
         path="/auth/callback"
         element={<AuthCallbackPage />}
+      />
+
+      <Route
+        path="/admin/practices"
+        element={<AdminPracticeListPage />}
+      />
+
+      <Route
+        path="/admin/practices/new"
+        element={<AdminPracticeEditPage />}
+      />
+
+      <Route
+        path="/admin/practices/:id/edit"
+        element={<AdminPracticeEditPage />}
       />
     </Routes>
   )
