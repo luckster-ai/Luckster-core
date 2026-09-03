@@ -41,7 +41,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 321,
     summary: '透過深長呼吸配合內、外屏息，帶來清晰感知與內心平靜，適合初學者練習呼吸覺知，也可作為加強專注力與活力的高階練習。',
-    videoReference: { provider: 'youtube', videoId: 'sip_w8Oxr6o' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/d1a64ddd-1efc-4099-8812-604ace1b1dd8/playlist.m3u8' },
     tags: ['冥想', '呼吸法', '智慧手印', '心輪', '屏息', '初學者', '平靜'],
     prerequisites: ['FD001', 'FD004', 'FD005-L01', 'FD008', 'FD008-L01']
   },
@@ -57,7 +57,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 264,
     summary: '以交替鼻孔呼吸建立情緒平衡與新的洞察力，是昆達里尼與哈他瑜伽的基本技巧，也是睡前排除白天憂慮的極佳練習，練習時長依目的可從 3 分鐘延伸至 31 分鐘。',
-    videoReference: { provider: 'youtube', videoId: 'HTV4E4ornUA' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/3b26a786-bd91-45ef-ad95-6b924a5f54bf/playlist.m3u8' },
     tags: ['呼吸法', '交替鼻孔呼吸', '情緒平衡', '洞察力', '初學者', '睡前'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L04']
   },
@@ -73,7 +73,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 382,
     summary: '提升自控能力，幫助練習者保持並履行自我的權威。',
-    videoReference: { provider: 'youtube', videoId: '1Z4VQv71l-I' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/94c4bd4a-3b30-427d-a5b9-5da75c552dd9/playlist.m3u8' },
     tags: ['冥想', '呼吸法', '自我權威', '自控力', '心輪'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
   },
@@ -134,7 +134,7 @@ const modules = [
     difficulty: 'Intermidiate',
     duration: 3702,
     summary: '包含23個動作的全套昆達里尼練習，能鬆開全身緊繃處、強化神經與腺體系統，據說能解決所有問題；為晨間冥想做好準備。',
-    videoReference: { provider: 'youtube', videoId: 'P5mkSMFGB04' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/f4803142-3837-4ae8-8aff-34c75528c484/playlist.m3u8' },
     tags: ['身體奎亞', '晨間練習', '薩達那', '神經系統', '解決所有問題'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008', 'FD008-L01', 'FD008-L07']
   },
@@ -149,7 +149,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 2869,
     summary: '包含23個動作的全套昆達里尼練習，能鬆開全身緊繃處、強化神經與腺體系統，據說能解決所有問題；為晨間冥想做好準備。',
-    videoReference: { provider: 'youtube', videoId: 'BE6FcaLEcL8' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/b5d77494-fa25-435d-a55c-fd26f38b5314/playlist.m3u8' },
     tags: ['身體奎亞', '晨間練習', '薩達那', '神經系統', '解決所有問題'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008', 'FD008-L01', 'FD008-L07']
   },
@@ -197,7 +197,7 @@ const modules = [
     difficulty: 'Intermediate',
     duration: 1978,
     summary: 'Sa Ta Na Ma 唱誦冥想。31分鐘版本（無解說）。',
-    videoReference: { provider: 'youtube', videoId: 'KYwWSdNb3UA' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/6bfebb54-a69f-4421-b238-16dfa4eeb6ba/playlist.m3u8' },
     tags: ['唱誦', '手印', '冥想', '專注力'],
     prerequisites: ['FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001']
   },
@@ -213,7 +213,7 @@ const modules = [
     difficulty: 'Advanced',
     duration: 9260,
     summary: 'Sa Ta Na Ma 唱誦冥想。2.5小時版本（無解說）。',
-    videoReference: { provider: 'youtube', videoId: '2GaicKj6jMg' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/2c6e37a0-4356-49a8-bbbc-f72ff097f943/playlist.m3u8' },
     tags: ['唱誦', '手印', '冥想', '專注力'],
     prerequisites: ['FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04', 'MM001', 'MM002']
   },
@@ -309,7 +309,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 958,
     summary: '以交替鼻孔呼吸建立情緒平衡與新的洞察力，是昆達里尼與哈他瑜伽的基本技巧，也是睡前排除白天憂慮的極佳練習，練習時長依目的可從 3 分鐘延伸至 31 分鐘。',
-    videoReference: { provider: 'youtube', videoId: '3Ld22dSlG7I' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/8fa1ac69-399c-4175-8a47-c80f6f853dda/playlist.m3u8' },
     tags: ['呼吸法', '交替鼻孔呼吸', '情緒平衡', '洞察力', '初學者', '睡前'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L04']
   },
@@ -325,7 +325,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 806,
     summary: '提升自控能力，幫助練習者保持並履行自我的權威。',
-    videoReference: { provider: 'youtube', videoId: 'i1asgPzb9yk' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/00dd5534-cf99-4fcd-89ee-809ff5faf421/playlist.m3u8' },
     tags: ['冥想', '呼吸法', '自我權威', '自控力', '心輪'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
   },
