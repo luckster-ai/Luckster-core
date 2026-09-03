@@ -3,8 +3,7 @@ import { useLocation } from 'react-router-dom'
 
 import homepage from '../data/homepage'
 import teacher from '../data/teacher'
-import practices from '../data/practices'
-import { isPublished } from '../utils/practiceLifecycle'
+import { useOfficialPractices } from '../hooks/useOfficialPractices'
 
 import HeroSection from '../components/HeroSection'
 import CoursesSection from '../components/CoursesSection'
@@ -15,14 +14,14 @@ import ExternalLinksSection from '../components/ExternalLinksSection'
 
 function HomePage() {
   const location = useLocation()
+  const { practices: officialPractices } = useOfficialPractices()
 
-  // Was `practices[0]` -- broke silently the moment a second official
-  // Practice existed (always showed the array's first entry regardless
-  // of intent) and had no way to keep an in-progress Practice out of the
-  // spotlight. `.find` picks the first *published* entry instead, so
-  // adding more official Practices (or drafting one) can't change which
-  // one Home features without an explicit status change.
-  const featuredPractice = practices.find(isPublished) || null
+  // Featured = the most recently published Official Practice. The list is
+  // ordered created_at desc and useOfficialPractices already filters to
+  // published, so [0] is that practice -- no extra field or Featured CMS.
+  // null while the list is still loading, or if there are none;
+  // FeaturedPracticeSection renders nothing in that case.
+  const featuredPractice = officialPractices[0] || null
 
   useEffect(() => {
     if (!location.hash) return

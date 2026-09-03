@@ -7,8 +7,13 @@ import PracticeCard from './PracticeCard'
 // Guidance First": 官方練習 comes first and is the visually primary
 // section; 我的練習 is clearly discoverable but secondary; 建立新練習
 // stays a calm, small CTA rather than competing for attention.
-function PracticeHub({ officialPractices, customPractices }) {
+//
+// Phase 6D: 官方練習 is now async (Supabase). It renders whatever it has
+// as soon as it has it; only a genuinely empty list falls through to the
+// loading / error / empty copy below, in that priority order.
+function PracticeHub({ officialPractices, customPractices, officialLoading, officialError }) {
   const hasCustomPractices = customPractices.length > 0
+  const hasOfficialPractices = officialPractices.length > 0
 
   return (
     <section className="practice-hub">
@@ -21,11 +26,19 @@ function PracticeHub({ officialPractices, customPractices }) {
       <div className="practice-hub-section">
         <h2>官方練習</h2>
 
-        <div className="cards">
-          {officialPractices.map((practice) => (
-            <PracticeCard key={practice.id} practice={practice} />
-          ))}
-        </div>
+        {hasOfficialPractices ? (
+          <div className="cards">
+            {officialPractices.map((practice) => (
+              <PracticeCard key={practice.id} practice={practice} />
+            ))}
+          </div>
+        ) : officialLoading ? (
+          <p>載入中…</p>
+        ) : officialError ? (
+          <p>暫時無法載入官方練習，請稍後再試。</p>
+        ) : (
+          <p>目前沒有官方練習。</p>
+        )}
       </div>
 
       <div className="practice-hub-section">

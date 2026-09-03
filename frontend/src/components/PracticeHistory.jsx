@@ -14,7 +14,7 @@ import { resolvePracticeById, resolveModuleTitles, groupSessionsByDay } from '..
 // already-answered question (Phase 4D's actual Bunny watch-time
 // tracking); showing a second, unrelated number with a similar meaning
 // here would just be confusing, not informative.
-function PracticeHistory({ sessions, loading }) {
+function PracticeHistory({ sessions, officialById, loading }) {
   if (loading) return null
 
   if (sessions.length === 0) {
@@ -38,7 +38,7 @@ function PracticeHistory({ sessions, loading }) {
 
           <ul className="practice-history-list">
             {daySessions.map((session) => {
-              const practice = resolvePracticeById(session.practice_id)
+              const practice = resolvePracticeById(session.practice_id, officialById)
               const time = new Date(session.started_at).toLocaleTimeString('zh-TW', {
                 hour: '2-digit',
                 minute: '2-digit'

@@ -6,8 +6,8 @@
 // Practice Detail -> Practice Player -> re-open -> edit -> Save-again
 // (Sprint 1E), reusing the existing PracticePage / PracticePlayer /
 // PracticeBuilder components without writing learner-created content
-// into hand-authored Runtime Data (data/practices.js), which is shared
-// content, not per-learner data.
+// into the shared Official Practice store (Supabase), which is
+// admin-authored content, not per-learner data.
 //
 // Backed by localStorage (Sprint 1E; was sessionStorage through Sprint
 // 1D): saveCustomPractice already overwrites by slug, so calling it

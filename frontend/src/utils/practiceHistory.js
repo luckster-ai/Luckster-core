@@ -1,23 +1,23 @@
-import practices from '../data/practices'
 import modules from '../data/modules'
 import { getCustomPractice } from '../state/customPracticeStore'
 
-// Practice History (Phase 5D). Pure functions, no Supabase/React
-// involved -- practice_sessions.practice_id is a stable identity (P001
-// for Official, a slug for Custom -- see the Phase 5A ADR on asset
-// identity), never the routing slug directly for Official Practices, so
-// this has to resolve it before History can link anywhere.
+// Practice History (Phase 5D). practice_sessions.practice_id is a stable
+// identity (P00x for Official, a slug for Custom -- see the Phase 5A ADR
+// on asset identity), never the routing slug directly for Official
+// Practices, so this has to resolve it before History can link anywhere.
+//
+// Phase 6D: Official Practices live solely in Supabase, so their
+// titles/links come in via `officialById` (a Map keyed by practice id,
+// built once by usePracticeHistory). React/Supabase stay out of this
+// file -- the caller owns the fetch.
 //
 // Returns null (not a placeholder object) when the Practice can't be
-// found at all -- either a Custom Practice that only ever existed in a
-// different browser/device's localStorage, or (same code path, no
-// special-casing needed) a hypothetical future Official Practice that
-// got removed from data/practices.js after someone practiced it. Either
-// way, the caller falls back to resolveModuleTitles() below, which
-// works from practice_sessions.module_ids alone and needs nothing this
-// function could fail to find.
-export function resolvePracticeById(practiceId) {
-  const official = practices.find((practice) => practice.id === practiceId)
+// resolved at all -- a Custom Practice that only ever existed on another
+// device, an archived/removed Official Practice, or Supabase being
+// unreachable. The caller then falls back to resolveModuleTitles(), which
+// works from practice_sessions.module_ids alone.
+export function resolvePracticeById(practiceId, officialById = null) {
+  const official = officialById && officialById.get(practiceId)
   if (official) return { chineseTitle: official.chineseTitle, slug: official.slug }
 
   // Custom Practices use their own slug as their id (see

@@ -14,12 +14,14 @@ function findModuleById(modules, id) {
   return modules.find((item) => item.id === id) || null
 }
 
-// Practice composition (practice.modules) has not been migrated to ID per
-// ADR 0003's phased scope — it is still slug-based, so resolving a Practice's
-// own Module list still requires a slug lookup. Only prerequisite references
-// (inside each Module/Lesson's own `prerequisites` array) are ID-based.
-function findModuleBySlug(modules, slug) {
-  return modules.find((item) => item.slug === slug) || null
+// A Practice's own `modules` list is Module ID for Official Practices
+// authored via the Supabase store (Phase 6D) and slug for P001 / every
+// Custom Practice. ID and slug formats never overlap, so resolve by
+// either -- same rule as resolvePracticeModules.js's findModuleByRef.
+// Prerequisite references (inside each Module/Lesson's own `prerequisites`
+// array) remain ID-based per ADR 0003.
+function findModuleByRef(modules, ref) {
+  return modules.find((item) => item.id === ref || item.slug === ref) || null
 }
 
 function resolveAsset(id, { foundations, modules }) {
@@ -90,8 +92,8 @@ export function collectPracticePrerequisites(practice, { foundations, modules })
   const visited = new Set()
   const results = []
 
-  for (const moduleSlug of practice.modules) {
-    const module = findModuleBySlug(modules, moduleSlug)
+  for (const moduleRef of practice.modules) {
+    const module = findModuleByRef(modules, moduleRef)
 
     if (!module) continue
 

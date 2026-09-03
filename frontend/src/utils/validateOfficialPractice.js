@@ -1,16 +1,16 @@
 // Official Practice Architecture — Phase 1.
 //
-// Validates a Practice entry from data/practices.js against the SAME
-// Section rules the Practice Builder already enforces interactively --
-// this file intentionally invents no new rule engine. It reuses:
+// Validates an Official Practice object against the SAME Section rules
+// the Practice Builder already enforces interactively -- this file
+// intentionally invents no new rule engine. It reuses:
 //   - buildBuilderStateFromPractice / validatePracticeComposition /
 //     assemblePracticeOrder (validatePracticeBuilder.js) for structure
 //   - resolvePracticeModules (resolvePracticeModules.js) for Module lookup
 //
-// This is meant to be run outside the Builder UI (see
-// frontend/scripts/validate-official-practices.mjs), so an Official
-// Practice's correctness can be checked before it's ever opened in a
-// browser.
+// Phase 6D: Official Practices live solely in Supabase, so this runs from
+// officialPracticeStore.validateForSave on every create / update / status
+// change -- the gate a Practice must pass before it can be saved as, or
+// stay, `published`.
 import { resolvePracticeModules } from './resolvePracticeModules.js'
 import {
   buildBuilderStateFromPractice,
@@ -21,8 +21,8 @@ import {
 // ID first, slug second (Phase 6B) -- see resolvePracticeModules.js's
 // findModuleByRef for why this is unambiguous. Field name kept as
 // missingModuleSlugs (not renamed) since it's already part of this
-// function's and validate-official-practices.mjs's public output shape;
-// a missing entry can now be either an ID or a slug.
+// function's public output shape; a missing entry can now be either an
+// ID or a slug.
 function getMissingModuleSlugs(practice, modules) {
   return practice.modules.filter((ref) => !modules.some((module) => module.id === ref || module.slug === ref))
 }

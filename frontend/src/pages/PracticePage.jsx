@@ -1,33 +1,84 @@
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import practices from '../data/practices'
 import modules from '../data/modules'
 import foundations from '../data/foundations'
 import formatDuration from '../utils/formatDuration'
 import { calculatePracticeDuration } from '../utils/calculatePracticeDuration'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
 import { getCustomPractice } from '../state/customPracticeStore'
+import { getOfficialPracticeBySlug } from '../state/officialPracticeStore'
 import { useLearnerStatus } from '../hooks/useLearnerStatus'
 import { collectPracticePrerequisites } from '../utils/prerequisiteEngine'
 import { getMissingPrerequisites } from '../utils/learnerStatus'
 import PracticeStep from '../components/PracticeStep'
 
-const markdownModules = import.meta.glob(
-  '../content/practices/*.md',
-  {
-    query: '?raw',
-    import: 'default',
-    eager: true
-  }
-)
-
+// A Custom Practice from this device's localStorage is the only
+// synchronously-known Practice. Everything else is an Official Practice
+// fetched from Supabase by slug (the routing key) -- the single runtime
+// source of truth for Official Practices since Phase 6D.
 function PracticePage() {
   const { slug } = useParams()
-
-  const practice =
-    practices.find((item) => item.slug === slug) || getCustomPractice(slug)
-
   const { isLoggedIn, learnerStatusMap } = useLearnerStatus()
+
+  const localPractice = getCustomPractice(slug)
+  const hasLocal = Boolean(localPractice)
+
+  // Only the async Supabase lookup needs state. `resolving` is *derived*
+  // (below) from "no remote result for the current slug yet", so nothing
+  // here calls setState synchronously inside the effect. No offline cache
+  // by design (Phase 6D): a failed fetch is its own 'error' outcome,
+  // never a false 'not-found'.
+  const [remote, setRemote] = useState({ slug: null, status: 'idle', practice: null })
+
+  useEffect(() => {
+    if (hasLocal) return
+
+    let active = true
+
+    getOfficialPracticeBySlug(slug).then(({ data, error }) => {
+      if (!active) return
+
+      setRemote({
+        slug,
+        status: error ? 'error' : data ? 'ready' : 'not-found',
+        practice: data || null
+      })
+    })
+
+    return () => {
+      active = false
+    }
+  }, [slug, hasLocal])
+
+  let status = 'ready'
+  let practice = localPractice
+
+  if (!hasLocal) {
+    if (remote.slug === slug) {
+      status = remote.status
+      practice = remote.practice
+    } else {
+      status = 'resolving'
+      practice = null
+    }
+  }
+
+  if (status === 'resolving') {
+    return (
+      <div className="practice-page">
+        <p>載入中…</p>
+      </div>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="practice-page">
+        <h1>暫時無法載入</h1>
+        <p>請稍後再試。</p>
+      </div>
+    )
+  }
 
   if (!practice) {
     return (
@@ -37,9 +88,6 @@ function PracticePage() {
       </div>
     )
   }
-
-  const markdownPath = `../content/practices/${slug}.md`
-  const markdown = practice.isCustom ? '' : markdownModules[markdownPath] || ''
 
   const orderedModules = resolvePracticeModules(practice, modules)
   const totalDuration = calculatePracticeDuration(practice, modules)
@@ -114,14 +162,6 @@ function PracticePage() {
           ))}
         </ol>
       </section>
-
-      {!practice.isCustom && (
-        <section className="practice-notes">
-          <h2>練習筆記 Practice Notes</h2>
-
-          <ReactMarkdown>{markdown}</ReactMarkdown>
-        </section>
-      )}
     </div>
   )
 }

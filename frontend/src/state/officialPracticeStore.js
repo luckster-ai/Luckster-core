@@ -3,33 +3,29 @@ import modules from '../data/modules.js'
 import { validateOfficialPracticeStructure } from '../utils/validateOfficialPractice.js'
 
 // Official Practice CRUD / Store (Phase 6B). Same thin-wrapper shape as
-// practiceActivityStore.js / practiceNotesStore.js -- data layer only, no
-// UI here (Phase 6C, not built yet). This is the one place a future
-// Admin UI writes an Official Practice through; it never bypasses RLS
-// (always the normal anon-key client -- see lib/supabaseClient.js, no
-// service-role key here or ever) and never re-implements structural
-// validation -- it reuses validateOfficialPracticeStructure exactly as
-// the CLI script (scripts/validate-official-practices.mjs) and the
-// Builder UI already do.
+// practiceActivityStore.js / practiceNotesStore.js -- data layer only.
+// Since Phase 6D this is the sole runtime source of truth for Official
+// Practices (the static data/practices.js is gone). Every write goes
+// through here; it never bypasses RLS (always the normal anon-key client
+// -- see lib/supabaseClient.js, no service-role key here or ever) and
+// never re-implements structural validation -- it reuses
+// validateOfficialPracticeStructure exactly as the Builder UI does.
 //
 // Row <-> Practice shape mapping: Supabase columns are snake_case
 // (chinese_title), matching every other table in this schema; the rest
-// of the app has always used camelCase (chineseTitle) for a Practice
-// object (data/practices.js, PracticeCard.jsx, etc.). fromPracticeRow/
-// toPracticeRow are the one place that boundary is crossed, so nothing
-// else in the app (including the validation functions above) needs to
-// know Supabase's column names.
+// of the app uses camelCase (chineseTitle) for a Practice object (see
+// PracticeCard.jsx etc.). fromPracticeRow/toPracticeRow are the one
+// place that boundary is crossed, so nothing else in the app (including
+// the validation functions above) needs to know Supabase's column names.
 //
-// modules stores Module ID (Phase 6A/6B decision), not slug -- P001 and
-// every Custom Practice still use slugs. resolvePracticeModules.js /
-// validatePracticeBuilder.js / validateOfficialPractice.js were given a
-// minimal ID-first-slug-fallback lookup (this phase) specifically so
-// validateOfficialPracticeStructure below works correctly against an
-// ID-based Practice from this table -- see each file's own comment.
+// modules stores Module ID (Phase 6A/6B decision), not slug -- every
+// Custom Practice still uses slugs. resolvePracticeModules.js /
+// validatePracticeBuilder.js / validateOfficialPractice.js all do a
+// minimal ID-first-slug-fallback lookup, so validateOfficialPracticeStructure
+// below works correctly against an ID-based Practice from this table.
 //
-// Lifecycle validation mirrors validate-official-practices.mjs's
-// existing, already-established rule exactly: a draft (or archived) row
-// only needs its Module references to actually exist -- structural
+// Lifecycle validation rule: a draft (or archived) row only needs its
+// Module references to actually exist -- structural
 // completeness (Section composition, Bunny-ready) is explicitly allowed
 // to be incomplete while drafting. Only a `published` row must pass the
 // full canPublish check. This is enforced on every create/update/status
@@ -149,12 +145,24 @@ function mapSupabaseError(error) {
 // RLS alone decides which rows come back -- published for anyone,
 // draft/archived additionally for admin (supabase/schema_practices.sql).
 // This function never checks who's asking; that's the point.
-export async function listOfficialPractices() {
-  if (!supabase) return []
+//
+// Result form ({ data, error }) added for Phase 6D's public Practice Hub,
+// which needs to tell "no published Practices yet" apart from "the fetch
+// failed" (no offline cache). Admin's list page keeps calling the plain
+// listOfficialPractices() below unchanged.
+export async function listOfficialPracticesResult() {
+  if (!supabase) return { data: [], error: null }
 
   const { data, error } = await supabase.from('practices').select('*').order('created_at', { ascending: false })
 
-  return error || !data ? [] : data.map(fromPracticeRow)
+  if (error) return { data: [], error }
+
+  return { data: (data || []).map(fromPracticeRow), error: null }
+}
+
+export async function listOfficialPractices() {
+  const { data } = await listOfficialPracticesResult()
+  return data
 }
 
 export async function getOfficialPractice(id) {
@@ -163,6 +171,25 @@ export async function getOfficialPractice(id) {
   const { data, error } = await supabase.from('practices').select('*').eq('id', id).single()
 
   return error || !data ? null : fromPracticeRow(data)
+}
+
+// Public Practice Detail / Player resolve by slug (the routing key), not
+// id. Returns { data, error } rather than a bare value so the caller can
+// tell "no such published Practice" (data: null, error: null) apart from
+// a transport/RLS failure (error set) -- Phase 6D deliberately has no
+// offline cache, so a failed fetch must surface as its own "try again"
+// state, never a false "not found". RLS still scopes visibility: a
+// signed-out visitor sees only status = 'published', so a draft/archived
+// slug resolves to null here. maybeSingle() (not single()) treats "no
+// row" as data: null rather than an error.
+export async function getOfficialPracticeBySlug(slug) {
+  if (!supabase || !slug) return { data: null, error: null }
+
+  const { data, error } = await supabase.from('practices').select('*').eq('slug', slug).maybeSingle()
+
+  if (error) return { data: null, error }
+
+  return { data: data ? fromPracticeRow(data) : null, error: null }
 }
 
 // practice: { id, slug, title, chineseTitle, description, difficulty,

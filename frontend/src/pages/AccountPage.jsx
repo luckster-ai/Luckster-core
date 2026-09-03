@@ -18,7 +18,7 @@ const STATUS_LABEL = {
 // not a live countdown, is the right amount of precision here).
 function AccountPage() {
   const { loading, user, profile, signOut, setMarketingConsent } = useAuth()
-  const { sessions, loading: historyLoading } = usePracticeHistory()
+  const { sessions, officialById, loading: historyLoading } = usePracticeHistory()
 
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
@@ -64,7 +64,7 @@ function AccountPage() {
         </>
       )}
 
-      <PracticeHistory sessions={sessions} loading={historyLoading} />
+      <PracticeHistory sessions={sessions} officialById={officialById} loading={historyLoading} />
 
       <label className="auth-consent">
         <input
