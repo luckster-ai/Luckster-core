@@ -7,6 +7,9 @@ import { calculatePracticeDuration } from '../utils/calculatePracticeDuration'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
 import { getCustomPractice } from '../state/customPracticeStore'
 import { getOfficialPracticeBySlug } from '../state/officialPracticeStore'
+import { getResumableSession } from '../state/practiceActivityStore'
+import { evaluateResumableSession } from '../utils/practiceResume'
+import { useAuth } from '../state/useAuth'
 import { useLearnerStatus } from '../hooks/useLearnerStatus'
 import { collectPracticePrerequisites } from '../utils/prerequisiteEngine'
 import { getMissingPrerequisites } from '../utils/learnerStatus'
@@ -18,6 +21,7 @@ import PracticeStep from '../components/PracticeStep'
 // source of truth for Official Practices since Phase 6D.
 function PracticePage() {
   const { slug } = useParams()
+  const { user } = useAuth()
   const { isLoggedIn, learnerStatusMap } = useLearnerStatus()
 
   const localPractice = getCustomPractice(slug)
@@ -62,6 +66,38 @@ function PracticePage() {
       practice = null
     }
   }
+
+  const practiceId = practice?.id || null
+  const moduleIdsKey = practice
+    ? resolvePracticeModules(practice, modules).map((module) => module.id).join('|')
+    : ''
+
+  // Resume (Phase 5E): a 1-12h unfinished session for this Practice makes
+  // the single 開始練習 button become 繼續練習 / 重新開始 (see the CTA
+  // block below). <=1h resumes silently in the Player, so it stays a
+  // single 開始練習 here.
+  const [resume, setResume] = useState({ practiceId: null, done: false, mode: 'none' })
+
+  useEffect(() => {
+    if (!practiceId) return
+
+    let active = true
+    const currentModuleIds = moduleIdsKey ? moduleIdsKey.split('|') : []
+    const lookup = user ? getResumableSession(user.id, practiceId) : Promise.resolve(null)
+
+    lookup.then((session) => {
+      if (!active) return
+      setResume({
+        practiceId,
+        done: true,
+        mode: evaluateResumableSession(session, currentModuleIds).mode
+      })
+    })
+
+    return () => {
+      active = false
+    }
+  }, [practiceId, user, moduleIdsKey])
 
   if (status === 'resolving') {
     return (
@@ -138,9 +174,23 @@ function PracticePage() {
           </p>
         )}
 
-        <Link to={`/practices/${slug}/play`} className="button">
-          開始練習
-        </Link>
+        {!(resume.done && resume.practiceId === practiceId) ? (
+          <p>載入中…</p>
+        ) : resume.mode === 'offer' ? (
+          <>
+            <Link to={`/practices/${slug}/play?resume=1`} className="button">
+              繼續練習
+            </Link>
+
+            <Link to={`/practices/${slug}/play?resume=0`} className="button secondary">
+              重新開始
+            </Link>
+          </>
+        ) : (
+          <Link to={`/practices/${slug}/play`} className="button">
+            開始練習
+          </Link>
+        )}
 
         {practice.isCustom && (
           <Link to={`/practice/build?edit=${slug}`} className="button secondary">

@@ -4,9 +4,26 @@ import ModuleRenderer from './ModuleRenderer'
 import { useAuth } from '../state/useAuth'
 import { startPracticeSession, completePracticeSession } from '../state/practiceActivityStore'
 
-function PracticePlayer({ practice, modules }) {
+// initialModuleIndex / initialPositionSeconds / resumeSessionId are set
+// only when PracticePlayerPage decided this is a Resume (Phase 5E) --
+// otherwise they take their defaults and this behaves exactly as before:
+// start at Module 1, no seeded session.
+function PracticePlayer({
+  practice,
+  modules,
+  initialModuleIndex = 0,
+  initialPositionSeconds = 0,
+  resumeSessionId = null
+}) {
   const { user } = useAuth()
-  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const startIndex = Math.min(Math.max(0, initialModuleIndex), Math.max(0, modules.length - 1))
+  const [currentIndex, setCurrentIndex] = useState(startIndex)
+  // The resumed position applies to exactly one Module render -- the one
+  // the viewer left off in, before any navigation. Cleared on the first
+  // 下一個 / 上一個 / 再練習一次 so it can never re-seek later (e.g. a
+  // restart that lands back on the same index).
+  const [resumePending, setResumePending] = useState(Boolean(resumeSessionId))
   // Practice-level, presentation-only state — deliberately not the same
   // thing as the browser's real Fullscreen API. Entered once, from the
   // same first-play gesture that already requests real fullscreen, and
@@ -25,12 +42,15 @@ function PracticePlayer({ practice, modules }) {
   // "再練習一次" both re-mounts VideoModule (the complete screen unmounts
   // it) AND is an explicit new attempt, so restart() starts the session
   // itself and the re-mounted VideoModule's onPlaybackStarted then just
-  // no-ops against the guard below. The ref (not state) holds whichever
-  // session is currently open; completing consumes it (sets back to null)
-  // so a stray extra isComplete transition (e.g. 上一個 Module after
-  // finishing, then 下一個 Module again, without an explicit restart)
-  // can't try to complete an already-finished or nonexistent session.
-  const sessionIdRef = useRef(null)
+  // no-ops against the guard below.
+  //
+  // On a Resume (Phase 5E) the ref is seeded with the existing session id
+  // so that first onPlaybackStarted no-ops and the unfinished row is
+  // reused, not duplicated. `sessionId` state mirrors the ref so
+  // VideoModule's progress saver re-renders with it once an insert lands;
+  // the ref stays the synchronous source of truth for the guard.
+  const sessionIdRef = useRef(resumeSessionId)
+  const [sessionId, setSessionId] = useState(resumeSessionId)
   // Guards startSession so one attempt only ever lands one row, no matter
   // how many paths call it (onPlaybackStarted, restart(), a re-mounted
   // VideoModule after restart). Cleared once the insert resolves.
@@ -42,9 +62,10 @@ function PracticePlayer({ practice, modules }) {
 
     sessionStartPendingRef.current = true
     startPracticeSession(user.id, practice.id, modules.map((module) => module.id)).then(
-      (sessionId) => {
-        sessionIdRef.current = sessionId
+      (newSessionId) => {
+        sessionIdRef.current = newSessionId
         sessionStartPendingRef.current = false
+        setSessionId(newSessionId)
       }
     )
   }
@@ -53,17 +74,21 @@ function PracticePlayer({ practice, modules }) {
     if (!isComplete || !sessionIdRef.current) return
     completePracticeSession(sessionIdRef.current)
     sessionIdRef.current = null
+    setSessionId(null)
   }, [isComplete])
 
   const goNext = () => {
+    setResumePending(false)
     setCurrentIndex((index) => Math.min(index + 1, modules.length))
   }
 
   const goPrevious = () => {
+    setResumePending(false)
     setCurrentIndex((index) => Math.max(index - 1, 0))
   }
 
   const restart = () => {
+    setResumePending(false)
     setCurrentIndex(0)
     startSession()
   }
@@ -134,6 +159,11 @@ function PracticePlayer({ practice, modules }) {
             onEnded={goNext}
             onImmersiveStart={() => setImmersiveMode(true)}
             onPlaybackStarted={startSession}
+            progressSessionId={sessionId}
+            progressModuleIndex={currentIndex}
+            initialPositionSeconds={
+              resumePending && currentIndex === startIndex ? initialPositionSeconds : 0
+            }
           />
         </section>
       )}

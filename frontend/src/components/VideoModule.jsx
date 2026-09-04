@@ -2,11 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import VideoPlayer from './VideoPlayer'
 import { useModuleUsageTracking } from '../hooks/useModuleUsageTracking'
+import { usePracticeProgressSaver } from '../hooks/usePracticeProgressSaver'
 import { useAuth } from '../state/useAuth'
 import { getMembershipStatus } from '../utils/membershipStatus'
 import { getModuleCapSeconds } from '../utils/playbackEntitlement'
 
-function VideoModule({ module, onEnded, onImmersiveStart, onPlaybackStarted }) {
+function VideoModule({
+  module,
+  onEnded,
+  onImmersiveStart,
+  onPlaybackStarted,
+  progressSessionId,
+  progressModuleIndex,
+  initialPositionSeconds = 0
+}) {
   const { profile, refreshProfile } = useAuth()
   const membershipStatus = getMembershipStatus(profile)
   const capSeconds = getModuleCapSeconds({ membershipStatus, provider: module.videoReference.provider })
@@ -56,6 +65,16 @@ function VideoModule({ module, onEnded, onImmersiveStart, onPlaybackStarted }) {
   // does re-mount this component, so it will notify again then --
   // PracticePlayer's own session guard absorbs that duplicate.
   const playbackStartedNotifiedRef = useRef(false)
+  // Practice Resume (Phase 5E): when this Practice was resumed, the very
+  // first Module shown is the one the viewer left off in, and the engine
+  // must seek to that saved position. Captured at mount (VideoModule does
+  // not re-mount on a Module transition, so this only ever targets the
+  // resumed Module, once); the engine's own seek() waits for the media
+  // to be ready and bails if the source changed meanwhile.
+  const initialSeekRef = useRef(initialPositionSeconds)
+  useEffect(() => {
+    if (initialSeekRef.current > 0) playerRef.current?.seek?.(initialSeekRef.current)
+  }, [])
 
   // A Module transition's autoplay outcome only applies to that one
   // transition — reset during render (not an effect, so it doesn't cause
@@ -88,6 +107,21 @@ function VideoModule({ module, onEnded, onImmersiveStart, onPlaybackStarted }) {
     moduleId: module.id,
     provider: module.videoReference.provider,
     isPlaying
+  })
+
+  // Practice Resume (Phase 5E): auto-save where the viewer is, so a
+  // re-entry within the resume window picks up here. No-ops without a
+  // session id (logged-out, or the session insert hasn't landed yet).
+  usePracticeProgressSaver({
+    sessionId: progressSessionId,
+    moduleIndex: progressModuleIndex,
+    isPlaying,
+    // null (not 0) once the engine's imperative handle is gone -- lets
+    // the saver keep the last real position instead of wiping it.
+    getPositionSeconds: () => {
+      const t = playerRef.current?.getCurrentTime?.()
+      return typeof t === 'number' ? t : null
+    }
   })
 
   return (

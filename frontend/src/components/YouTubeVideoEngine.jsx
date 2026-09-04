@@ -55,6 +55,19 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
   // neither arrives — the AUTOPLAY_WATCHDOG_MS backstop below.
   const watchingAutoplayRef = useRef(false)
   const watchdogTimerRef = useRef(null)
+  // Practice Resume (Phase 5E). seek() may be called before the YT.Player
+  // is ready (a resumed Module's mount), so the target is held here and
+  // flushed once the player can accept it -- from onReady, or from the
+  // next onStateChange, whichever comes first. Cleared as soon as it lands.
+  const pendingSeekRef = useRef(null)
+
+  const flushPendingSeek = () => {
+    const target = pendingSeekRef.current
+    const player = playerRef.current
+    if (target == null || !player || typeof player.seekTo !== 'function') return
+    pendingSeekRef.current = null
+    player.seekTo(target, true)
+  }
 
   const clearAutoplayWatchdog = () => {
     if (watchdogTimerRef.current !== null) {
@@ -141,7 +154,17 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
         // existed.
         playerVars: autoplayRef.current ? { autoplay: 1 } : undefined,
         events: {
+          onReady() {
+            // Practice Resume (Phase 5E): apply a seek requested before
+            // the player was ready. No effect on autoplay -- the video
+            // stays cued (or autoplays) exactly as playerVars decided.
+            flushPendingSeek()
+          },
           onStateChange(event) {
+            // Backstop for flushPendingSeek() in case seek() arrived just
+            // after onReady already fired.
+            flushPendingSeek()
+
             // Phase 4C: unconditional, unlike the watchdog-gated logic
             // below -- PLAYING is the only state that counts as "playing"
             // (PAUSED/ENDED/BUFFERING/CUED all correctly fall through to
@@ -210,6 +233,17 @@ const YouTubeVideoEngine = forwardRef(function YouTubeVideoEngine({ videoId, aut
     },
     pause() {
       playerRef.current?.pauseVideo()
+    },
+    // Practice Resume (Phase 5E). Provider-agnostic surface used by
+    // VideoModule; getCurrentTime maps straight to the YT API, seek is
+    // queued via pendingSeekRef until the player is ready (see above).
+    getCurrentTime() {
+      const player = playerRef.current
+      return player && typeof player.getCurrentTime === 'function' ? player.getCurrentTime() : 0
+    },
+    seek(seconds) {
+      pendingSeekRef.current = Math.max(0, Number(seconds) || 0)
+      flushPendingSeek()
     },
     requestFullscreen() {
       // Only ever called from a direct click handler (never automatically

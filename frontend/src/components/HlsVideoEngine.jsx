@@ -318,6 +318,35 @@ const HlsVideoEngine = forwardRef(function HlsVideoEngine({ videoId, autoplay = 
     pause() {
       videoRef.current?.pause()
     },
+    // Practice Resume (Phase 5E). Provider-agnostic surface used by
+    // VideoModule; the <video> element already exposes both natively.
+    getCurrentTime() {
+      return videoRef.current?.currentTime ?? 0
+    },
+    // Setting currentTime before metadata is loaded is a no-op / can
+    // throw on some browsers, so defer to loadedmetadata when the media
+    // isn't ready yet. Only ever called once, on a resumed Module's mount.
+    // The deferred apply bails if the source has since changed (viewer
+    // navigated to another Module before this one's metadata arrived), so
+    // it can never land on the wrong video.
+    seek(seconds) {
+      const video = videoRef.current
+      if (!video) return
+
+      const target = Math.max(0, Number(seconds) || 0)
+
+      if (video.readyState >= 1) {
+        video.currentTime = target
+        return
+      }
+
+      const seekVideoId = latestVideoIdRef.current
+      const applyOnce = () => {
+        video.removeEventListener('loadedmetadata', applyOnce)
+        if (latestVideoIdRef.current === seekVideoId) video.currentTime = target
+      }
+      video.addEventListener('loadedmetadata', applyOnce)
+    },
     requestFullscreen() {
       // Same approach as YouTubeVideoEngine: fullscreens the stable
       // wrapper div (never the <video> itself), only ever called from a
