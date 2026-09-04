@@ -6,7 +6,7 @@ import { useAuth } from '../state/useAuth'
 import { getMembershipStatus } from '../utils/membershipStatus'
 import { getModuleCapSeconds } from '../utils/playbackEntitlement'
 
-function VideoModule({ module, onEnded, onImmersiveStart }) {
+function VideoModule({ module, onEnded, onImmersiveStart, onPlaybackStarted }) {
   const { profile, refreshProfile } = useAuth()
   const membershipStatus = getMembershipStatus(profile)
   const capSeconds = getModuleCapSeconds({ membershipStatus, provider: module.videoReference.provider })
@@ -47,6 +47,15 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
   // Module transition (VideoPlayer.jsx swaps Engine type by provider)
   // needs to know this isn't the Practice's genuine first video.
   const [hasStarted, setHasStarted] = useState(false)
+  // Practice Activity (Phase 5B): notify once, the first time this
+  // Module's video genuinely starts playing -- via the 播放 button OR the
+  // provider's own native/iframe controls, both of which arrive here as
+  // the same onPlayStateChange(true). A ref, deliberately NOT reset on a
+  // Module transition (VideoModule stays mounted across the Practice), so
+  // a multi-Module Practice notifies exactly once. A "再練習一次" restart
+  // does re-mount this component, so it will notify again then --
+  // PracticePlayer's own session guard absorbs that duplicate.
+  const playbackStartedNotifiedRef = useRef(false)
 
   // A Module transition's autoplay outcome only applies to that one
   // transition — reset during render (not an effect, so it doesn't cause
@@ -95,7 +104,13 @@ function VideoModule({ module, onEnded, onImmersiveStart }) {
         onEnded={onEnded}
         onAutoplayBlocked={() => setShowResumePrompt(true)}
         onPlaybackResumed={() => setShowResumePrompt(false)}
-        onPlayStateChange={setIsPlaying}
+        onPlayStateChange={(playing) => {
+          setIsPlaying(playing)
+          if (playing && !playbackStartedNotifiedRef.current) {
+            playbackStartedNotifiedRef.current = true
+            onPlaybackStarted?.()
+          }
+        }}
         capSeconds={capSeconds}
         onPlaybackCapped={() => setShowCappedNotice(true)}
       />

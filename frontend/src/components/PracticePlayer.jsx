@@ -18,24 +18,33 @@ function PracticePlayer({ practice, modules }) {
   const isComplete = currentIndex >= modules.length
 
   // Practice Activity (Phase 5B). One session per genuine attempt --
-  // started once from the same real-first-play gesture that already
-  // enters immersive mode (VideoModule.jsx's onImmersiveStart, which is
-  // itself only ever called once per VideoModule mount), and explicitly
-  // again from restart() below, since VideoModule stays mounted across
-  // the whole Practice and never resets its own hasStarted guard on a
-  // restart -- onImmersiveStart alone would never fire a second time for
-  // a "再練習一次" attempt. The ref (not state) holds whichever session
-  // is currently open; completing consumes it (sets back to null) so a
-  // stray extra isComplete transition (e.g. 上一個 Module after finishing,
-  // then 下一個 Module again, without an explicit restart) can't try to
-  // complete an already-finished or nonexistent session.
+  // started when the Practice's video first actually begins playing,
+  // whether via the JOTI 播放 button or the provider's own native/iframe
+  // controls (both surface as VideoModule's onPlaybackStarted, fired once
+  // per VideoModule mount), and explicitly again from restart() below.
+  // "再練習一次" both re-mounts VideoModule (the complete screen unmounts
+  // it) AND is an explicit new attempt, so restart() starts the session
+  // itself and the re-mounted VideoModule's onPlaybackStarted then just
+  // no-ops against the guard below. The ref (not state) holds whichever
+  // session is currently open; completing consumes it (sets back to null)
+  // so a stray extra isComplete transition (e.g. 上一個 Module after
+  // finishing, then 下一個 Module again, without an explicit restart)
+  // can't try to complete an already-finished or nonexistent session.
   const sessionIdRef = useRef(null)
+  // Guards startSession so one attempt only ever lands one row, no matter
+  // how many paths call it (onPlaybackStarted, restart(), a re-mounted
+  // VideoModule after restart). Cleared once the insert resolves.
+  const sessionStartPendingRef = useRef(false)
 
   const startSession = () => {
     if (!user) return
+    if (sessionIdRef.current || sessionStartPendingRef.current) return
+
+    sessionStartPendingRef.current = true
     startPracticeSession(user.id, practice.id, modules.map((module) => module.id)).then(
       (sessionId) => {
         sessionIdRef.current = sessionId
+        sessionStartPendingRef.current = false
       }
     )
   }
@@ -123,10 +132,8 @@ function PracticePlayer({ practice, modules }) {
           <ModuleRenderer
             module={modules[currentIndex]}
             onEnded={goNext}
-            onImmersiveStart={() => {
-              setImmersiveMode(true)
-              startSession()
-            }}
+            onImmersiveStart={() => setImmersiveMode(true)}
+            onPlaybackStarted={startSession}
           />
         </section>
       )}

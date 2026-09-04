@@ -1,7 +1,7 @@
 import VideoModule from './VideoModule'
 import ModulePlaceholder from './ModulePlaceholder'
 
-function ModuleRenderer({ module, onEnded, onImmersiveStart }) {
+function ModuleRenderer({ module, onEnded, onImmersiveStart, onPlaybackStarted }) {
   const hasVideo = Boolean(module.videoReference?.videoId)
 
   if (hasVideo) {
@@ -10,6 +10,7 @@ function ModuleRenderer({ module, onEnded, onImmersiveStart }) {
         module={module}
         onEnded={onEnded}
         onImmersiveStart={onImmersiveStart}
+        onPlaybackStarted={onPlaybackStarted}
       />
     )
   }
