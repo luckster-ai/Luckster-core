@@ -104,7 +104,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 2674,
     summary: '一套簡單的暖身身體奎亞，能系統地鍛鍊脊柱，開展普拉納（prana）的循環，以平衡脈輪（chakras）。',
-    videoReference: { provider: 'youtube', videoId: 'ASHd6cEdKRs' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/8f51bfc4-0600-480c-89be-be5ce4f88c8b/playlist.m3u8' },
     tags: ['身體奎亞', '暖身', '脊柱', '脈輪平衡', '普拉納能量'],
     prerequisites: ['FD001', 'FD002', 'FD003', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008-L07', 'FD009']
   },
@@ -119,7 +119,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 1198,
     summary: '薩特奎亞是少數可單獨完整練習的奎亞，透過岩石坐姿、交扣手印與節奏唱誦「Sat Naam」帶動丹田與身體鎖自動收縮，能協調神經系統、平息情緒、疏導性與創造能量，是昆達里尼練習的核心必修動作。',
-    videoReference: { provider: 'youtube', videoId: 'KjQ_sUbH3qQ' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/d7e02b91-e8d7-4341-808a-a5ef2b5cc323/playlist.m3u8' },
     tags: ['身體奎亞', '身體鎖', '神經系統', '性能量'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L04', 'FD006', 'FD008-L07', 'FD009']
   },
@@ -229,7 +229,7 @@ const modules = [
     difficulty: 'Intermediate',
     duration: 329,
     summary: '透過拳頭與拇指構成準心般的手印，配合精確計時的吸氣、呼氣與屏息循環，強化呼吸的投射力與掌控力，是需逐步培養的進階冥想練習。',
-    videoReference: { provider: 'youtube', videoId: 'QnwrIXNddqk' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/f7398564-9490-429c-810b-60e660604d21/playlist.m3u8' },
     tags: ['冥想', '呼吸法', '屏息', '神經系統'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
   },
@@ -245,7 +245,7 @@ const modules = [
     difficulty: 'Advanced',
     duration: 668,
     summary: '透過拳頭與拇指構成準心般的手印，配合精確計時的吸氣、呼氣與屏息循環，強化呼吸的投射力與掌控力，是需逐步培養的進階冥想練習。',
-    videoReference: { provider: 'youtube', videoId: 'aCyKYSj3aU0' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/7425a7bc-82b0-41e5-9dbf-b952546bd103/playlist.m3u8' },
     tags: ['冥想', '呼吸法', '屏息', '神經系統'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01', 'MM004']
   },
@@ -261,7 +261,7 @@ const modules = [
     difficulty: 'Intermediate',
     duration: 855,
     summary: '透過屏息配合前後彎曲脊椎的單步驟奎亞，能增強肺部向血液輸送氧氣的效率、促進心肌協調並有益腎臟與生殖系統，需逐步培養耐力才能獲得全部功效。',
-    videoReference: { provider: 'youtube', videoId: 'V3skjng5qP0' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/4ed295aa-3867-49e6-9d7a-eee0f542b428/playlist.m3u8' },
     tags: ['呼吸法', '神經系統', '屏息', '心肺功能', '耐力', '排毒'],
     prerequisites: ['FD001', 'FD002', 'FD004', 'FD005-L01']
   },
@@ -277,7 +277,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 867,
     summary: '火呼吸能排毒、增強肺活量與神經系統韌性、強化臍輪並提升專注與免疫力；初學者可從祈禱式坐姿開始，搭配短時間火呼吸與屏息的組合逐步練習。',
-    videoReference: { provider: 'youtube', videoId: 'KsOP80J80T8' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/1e365711-b557-4378-95ee-f9a2f331e3d9/playlist.m3u8' },
     tags: ['呼吸法', '火呼吸', '初學者', '排毒', '神經系統'],
     prerequisites: ['FD001', 'FD002', 'FD003', 'FD004', 'FD005-L01']
   },
