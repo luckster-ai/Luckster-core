@@ -197,7 +197,7 @@ asana01-surya-kriya
 
 任何涉及「這是哪一個 Learning Asset」的邏輯判斷，應以 ID 為準，而非 Slug。
 
-> **實作現況（Implementation Status）**：此為已確認的目標架構（詳見 `docs/development/adr/0003-learning-asset-identity-and-prerequisite-validation.md`）。目前 `data/practices.js` 的 Module 組成與 Sprint 8.2 實作的 Prerequisite Engine 仍以 Slug 作為內部關聯依據，尚未遷移至 ID，此差異已記錄於上述 ADR，待未來實作 Sprint 處理。
+> **實作現況（Implementation Status）**：此為已確認的目標架構（詳見 `docs/development/adr/0003-learning-asset-identity-and-prerequisite-validation.md`）。Official Practice 已統一由 Supabase `practices` 表管理，其 Module 組成以 ID 為內部關聯依據。目前 Custom Practice 的 Module 組成與 Sprint 8.2 實作的 Prerequisite Engine 仍以 Slug 作為內部關聯依據，尚未遷移至 ID，此差異已記錄於上述 ADR，待未來實作 Sprint 處理。
 
 ---
 

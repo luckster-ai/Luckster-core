@@ -379,7 +379,6 @@ The goal is sustainable long-term development.
 - After that fix, re-confirm all of the following pass:
   - `npm run lint`
   - `npm run build`
-  - `npm run validate:practices`
   - `npm run validate:module-video`
 - Not a current product blocker. Do not fix opportunistically as part of an unrelated checkpoint.
 
