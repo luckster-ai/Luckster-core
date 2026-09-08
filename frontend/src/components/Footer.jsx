@@ -15,7 +15,13 @@ function Footer() {
           YouTube
         </a>
 
-        <span className="link-placeholder">Facebook</span>
+        <a
+          href="https://www.facebook.com/JotiLivdeepKaur"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Facebook
+        </a>
       </nav>
 
       <p>© JOTI Kundalini Yoga</p>

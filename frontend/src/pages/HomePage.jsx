@@ -6,12 +6,23 @@ import teacher from '../data/teacher'
 import { useOfficialPractices } from '../hooks/useOfficialPractices'
 
 import HeroSection from '../components/HeroSection'
+import WhyJotiSection from '../components/WhyJotiSection'
 import CoursesSection from '../components/CoursesSection'
-import FeaturedPracticeSection from '../components/FeaturedPracticeSection'
 import PracticeFlowStrip from '../components/PracticeFlowStrip'
+import FeaturedPracticeSection from '../components/FeaturedPracticeSection'
 import AboutSection from '../components/AboutSection'
-import ExternalLinksSection from '../components/ExternalLinksSection'
+import SocialProofSection from '../components/SocialProofSection'
+import FinalCtaSection from '../components/FinalCtaSection'
 
+// Homepage Section Order Plan (2026-09), Option A -- ordered along the
+// first-time visitor's decision path (understand the need → understand
+// JOTI → understand the product → build trust → sign up / subscribe):
+//   Hero → Why JOTI → 進入課程 (Courses) → Practice Flow → Featured
+//   Practice → About / Founder → Social Proof (reserved, renders nothing
+//   yet) → Final CTA.
+// About/Founder now sits with Social Proof as the trust cluster, right
+// before the Final CTA. Footer (關於 JOTI / YouTube / Facebook) is
+// App.jsx's global layout, not rendered here.
 function HomePage() {
   const location = useLocation()
   const { practices: officialPractices } = useOfficialPractices()
@@ -37,15 +48,19 @@ function HomePage() {
     <>
       <HeroSection homepage={homepage} />
 
-      <CoursesSection />
+      <WhyJotiSection />
 
-      <FeaturedPracticeSection practice={featuredPractice} />
+      <CoursesSection />
 
       <PracticeFlowStrip title={homepage.practiceFlow.title} />
 
+      <FeaturedPracticeSection practice={featuredPractice} />
+
       <AboutSection teacher={teacher} />
 
-      <ExternalLinksSection homepage={homepage} />
+      <SocialProofSection />
+
+      <FinalCtaSection />
     </>
   )
 }

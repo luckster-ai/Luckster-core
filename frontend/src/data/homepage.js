@@ -1,53 +1,37 @@
+// Homepage Hero copy (2026-09). Order in the rendered Hero is: title /
+// titleEn → mission → encouragement → CTAs → image → hook → what, so the
+// CTAs sit in the first viewport on both desktop and mobile (see
+// HeroSection.jsx). `mission` is JOTI's brand / mission statement, kept
+// verbatim and given its own visual step above body copy. `hook` (the
+// visitor's own situation), `what` (what JOTI is) and `encouragement`
+// (the low-barrier line before the CTAs) are product-direction copy, not
+// new marketing claims: no medical, therapeutic, or outcome guarantees,
+// and the "顯化…" line is phrased as a question about the visitor's own
+// intention, not a promise.
 const homepage = {
   brand: {
     name: "JOTI",
-    subtitle: "昆達里尼 ABC 瑜伽",
-    subtitleEn: "KUNDALINI ABC YOGA",
-    tagline: "喚醒內在力量",
-    taglineEn: "Awaken Your Inner Power"
+    subtitleEn: "KUNDALINI ABC YOGA"
   },
 
   hero: {
     title: "喚醒內在力量",
-    subtitle: "昆達里尼 ABC 瑜伽",
-    description:
-      "透過簡單、有系統的 ABC 學習法，幫助更多人認識昆達里尼瑜伽，建立穩定、覺察與充滿能量的人生。"
-  },
-
-  about: {
-    title: "關於 JOTI",
-    content:
-      "JOTI 致力於成為華語世界最容易入門的昆達里尼瑜伽學習平台。透過 ABC 系統，讓每個人都能以簡單自然的方式接觸昆達里尼瑜伽。"
+    titleEn: "Awaken Your Inner Power",
+    mission: "從回到自己開始，連結本自具足的神性力量，走向靈性覺醒。",
+    hook: [
+      "你有煩惱嗎？",
+      "你想改善身體狀態，或正在面對身體上的困擾嗎？",
+      "你想顯化自己想要的結果嗎？——財富、健康、人際關係……"
+    ],
+    what: [
+      "JOTI 是傳遞實用工具的管道：昆達里尼瑜伽技術。",
+      "用清楚、完整的練習，陪你從第一次接觸開始。"
+    ],
+    encouragement: "你不需要柔軟，也不需要經驗。只需要開始。"
   },
 
   practiceFlow: {
-    title: "完整課程流程",
-    steps: [
-      "調頻",
-      "熱身",
-      "奎亞",
-      "放鬆",
-      "冥想",
-      "結尾"
-    ]
-  },
-
-  freePractice: {
-    title: "免費開始練習",
-    items: [
-      {
-        title: "深長呼吸",
-        duration: "5分鐘"
-      },
-      {
-        title: "火呼吸",
-        duration: "11分鐘"
-      },
-      {
-        title: "生命力冥想",
-        duration: "11分鐘"
-      }
-    ]
+    title: "完整課程流程"
   },
 
   youtube: {

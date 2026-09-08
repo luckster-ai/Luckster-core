@@ -117,7 +117,7 @@ function AboutPage() {
 
         <div className="about-cta-group">
           <Link to="/" className="button secondary">回到首頁</Link>
-          <Link to="/practice" className="button">開始練習</Link>
+          <Link to="/practice" className="button">完整練習</Link>
         </div>
 
         <p className="about-colophon">{homepage.brand.name} {homepage.brand.subtitleEn}</p>

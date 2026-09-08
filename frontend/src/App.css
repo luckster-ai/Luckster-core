@@ -29,12 +29,14 @@ nav a {
 
 .hero {
   text-align: center;
-  padding: 120px 24px;
+  padding: 72px 24px;
 }
 
+/* The image now sits BELOW the CTAs (see HeroSection.jsx) so the CTAs
+   land in the first viewport; it gets top margin instead of bottom. */
 .hero-image {
-  max-width: 700px;
-  margin: 0 auto 40px;
+  max-width: 640px;
+  margin: 48px auto 0;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -49,23 +51,62 @@ nav a {
   object-position: center;
 }
 
-.hero-brand-name {
-  margin: 0;
-  font-size: 32px;
-  font-weight: bold;
-}
-
-.hero-brand-subtitle {
-  margin: 4px 0 0;
-  font-size: 14px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #8a7b54;
-}
-
 .hero h1 {
   font-size: 56px;
   margin-bottom: 16px;
+}
+
+.hero-title-en {
+  margin: 4px 0 24px;
+  color: #8a7b54;
+}
+
+/* JOTI's mission / brand statement. A clear step above body copy --
+   larger, medium weight, warm dark -- but deliberately lighter than the
+   H1 and the CTAs. */
+.hero-mission {
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.9;
+  color: #4a4436;
+}
+
+.hero-encouragement {
+  margin: 20px 0 0;
+  color: #8a7b54;
+  line-height: 1.9;
+}
+
+.hero-cta {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* The fuller hook / what copy, below the image. */
+.hero-message {
+  max-width: 560px;
+  margin: 56px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.hero-hook p {
+  margin: 0;
+  color: #6b6b6b;
+  line-height: 1.9;
+}
+
+.hero-what p {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1.8;
 }
 
 .subtitle {
@@ -114,9 +155,26 @@ button {
 .about,
 .practice,
 .videos,
-.modules {
+.modules,
+.why-joti {
   padding: 80px 24px;
   text-align: center;
+}
+
+/* Homepage First Refinement -- Why JOTI's single lead line, sitting
+   between the heading and the ABC triad. */
+.why-joti-lead {
+  max-width: 560px;
+  margin: 0 auto 32px;
+  color: #6b6b6b;
+  line-height: 1.9;
+}
+
+/* .about-abc is a plain flex row (left-aligned) on /about, where it sits
+   inside a centered column; the standalone Why JOTI section has no such
+   wrapper, so center the row here. */
+.why-joti .about-abc {
+  justify-content: center;
 }
 
 .cards {
@@ -124,6 +182,15 @@ button {
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-top: 32px;
+}
+
+/* Homepage 進入課程 has only two cards; the shared 3-column .cards grid
+   leaves an empty right column, pushing them left. Center them instead.
+   auto-fit collapses the empty track, so 1 card per row on narrow
+   screens still centers without a media query. */
+.courses .cards {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 358px));
+  justify-content: center;
 }
 
 .card {
@@ -608,15 +675,37 @@ footer {
   margin: 0 auto;
 }
 
+/* Homepage Section Order Plan (2026-09): primary CTA below the featured
+   card. .button carries the visual; this only spaces it onto its own
+   line above the quieter 查看所有練習 link. */
+.home-featured-cta {
+  margin-top: 28px;
+}
+
 .home-featured-more {
-  display: inline-block;
-  margin-top: 24px;
+  display: block;
+  margin-top: 20px;
   color: #8a7b54;
   text-decoration: none;
 }
 
 .home-featured-more:hover {
   text-decoration: underline;
+}
+
+/* Homepage Section Order Plan (2026-09): the closing CTA section, after
+   the trust cluster. Button row mirrors .hero-cta. */
+.home-final-cta {
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.home-final-cta-buttons {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .practice-flow-strip {
@@ -1630,20 +1719,34 @@ footer {
   }
 
   .hero {
-    padding: 80px 24px;
+    padding: 44px 24px;
   }
 
   .hero-image {
     max-width: 1000px;
-    margin-bottom: 24px;
-  }
-
-  .hero-brand-name {
-    font-size: 26px;
+    margin-top: 32px;
   }
 
   .hero h1 {
     font-size: 40px;
+  }
+
+  .hero-mission {
+    font-size: 18px;
+  }
+
+  .hero-message {
+    margin-top: 40px;
+  }
+
+  /* Tighten the About / Founder → Final CTA gap on mobile (Social Proof
+     between them renders nothing yet, so the two 80px paddings stack). */
+  .about {
+    padding-bottom: 44px;
+  }
+
+  .home-final-cta {
+    padding-top: 44px;
   }
 
   .cards {

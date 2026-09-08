@@ -17,7 +17,7 @@ function PracticeHub({ officialPractices, customPractices, officialLoading, offi
 
   return (
     <section className="practice-hub">
-      <h1>開始練習</h1>
+      <h1>完整練習</h1>
 
       <p className="section-description">
         選擇一堂官方練習，或找到你先前建立的練習，開始今天的 Kundalini Yoga 練習。
