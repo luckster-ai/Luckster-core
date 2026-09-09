@@ -1,4 +1,5 @@
-import { Navigate } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../state/useAuth'
 import { getMembershipStatus, getTrialUsageSummary, MEMBERSHIP_STATUS } from '../utils/membershipStatus'
 import { formatVideoDuration } from '../utils/formatDuration'
@@ -7,9 +8,18 @@ import PracticeHistory from '../components/PracticeHistory'
 
 const STATUS_LABEL = {
   [MEMBERSHIP_STATUS.ADMIN]: 'Admin',
+  [MEMBERSHIP_STATUS.SUBSCRIBER]: '付費會員',
   [MEMBERSHIP_STATUS.TRIAL]: '免費體驗中',
   [MEMBERSHIP_STATUS.TRIAL_EXPIRED]: '免費體驗已結束'
 }
+
+// Payment Phase 1 -- Oen TEST first-subscription MVP. The subscribe entry
+// point (Link + the ?checkout return handling) is only meaningful on the
+// Preview deployment where /subscribe exists (VITE_ENABLE_SUBSCRIBE). On
+// every other environment SUBSCRIBE_ENABLED is false and none of this
+// renders, so AccountPage is unchanged for current users.
+const SUBSCRIBE_ENABLED = import.meta.env.VITE_ENABLE_SUBSCRIBE === 'true'
+const MAX_ACTIVATION_POLLS = 10
 
 // Membership / Authentication Foundation (Phase 2A). Trial usage/
 // remaining-time display added Phase 4E -- a static snapshot of
@@ -17,17 +27,51 @@ const STATUS_LABEL = {
 // getTrialUsageSummary()'s own comment for why a static snapshot,
 // not a live countdown, is the right amount of precision here).
 function AccountPage() {
-  const { loading, user, profile, signOut, setMarketingConsent } = useAuth()
+  const { loading, user, profile, signOut, setMarketingConsent, refreshProfile } = useAuth()
   const { sessions, officialById, loading: historyLoading } = usePracticeHistory()
+
+  const [searchParams] = useSearchParams()
+  const checkoutResult = SUBSCRIBE_ENABLED ? searchParams.get('checkout') : null
+
+  const status = getMembershipStatus(profile)
+  const activating =
+    checkoutResult === 'success' && status !== MEMBERSHIP_STATUS.SUBSCRIBER
+
+  // refreshProfile is a fresh function identity every AuthProvider render
+  // (not memoized) -- keep it in a ref so the polling effect below doesn't
+  // re-run purely on identity churn (same pattern as
+  // hooks/useModuleUsageTracking.js).
+  const refreshProfileRef = useRef(refreshProfile)
+  useEffect(() => {
+    refreshProfileRef.current = refreshProfile
+  }, [refreshProfile])
+
+  // Poll the profile a few times after returning from a successful checkout,
+  // giving the Oen webhook time to activate the membership. setTimeout (not
+  // an interval), re-armed when `status` changes (i.e. after each refresh),
+  // so there is never more than one pending timer.
+  const pollTries = useRef(0)
+  useEffect(() => {
+    if (!activating) return undefined
+    if (pollTries.current >= MAX_ACTIVATION_POLLS) return undefined
+    const timer = setTimeout(() => {
+      pollTries.current += 1
+      refreshProfileRef.current()
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [activating, status])
 
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
 
-  const status = getMembershipStatus(profile)
   const usageSummary =
     status === MEMBERSHIP_STATUS.TRIAL || status === MEMBERSHIP_STATUS.TRIAL_EXPIRED
       ? getTrialUsageSummary(profile)
       : null
+
+  const showSubscribeCta =
+    SUBSCRIBE_ENABLED &&
+    (status === MEMBERSHIP_STATUS.TRIAL || status === MEMBERSHIP_STATUS.TRIAL_EXPIRED)
 
   return (
     <div className="auth-page">
@@ -42,6 +86,24 @@ function AccountPage() {
         <p>
           <strong>會員狀態：</strong>
           {STATUS_LABEL[status]}
+        </p>
+      )}
+
+      {checkoutResult === 'success' && (
+        <p>
+          {activating
+            ? '付款完成，正在開通會員權限…'
+            : status === MEMBERSHIP_STATUS.SUBSCRIBER
+              ? '付費會員已開通 🎉'
+              : '付款已完成。若狀態尚未更新，請稍後重新整理。'}
+        </p>
+      )}
+
+      {checkoutResult === 'failed' && <p>付款未完成。</p>}
+
+      {showSubscribeCta && (
+        <p>
+          <Link to="/subscribe">訂閱 JOTI</Link>
         </p>
       )}
 

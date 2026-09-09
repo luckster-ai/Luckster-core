@@ -14,7 +14,11 @@ import { MEMBERSHIP_STATUS } from './membershipStatus'
 // meant to have identical Bunny Module access, not two separate rules.
 export const MODULE_PREVIEW_SECONDS = 10
 
-const FULL_ACCESS_STATUSES = new Set([MEMBERSHIP_STATUS.ADMIN, MEMBERSHIP_STATUS.TRIAL])
+const FULL_ACCESS_STATUSES = new Set([
+  MEMBERSHIP_STATUS.ADMIN,
+  MEMBERSHIP_STATUS.SUBSCRIBER,
+  MEMBERSHIP_STATUS.TRIAL
+])
 
 // YouTube-provider Modules (and anything that isn't 'bunny') are never
 // gated -- Phase 4A's "YouTube is free content" decision, unchanged.
@@ -32,10 +36,10 @@ export function getModuleCapSeconds({ membershipStatus, provider }) {
 }
 
 // Only an active Trial's own Bunny-Module watch time should ever be
-// credited -- an admin has nothing to meter, and a visitor/expired
-// member is capped at MODULE_PREVIEW_SECONDS regardless, so crediting
-// their few preview seconds would just be a pointless RPC call against
-// a status that already can't change from it.
+// credited -- an admin or a paid SUBSCRIBER has nothing to meter, and a
+// visitor/expired member is capped at MODULE_PREVIEW_SECONDS regardless,
+// so crediting their few preview seconds would just be a pointless RPC
+// call against a status that already can't change from it.
 export function shouldTrackModuleUsage({ membershipStatus, provider }) {
   return provider === 'bunny' && membershipStatus === MEMBERSHIP_STATUS.TRIAL
 }

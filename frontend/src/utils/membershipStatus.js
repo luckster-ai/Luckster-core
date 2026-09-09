@@ -2,20 +2,28 @@
 // 4E (utils/playbackEntitlement.js) as the actual gating input.
 //
 // Pure, derived status -- mirrors the SQL logic in
-// supabase/schema.sql's get_membership_status() function exactly, so
-// the client can show the same answer without a round trip. This value
-// is trusted for Phase 4E's playback gating because its INPUTS
-// (profile.trial_started_at / module_usage_seconds / role) are already
-// protected from direct client tampering by protect_profile_system_fields()
-// -- the same reasoning already documented on that trigger. It is not a
-// substitute for real content protection (see Bunny signed-URL/token
-// delivery, still not implemented -- a client that bypasses the UI
-// entirely can still reach the raw Bunny URLs shipped in data/modules.js).
+// supabase/schema_subscriptions.sql's get_membership_status() function
+// exactly (originally supabase/schema.sql; Payment Phase 1 added the
+// 'subscriber' branch), so the client can show the same answer without a
+// round trip. This value is trusted for Phase 4E's playback gating
+// because its INPUTS (profile.trial_started_at / module_usage_seconds /
+// role / subscription_status) are already protected from direct client
+// tampering by protect_profile_system_fields() -- the same reasoning
+// already documented on that trigger. It is not a substitute for real
+// content protection (see Bunny signed-URL/token delivery, still not
+// implemented -- a client that bypasses the UI entirely can still reach
+// the raw Bunny URLs shipped in data/modules.js).
+//
+// subscription_status is a DERIVED CACHE of the public.subscriptions rows
+// (the subscription source of truth), maintained only by the Oen webhook.
+// It is `undefined` on profiles loaded before schema_subscriptions.sql is
+// run, which correctly falls through to the trial logic.
 export const TRIAL_DAYS = 30
 export const TRIAL_SECONDS = 30 * 60 * 60
 
 export const MEMBERSHIP_STATUS = {
   ADMIN: 'admin',
+  SUBSCRIBER: 'subscriber',
   TRIAL: 'trial',
   TRIAL_EXPIRED: 'trial_expired'
 }
@@ -23,6 +31,7 @@ export const MEMBERSHIP_STATUS = {
 export function getMembershipStatus(profile) {
   if (!profile) return null
   if (profile.role === 'admin') return MEMBERSHIP_STATUS.ADMIN
+  if (profile.subscription_status === 'active') return MEMBERSHIP_STATUS.SUBSCRIBER
 
   const trialStartedAt = profile.trial_started_at ? new Date(profile.trial_started_at) : null
   const daysElapsed = trialStartedAt

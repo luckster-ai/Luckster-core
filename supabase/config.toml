@@ -1,0 +1,22 @@
+# Supabase CLI project config. Committed. Contains NO secrets -- only the
+# project ref (already public, it is the subdomain of VITE_SUPABASE_URL)
+# and per-function auth flags.
+#
+# `supabase link --project-ref <ref>` will set / confirm project_id.
+# Verify this matches your project before deploying functions.
+project_id = "ngznngqmbhxejkjbqomh"
+
+[functions.create-subscription-checkout]
+# MUST stay true. With verify_jwt = true the Supabase Edge runtime rejects
+# any request without a valid Supabase JWT before the handler runs -- this
+# is the only thing stopping an anonymous caller from creating Oen
+# checkouts against our merchant account. Never set a global
+# verify_jwt = false that would override this.
+verify_jwt = true
+
+[functions.oen-webhook]
+# Oen cannot send a Supabase JWT and its webhook carries no signature, so
+# transport-level auth is disabled here. Authenticity is enforced INSIDE
+# the function: every actionable event is re-queried against the Oen API
+# with our secret token before any entitlement is granted (see index.ts).
+verify_jwt = false

@@ -14,8 +14,16 @@ import PracticePlayerPage from '../pages/PracticePlayerPage'
 import LoginPage from '../pages/LoginPage'
 import AccountPage from '../pages/AccountPage'
 import AuthCallbackPage from '../pages/AuthCallbackPage'
+import SubscribePage from '../pages/SubscribePage'
 import AdminPracticeListPage from '../pages/AdminPracticeListPage'
 import AdminPracticeEditPage from '../pages/AdminPracticeEditPage'
+
+// Payment Phase 1 -- Oen TEST first-subscription MVP. /subscribe is
+// enabled ONLY when VITE_ENABLE_SUBSCRIBE === 'true', which is set only on
+// the Vercel Preview deployment (A4). Every other environment (local,
+// production `main`) leaves it unset, so the route is not registered at
+// all and the page is unreachable.
+const SUBSCRIBE_ENABLED = import.meta.env.VITE_ENABLE_SUBSCRIBE === 'true'
 
 function AppRouter() {
   return (
@@ -104,6 +112,13 @@ function AppRouter() {
         path="/admin/practices/:id/edit"
         element={<AdminPracticeEditPage />}
       />
+
+      {SUBSCRIBE_ENABLED && (
+        <Route
+          path="/subscribe"
+          element={<SubscribePage />}
+        />
+      )}
     </Routes>
   )
 }
