@@ -104,7 +104,7 @@ const modules = [
     difficulty: 'Beginner',
     duration: 2674,
     summary: '一套簡單的暖身身體奎亞，能系統地鍛鍊脊柱，開展普拉納（prana）的循環，以平衡脈輪（chakras）。',
-    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/8f51bfc4-0600-480c-89be-be5ce4f88c8b/playlist.m3u8' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/ec06b271-db8e-4050-a99f-6c8eed7c3883/playlist.m3u8' },
     tags: ['身體奎亞', '暖身', '脊柱', '脈輪平衡', '普拉納能量'],
     prerequisites: ['FD001', 'FD002', 'FD003', 'FD004', 'FD005-L01', 'FD005-L04', 'FD006', 'FD008-L07', 'FD009']
   },
@@ -172,7 +172,7 @@ const modules = [
 
   {
     id: 'MM001',
-    slug: 'med01-kirtan-kriya-18min',
+    slug: 'med01-kirtan-kriya-18min-detailed',
     title: 'Kirtan Kriya (18-Minute Detailed)',
     chineseTitle: '克爾坦奎亞（18分鐘詳解版）',
     type: 'med',
@@ -181,14 +181,14 @@ const modules = [
     difficulty: 'Beginner',
     duration: 1128,
     summary: 'Sa Ta Na Ma 唱誦冥想 + 詳細解說。',
-    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/78fb82b1-d8cc-4da3-be37-6d1ed002da24/playlist.m3u8' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/70f59867-ee3b-4260-8214-44d6f090557b/playlist.m3u8' },
     tags: ['唱誦', '手印', '冥想', '專注力', '基礎'],
     prerequisites: ['FD004', 'FD005-L01', 'FD008', 'FD008-L01', 'FD008-L02', 'FD008-L03', 'FD008-L04']
   },
 
   {
     id: 'MM002',
-    slug: 'med02-kirtan-kriya-31min',
+    slug: 'med02-kirtan-kriya-31min-overview',
     title: 'Kirtan Kriya (31-Minute)',
     chineseTitle: '克爾坦奎亞（31分鐘）',
     type: 'med',
@@ -293,7 +293,7 @@ const modules = [
     difficulty: 'Advanced',
     duration: 2548,
     summary: '以簡易坐姿搭配智慧手印，唱誦 Japji Sahib 第25節（Bahuta Karam）31分鐘，接著靜心聆聽內在的梵音餘韻，是一套據稱能將匱乏轉化為豐盛的冥想練習。',
-    videoReference: { provider: 'youtube', videoId: 'yEYFwtmMVLg' },
+    videoReference: { provider: 'bunny', videoId: 'https://vz-c3c60b7e-4d4.b-cdn.net/90253f9b-468b-4108-a3ba-0a5f983f537b/playlist.m3u8' },
     tags: ['Mantra', '豐盛', 'Japji Sahib', '財富'],
     prerequisites: ['FD005-L01', 'FD008', 'FD008-L01']
   },

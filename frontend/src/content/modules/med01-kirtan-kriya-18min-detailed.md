@@ -42,7 +42,7 @@ Variant:
 
 ## Summary
 
-Sa Ta Na Ma 唱誦冥想 + 詳細解說。
+Sa Ta Na Ma 初學者唱誦冥想 + 詳細解說。
 
 ---
 
@@ -97,7 +97,7 @@ Bunny
 
 URL:
 
-https://vz-c3c60b7e-4d4.b-cdn.net/78fb82b1-d8cc-4da3-be37-6d1ed002da24/playlist.m3u8
+https://vz-c3c60b7e-4d4.b-cdn.net/70f59867-ee3b-4260-8214-44d6f090557b/playlist.m3u8
 
 Previous Source（歷史來源，僅供追溯，不作為目前播放依據）：
 

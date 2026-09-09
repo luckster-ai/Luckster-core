@@ -8,11 +8,11 @@ MM002
 
 Title:
 
-Kirtan Kriya (31-Minute)
+Kirtan Kriya (31-Minute Overview)
 
 Chinese Title:
 
-克爾坦奎亞（31分鐘）
+克爾坦奎亞（31分簡單解說版 ）
 
 Type:
 
@@ -36,13 +36,13 @@ Duration:
 
 Variant:
 
-31-Minute 
+31-Minute Overview
 
 ---
 
 ## Summary
 
-Sa Ta Na Ma 唱誦冥想。31分鐘版本（無解說）。
+Sa Ta Na Ma 唱誦冥想。31分鐘版本（簡單解說）。
 
 ---
 
