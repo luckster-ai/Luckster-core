@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import ModuleCard from './ModuleCard'
 
 function ModuleLibrary({ modules }) {
@@ -12,13 +11,7 @@ function ModuleLibrary({ modules }) {
 
       <div className="cards">
         {modules.map((module) => (
-          <Link
-            key={module.id}
-            to={`/modules/${module.slug}`}
-            className="card-link"
-          >
-            <ModuleCard module={module} />
-          </Link>
+          <ModuleCard key={module.id} module={module} />
         ))}
       </div>
     </section>

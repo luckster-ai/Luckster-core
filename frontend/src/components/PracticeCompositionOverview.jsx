@@ -179,40 +179,6 @@ function PracticeCompositionOverview({
           <span className="overview-sub">總時長 {totalLabel} · {typeLabel}</span>
         </div>
 
-        {/* Sprint 1E — Part B. relaxationPosition already exists in
-            Builder state and already drives assemblePracticeOrder (the
-            actual playback sequence) -- this control already existed
-            inside the old Level 2 Relaxation editor, but that editor is
-            now hidden on Desktop (Sprint 1D), so there was no way to
-            reach it there anymore. This surfaces the same existing
-            state/action at Level 1 instead of duplicating it. Only
-            meaningful once Relaxation has content. */}
-        {state.sections.relaxation.length > 0 && (
-          <fieldset className="overview-order-control">
-            <legend>放鬆順序</legend>
-
-            <label>
-              <input
-                type="radio"
-                name="overviewRelaxationPosition"
-                checked={state.relaxationPosition === 'before'}
-                onChange={() => onSetRelaxationPosition('before')}
-              />
-              在冥想之前
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="overviewRelaxationPosition"
-                checked={state.relaxationPosition === 'after'}
-                onChange={() => onSetRelaxationPosition('after')}
-              />
-              在冥想之後
-            </label>
-          </fieldset>
-        )}
-
         <div className="overview-rail" />
 
         <div className="overview-grid">
@@ -233,7 +199,16 @@ function PracticeCompositionOverview({
       </div>
 
       {/* Desktop-only: the single active Picker slot, per Sprint 1D.
-          Hidden below 1024px via CSS. */}
+          Hidden below 1024px via CSS.
+
+          Relaxation ordering: the "before / after Meditation" control now
+          lives INSIDE this picker when the Relaxation section is the
+          active one -- same placement as Mobile (MobileModulePanel puts
+          it in the Relaxation section's own panel), not floating at the
+          top of .overview-card. Same state/action/copy as the Mobile
+          control (buildRelaxationPositionControl in PracticeBuilder.jsx);
+          a distinct radio `name` keeps it from colliding with the other
+          rendering contexts' native radio groups. */}
       <DesktopActivePicker
         activeSection={activeSectionConfig}
         moduleIds={activeSectionConfig ? state.sections[activeSectionConfig.key] : []}
@@ -242,6 +217,33 @@ function PracticeCompositionOverview({
         moduleSectionLabels={moduleSectionLabels}
         onAdd={(moduleId) => onWorkbenchAdd(activeSectionConfig.key, moduleId)}
         onClose={() => onOpenPicker(activeSectionConfig?.key)}
+        relaxationControl={
+          activeSectionConfig?.key === 'relaxation' ? (
+            <fieldset className="builder-relaxation-position">
+              <legend>Relaxation 位置</legend>
+
+              <label>
+                <input
+                  type="radio"
+                  name="workbenchRelaxationPosition"
+                  checked={state.relaxationPosition === 'before'}
+                  onChange={() => onSetRelaxationPosition('before')}
+                />
+                在 Meditation 之前
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="workbenchRelaxationPosition"
+                  checked={state.relaxationPosition === 'after'}
+                  onChange={() => onSetRelaxationPosition('after')}
+                />
+                在 Meditation 之後
+              </label>
+            </fieldset>
+          ) : null
+        }
       />
     </div>
   )

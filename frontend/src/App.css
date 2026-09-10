@@ -368,13 +368,15 @@ footer {
   color: #8a7b54;
 }
 
-.foundation-page {
+.foundation-page,
+.module-page {
   max-width: 720px;
   margin: 0 auto;
   padding: 48px 24px;
 }
 
-.foundation-page h1 {
+.foundation-page h1,
+.module-page h1 {
   margin: 0 0 8px;
 }
 
@@ -1099,6 +1101,70 @@ footer {
   opacity: 0.55;
 }
 
+/* Module Preview (2026-09): inline expand inside a Picker candidate card.
+   Reuses the existing card / .module-playback-subtitle / .video-capped-
+   notice look -- no new palette. The card breaks out to the Picker's
+   full width while expanded so the shared <VideoPlayer> has room. */
+.piece-card-preview-toggle {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--section-accent, #d9c6a5);
+  background: none;
+  font-size: 12px;
+  color: #8a7b54;
+  cursor: pointer;
+}
+
+.piece-card--picker.expanded {
+  max-width: 100%;
+  flex-basis: 100%;
+}
+
+.piece-card-preview {
+  padding: 12px;
+  border-top: 1px solid #eee5d0;
+}
+
+.piece-card-preview-title {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0 0 2px;
+}
+
+.piece-card-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 8px 0;
+}
+
+.piece-card-preview-meta > div {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.piece-card-preview-meta dt {
+  color: #8a7b54;
+}
+
+.piece-card-preview-meta dd {
+  margin: 0;
+}
+
+.piece-card-preview-tags,
+.piece-card-preview-summary {
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.piece-card-preview-tags {
+  color: #8a7b54;
+}
+
 /* ============================================================
    Practice Composition Overview (Stage 1C — Level 1)
    Sits above the six per-section containers (Level 2) and replaces
@@ -1753,7 +1819,8 @@ footer {
     grid-template-columns: 1fr;
   }
 
-  .foundation-page {
+  .foundation-page,
+  .module-page {
     padding: 32px 16px;
   }
 

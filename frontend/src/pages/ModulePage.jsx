@@ -12,6 +12,7 @@ import { getMembershipStatus } from '../utils/membershipStatus'
 import { getModuleCapSeconds } from '../utils/playbackEntitlement'
 import { collectModulePrerequisites } from '../utils/prerequisiteEngine'
 import { getMissingPrerequisites, LEARNER_STATUS } from '../utils/learnerStatus'
+import { stripMarkdownSection, stripSectionIfEmpty } from '../utils/stripMarkdownSection'
 
 const markdownModules = import.meta.glob(
   '../content/modules/*.md',
@@ -21,6 +22,36 @@ const markdownModules = import.meta.glob(
     eager: true
   }
 )
+
+// Module Detail content filter -- mirrors FoundationOverview.jsx's
+// toFoundationOverviewContent() and LessonDetail.jsx's toLessonContent().
+// A Module .md carries authoring metadata that must never reach a reader:
+// ## Basic Information (internal ID, raw Type/Variant), ## Sources (the
+// Bunny playlist URL and the Previous Source history). Only the genuinely
+// user-facing prose survives -- ## Description and ## Learning Outcomes.
+// ## Summary is already shown from module.summary, ## Prerequisites is
+// already shown above as a resolved link list, and ## Tags is rendered
+// from module.tags, so all three are stripped here too.
+function toModuleContent(markdown) {
+  // The Module .md files are CRLF; normalise first so the "# Title" strip
+  // (which needs \n right after the heading text) works the same as the
+  // section strips below.
+  let result = markdown.replace(/\r\n/g, '\n').replace(/^#\s+.+\n+/, '')
+  result = stripMarkdownSection(result, '##\\s*Basic Information')
+  result = stripMarkdownSection(result, '##\\s*Summary')
+  result = stripMarkdownSection(result, '##\\s*Prerequisites')
+  result = stripMarkdownSection(result, '##\\s*Tags')
+  result = stripMarkdownSection(result, '###\\s*Video')
+  // Transcript stays a "strip only when empty" like the Foundation
+  // filters -- AI transcripts are a planned feature and should surface
+  // once real. Resources is an always-empty template stub in the Module
+  // content model (PDF / Audio / Downloads labels, no values), so it is
+  // removed outright.
+  result = stripSectionIfEmpty(result, '###\\s*Transcript')
+  result = stripMarkdownSection(result, '###\\s*Resources')
+  result = stripSectionIfEmpty(result, '##\\s*Sources')
+  return result
+}
 
 function ModulePage() {
   const { slug } = useParams()
@@ -91,7 +122,9 @@ function ModulePage() {
 
   return (
     <div className="module-page">
-      <h1>{module.title}</h1>
+      <h1>{module.chineseTitle}</h1>
+
+      <p className="module-playback-subtitle">{module.title}</p>
 
       <p>
         <strong>難度：</strong> {module.difficulty}
@@ -99,6 +132,10 @@ function ModulePage() {
 
       <p>
         <strong>影片時長：</strong> {formatVideoDuration(module.duration)}
+      </p>
+
+      <p>
+        <strong>類別：</strong> {module.categories.join('、')}
       </p>
 
       <p>{module.summary}</p>
@@ -177,7 +214,13 @@ function ModulePage() {
 
       <hr />
 
-      <ReactMarkdown>{markdown}</ReactMarkdown>
+      <ReactMarkdown>{toModuleContent(markdown)}</ReactMarkdown>
+
+      {module.tags?.length > 0 && (
+        <p className="module-playback-subtitle">
+          標籤：{module.tags.join('、')}
+        </p>
+      )}
     </div>
   )
 }

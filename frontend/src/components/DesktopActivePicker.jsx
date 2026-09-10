@@ -8,7 +8,13 @@ import ModulePickerCanvas from './ModulePickerCanvas'
 // Hidden below 1024px via CSS (see .workbench-picker in App.css);
 // Mobile/Tablet keep using the pre-existing Level 2 accordion below,
 // untouched by this component.
-function DesktopActivePicker({ activeSection, moduleIds, modules, allSelectedIds, moduleSectionLabels, onAdd, onClose }) {
+//
+// relaxationControl: the "放鬆 before/after Meditation" fieldset, passed
+// in only when the active Section is Relaxation. Rendered here (between
+// the head and the Module list) so its placement matches Mobile's --
+// MobileModulePanel puts the same control inside the Relaxation
+// section's own panel. Null for every other Section.
+function DesktopActivePicker({ activeSection, moduleIds, modules, allSelectedIds, moduleSectionLabels, onAdd, onClose, relaxationControl }) {
   if (!activeSection) return null
 
   const zhLabel = activeSection.label.split(' ')[0]
@@ -22,6 +28,8 @@ function DesktopActivePicker({ activeSection, moduleIds, modules, allSelectedIds
           收起
         </button>
       </div>
+
+      {relaxationControl}
 
       <ModulePickerCanvas
         category={activeSection.category}
