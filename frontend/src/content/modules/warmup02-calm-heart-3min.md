@@ -33,7 +33,7 @@ Beginner
 
 Duration:
 
-5:21
+4:57
 
 Variant:
 

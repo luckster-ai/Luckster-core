@@ -32,7 +32,7 @@ Intermediate
 
 Duration:
 
-14:15
+13:57
 
 Variant:
 

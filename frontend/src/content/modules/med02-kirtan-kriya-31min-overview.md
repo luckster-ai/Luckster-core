@@ -32,7 +32,7 @@ Intermediate
 
 Duration:
 
-32:58
+34:09
 
 Variant:
 
@@ -97,7 +97,7 @@ Bunny
 
 URL:
 
-https://vz-c3c60b7e-4d4.b-cdn.net/6bfebb54-a69f-4421-b238-16dfa4eeb6ba/playlist.m3u8
+https://vz-c3c60b7e-4d4.b-cdn.net/693b84e6-a5a2-449d-96cb-025f8a59e9a7/playlist.m3u8
 
 Previous Source（歷史來源，僅供追溯，不作為目前播放依據）：
 

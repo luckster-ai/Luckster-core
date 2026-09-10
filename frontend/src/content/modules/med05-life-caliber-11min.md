@@ -32,7 +32,7 @@ Advanced
 
 Duration:
 
-11:08
+12:26
 
 Variant:
 

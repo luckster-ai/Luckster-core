@@ -28,7 +28,7 @@ Beginner
 
 Duration:
 
-19:58
+19:45
 
 ---
 
