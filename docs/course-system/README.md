@@ -15,6 +15,7 @@ JOTI Course System 是 JOTI Kundalini ABC Yoga 的核心教學架構。
 - module-library.md
 - practice-library.md
 - practice-builder.md
+- module-authoring-workflow.md（新增 Module 的標準操作流程）
 
 未來亦可擴充：
 
