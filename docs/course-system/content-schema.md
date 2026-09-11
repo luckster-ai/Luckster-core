@@ -42,6 +42,8 @@ Learning Asset 是 JOTI 課程系統中，任何對應一支影片、可供學�
 * **summary**（必要）— 簡短摘要，用於 Foundation Card、Module Card、搜尋結果與推薦列表。對應 Learning Asset 中的 Summary 欄位，與 Markdown 內容中的長篇 Description 為不同用途，兩者不重複維護。
 * **difficulty**（必要）— 適合程度（例如 `Beginner`）。
 * **duration**（必要）— 影片時長（秒）。
+
+  **Module 的權威來源（已確認事實，2026-09 起生效）**：Module 的 `duration` 只存在於 `data/modules.js`（秒數），Module 的 `.md` 檔案**不再**包含 `Duration:` 欄位、不做人工填寫或維護。實際數值以 Bunny 影片本身的長度為準，由 `npm run validate:module-video:audit`（見 `frontend/scripts/validate-module-video-sync.mjs`）對照 Bunny HLS manifest 確認；該指令僅回報是否一致與正確數值為何，**不會自動寫回 `data/modules.js`**，寫入仍是人工（或 AI 協作）依報告手動更新。Foundation 的 `duration` 不受此變更影響，`.md` 仍維持既有的 `Duration:` 欄位（見 `frontend/src/content/template.md`）。
 * **Prerequisites**
 The `Prerequisites` section follows a standardized authoring format.
 If prerequisites exist:

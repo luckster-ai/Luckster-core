@@ -30,10 +30,6 @@ Difficulty:
 
 Advanced
 
-Duration:
-
-12:26
-
 Variant:
 
 11-Minute Guided

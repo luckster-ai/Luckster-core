@@ -30,10 +30,6 @@ Difficulty:
 
 Beginner
 
-Duration:
-
-4:27
-
 Variant:
 
 3 Rounds

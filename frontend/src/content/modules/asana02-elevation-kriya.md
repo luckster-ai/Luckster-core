@@ -28,10 +28,6 @@ Difficulty:
 
 Beginner
 
-Duration:
-
-46:27
-
 Variant:
 
 Capabilities:

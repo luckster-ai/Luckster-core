@@ -30,10 +30,6 @@ Difficulty:
 
 Advanced
 
-Duration:
-
-2:34:20
-
 Variant:
 
 150-Minute 

@@ -30,10 +30,6 @@ Difficulty:
 
 Intermediate
 
-Duration:
-
-34:09
-
 Variant:
 
 31-Minute Overview

@@ -28,10 +28,6 @@ Difficulty:
 
 Intermidiate
 
-Duration:
-
-1:01:42
-
 Variant:
 
 Standard

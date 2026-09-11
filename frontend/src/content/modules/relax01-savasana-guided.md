@@ -30,10 +30,6 @@ Difficulty:
 
 Beginner
 
-Duration:
-
-10:55
-
 Variant:
 
 Leading into

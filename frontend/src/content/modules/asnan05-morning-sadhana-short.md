@@ -28,10 +28,6 @@ Difficulty:
 
 Beginner
 
-Duration:
-
-47:49
-
 Variant:
 
 Short

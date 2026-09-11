@@ -30,10 +30,6 @@ Difficulty:
 
 Beginner
 
-Duration:
-
-13:26
-
 Variant:
 
 11-Minute 

@@ -26,10 +26,6 @@ Difficulty:
 
 Beginner
 
-Duration:
-
-38:00
-
 ---
 
 ## Summary

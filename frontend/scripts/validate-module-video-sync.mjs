@@ -15,27 +15,30 @@
 //      course-system/content-schema.md) and this is the safety net that
 //      catches drift. Previous Source is historical and never compared.
 //
-//   2. Duration sync -- each Module's .md "Duration:" field must match
-//      formatVideoDuration(module.duration) from data/modules.js, i.e. the
-//      MM:SS the site actually renders. Catches the case where one of the
-//      two places was updated (e.g. after a Bunny re-upload) and the other
-//      was left on the old value.
+// Duration is deliberately NOT part of this layer. Module .md files no
+// longer carry a "Duration:" field at all (removed 2026-09) -- duration
+// is authored exactly once, as data/modules.js's `duration` (seconds),
+// and its correctness against the real video is the Bunny audit's job
+// below, not an offline text-vs-text comparison. See
+// docs/course-system/content-schema.md and frontend/src/content/
+// template.md for the current authoring contract.
 //
 // ---------------------------------------------------------------------------
 // Bunny audit (opt-in via --audit, needs network)
 // ---------------------------------------------------------------------------
 //
-//   3. Availability -- fetch each bunny videoReference's HLS playlist and
+//   2. Availability -- fetch each bunny videoReference's HLS playlist and
 //      confirm it still exists. A definitive 404/410 fails the run (catches
 //      "videoReference points at a video that was deleted / re-uploaded
 //      under a new GUID"). A network error / timeout / 5xx is reported as
 //      UNVERIFIED, never as missing, and does not fail the offline checks
 //      -- a flaky connection must not look like a broken video.
 //
-//   4. Duration drift -- sum the media playlist's #EXTINF values (the real
+//   3. Duration drift -- sum the media playlist's #EXTINF values (the real
 //      encoded length) and compare with module.duration. Anything beyond
-//      DURATION_TOLERANCE_SECONDS is flagged so the recorded values can be
-//      re-synced from Bunny.
+//      DURATION_TOLERANCE_SECONDS is flagged so the recorded value can be
+//      re-synced from Bunny (still a manual copy-in -- this script only
+//      reports the drift, it never writes to data/modules.js).
 //
 // Bunny's "Block direct url file access" rejects requests with no Referer,
 // so every request here sends one (any https Referer satisfies it; see the
@@ -218,20 +221,7 @@ async function run() {
       }
     }
 
-    // --- Check 2: Duration sync (.md Duration <-> modules.js duration) ---
-    const mdDuration = extractLabeledValue(markdown, 'Duration:')
-    const expectedDuration = formatVideoDuration(module.duration)
-    if (!mdDuration) {
-      problems.push('no "Duration:" field in .md')
-    } else if (mdDuration !== expectedDuration) {
-      problems.push(
-        'Duration mismatch\n' +
-          `      .md Duration:            ${mdDuration}\n` +
-          `      data/modules.js (${module.duration}s): ${expectedDuration}`
-      )
-    }
-
-    // --- Check 3 + 4: Bunny audit (opt-in) ---
+    // --- Check 2 + 3: Bunny audit (opt-in) ---
     if (AUDIT && module.videoReference.provider === 'bunny') {
       const result = await getBunnyDuration(module.videoReference.videoId)
 
@@ -280,8 +270,8 @@ async function run() {
 
   console.log(
     AUDIT
-      ? 'validate:module-video OK — .md ↔ data/modules.js in sync, every Bunny video reachable and duration within tolerance.'
-      : 'validate:module-video OK — every Module .md Primary Video and Duration matches data/modules.js.'
+      ? 'validate:module-video OK — .md Primary Video ↔ data/modules.js in sync, every Bunny video reachable and duration within tolerance.'
+      : 'validate:module-video OK — every Module .md Primary Video matches data/modules.js.'
   )
   process.exit(0)
 }

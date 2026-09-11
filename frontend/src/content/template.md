@@ -45,7 +45,7 @@ Difficulty:
 
 Duration:
 
-（格式範例：5:01）
+（Foundation 必填，格式範例：5:01。**Module 不使用此欄位** —— Module 的 `duration` 只存在於 `data/modules.js`（秒數），來源為 Bunny 影片實際長度，透過 `npm run validate:module-video:audit` 對照 Bunny HLS manifest 確認，不在 Markdown 內人工填寫或維護。撰寫 Module 時省略此欄位，不留空的 `Duration:` 標籤。完整規則見 `docs/course-system/content-schema.md`。）
 
 Capabilities:
 
