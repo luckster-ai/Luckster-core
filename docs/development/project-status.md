@@ -10,11 +10,15 @@
 
 **核心學習系統（Foundation / Module / Practice / Auth / Membership）已完成並上線。**
 
+**JOTI Legal / Business Model v1（Membership Service Basic Agreement + Service Period）已確立並整理成文件。**
+
 目前重心：
 
-1. 內容擴充（新增 Module）
-2. Oen Payment 整合 —— Subscription（訂閱）驗證中，正式環境部署（固定 outbound IP）仍在 Discovery 階段
+1. **Oen Payment Implementation Discovery** —— 對照新的法律／商業模型，唯讀盤點現有 Oen integration code、Supabase schema 與前端流程的落差，**尚未進入 coding 階段**
+2. 內容擴充（新增 Module）
 3. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
+
+> 注意：下方「Payment（Oen）—— Test 環境」小節記錄的 T-1/T-2 成果，是**舊付款模型（recurring subscription）**下的測試紀錄，與新確立的 Legal/Business Model v1（不採自動續約）存在已知架構落差，將由上述 Discovery 正式盤點，尚未調整。
 
 ---
 
@@ -48,6 +52,27 @@
 - Supabase 端已有對應基礎建設：`create-subscription-checkout` / `oen-webhook` Edge Functions、`schema_subscriptions.sql`（`subscriptions` / `subscription_checkouts` / `payment_events` 表 + RLS + 唯一寫入者 RPC）
 - Payment Backend 正式環境部署 Discovery：比較 Supabase Edge Functions／Vercel Functions／小型常駐服務，推薦「維持 Supabase Edge Functions + 第三方固定 IP outbound proxy」，理由與比較已記錄於本次對話（尚未整理成獨立文件）
 
+### JOTI Legal / Business Model v1（法律／商業付款規則）
+- **架構模型確立**：Membership Service Basic Agreement（會員服務基本契約）＋ Service Period（付費服務期間）兩層模型——基本契約持續存在，月／年方案是其下購買的付費服務期間，不再視每次付款為獨立固定期限契約
+- **Trial**：30 個日曆日或累計 30 小時有效使用時間，以先達成者為準（規則不變，僅重新整理進正式文件）
+- **Trial 與 Contract Review 分離**：兩者為獨立計時，可互相重疊，不得合併或互相取代
+- **Contract Review**：至少 3 個日曆日之契約審閱期間
+- **`review_completed` ≠ `purchase_confirmed`**：完成契約審閱僅代表具備同意契約之資格，不代表已決定購買
+- **`purchase_confirmation` ≠ `payment_authorization`**：確認購買與付款方式授權為兩個獨立、明確之意思表示
+- **審閱期結束不自動購買、不自動扣款**
+- **【已確認】同一份仍然有效存續之基本契約下，會員主動購買新的 Service Period（續購），不重新啟動完整 3 日基本契約審閱期**（僅基本契約已終止需重新加入、或契約條款發生重大變更兩種情形例外）
+- **基本契約終止（連續 12 個月無有效 Service Period → 通知 → 至少 15 日處理機會 → 終止）後，會員重新加入視為重新成立新的基本契約，須重新進入契約審閱程序**
+- **不採自動續約**：Service Period 到期不自動扣款、不自動建立下一期
+- **已確認產品流程**：Trial → 主動購買（Purchase Intent/Confirmation）→ Payment Authorization（可先綁卡不立即扣款）→ Trial 條件成就 → 執行一次性扣款 → Order 完成 → Service Period 啟用
+- **文件產出**（`docs/legal/`、`docs/business/payment/`）：
+  - `docs/legal/joti-online-teaching-contract.md`：完成重寫（Basic Agreement + Service Period 模型）
+  - `docs/legal/joti-trial-and-usage-notice.md`：新建立
+  - `docs/legal/joti-privacy-policy.md`：新建立
+  - `docs/legal/README.md`：完成更新
+  - `docs/business/payment/payment-legal-spec.md`：完成更新
+  - `docs/business/payment/payment-integration-rules.md`：完成更新
+  - `docs/business/payment/README.md`：完成更新
+
 ---
 
 ## In Progress
@@ -59,9 +84,16 @@
 
 ## Next Steps
 
-1. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
-2. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
-3. T-2 核心機制已驗證可行，開始規劃 Payment Backend 正式 implementation（含固定 IP proxy 接入）。
+1. **Oen Payment Implementation Discovery**（目前最優先，唯讀盤點，尚未進入 coding）：
+   - 現有 `/checkout-schedule` 舊模型（recurring subscription）與新模型的落差
+   - 現有 Oen integration code（`_shared/oen.ts`、`create-subscription-checkout`、`oen-webhook`）
+   - 之前已驗證之「先綁卡 → 條件成就 → 一次性扣款」流程，如何對應到新模型的 Payment Authorization
+   - Order / Service Period / Payment / Membership 的資料流設計
+   - Trial / Contract Review / Purchase Confirmation / Payment Authorization 於 implementation 上的對應關係
+   - 現有 Supabase schema（`schema_subscriptions.sql`）與新模型的差異
+   - 前端（`SubscribePage.jsx`/`AccountPage.jsx`）需要新增的流程與 UI
+2. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
+3. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
 4. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 
 ---
@@ -72,8 +104,17 @@
 - **新 Warm Up Module** 需要先把來源影片上傳到 Bunny 才能繼續（非程式碼工作，需人工操作 Bunny Dashboard）。
 - Production Vercel 部署與目前 `main` 分支程式碼是否同步，本文件撰寫時**未重新驗證**（上次確認為 2026-09-10，當時發現落後數個 commit）。
 
+## Open Questions（法律／商業模型，待決）
+
+- 契約條款發生重大變更時，審閱／通知程序具體如何處理（是否需要新的審閱期、期間多長）——待法律顧問或經營者確認。
+- Payment Authorization 具體採用哪一個 Oen API 端點／參數組合實現「先綁卡、僅扣款一次」，且如何技術上保證不會變成持續扣款——工程決策，未決定。
+- 會員如何實際取消 Service Period（網站自助按鈕 vs 聯繫客服辦理）——未定義。
+- 退款金流實際執行方式（呼叫 Oen 退款 API 原路退回 vs 人工處理）——未定義。
+- 付款相關個資之法定保存期限——`docs/legal/joti-privacy-policy.md` 已標示待確認。
+- Vercel／Supabase 底層是否設定任何技術性 Cookie——`docs/legal/joti-privacy-policy.md` 已標示待確認。
+
 ---
 
 ## Last Updated
 
-2026-09-14
+2026-09-17
