@@ -14,11 +14,11 @@
 
 目前重心：
 
-1. **Oen Payment Implementation Discovery** —— 對照新的法律／商業模型，唯讀盤點現有 Oen integration code、Supabase schema 與前端流程的落差，**尚未進入 coding 階段**
+1. **Payment Rebuild — Step 2（Order Schema / DB Migration Proposal）已完成撰寫並整理成 `docs/business/payment/order-schema-proposal.md`**，等待最後一次人工 Review、明確授權後才進入 Step 3 Implementation，**目前仍未進入 coding 階段**
 2. 內容擴充（新增 Module）
 3. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
-> 注意：下方「Payment（Oen）—— Test 環境」小節記錄的 T-1/T-2 成果，是**舊付款模型（recurring subscription）**下的測試紀錄，與新確立的 Legal/Business Model v1（不採自動續約）存在已知架構落差，將由上述 Discovery 正式盤點，尚未調整。
+> 注意：下方「Payment（Oen）—— Test 環境」小節記錄的 T-1/T-2 成果，是**舊付款模型（recurring subscription）**下的測試紀錄，與新確立的 Legal/Business Model v1（不採自動續約）存在已知架構落差，已由 `docs/business/payment/order-schema-proposal.md` 正式盤點（見下方「Payment Rebuild — Step 2」小節），現行程式碼本身尚未調整。
 
 ---
 
@@ -52,6 +52,25 @@
 - Supabase 端已有對應基礎建設：`create-subscription-checkout` / `oen-webhook` Edge Functions、`schema_subscriptions.sql`（`subscriptions` / `subscription_checkouts` / `payment_events` 表 + RLS + 唯一寫入者 RPC）
 - Payment Backend 正式環境部署 Discovery：比較 Supabase Edge Functions／Vercel Functions／小型常駐服務，推薦「維持 Supabase Edge Functions + 第三方固定 IP outbound proxy」，理由與比較已記錄於本次對話（尚未整理成獨立文件）
 
+### Payment Rebuild — Step 2（Order Schema / DB Migration Proposal）
+- **文件**：`docs/business/payment/order-schema-proposal.md`（新建）——Status: Proposal（Design），**尚未實作，等待最後一次人工 Review 並授權後才進入 Step 3 Implementation**
+- **已確認的架構決策**（Order 只在使用者實際發起購買且 Contract Review Gate 通過後才建立，不因契約審閱完成或 Service Period 到期自動建立）：
+  - **Contract Acceptance**：採歷史紀錄模式（`contract_acceptances`，append-only），每次同意契約各留一筆；`orders.contract_acceptance_id` FK 回溯當次交易所用之 Contract Version
+  - **Currency**：CURRENT 僅 TWD，schema 保留未來擴充其他幣別的空間，不做 multi-currency pricing
+  - **Order status 七值**：`pending_payment / paid / payment_failed / payment_expired / refund_processing / refund_failed / refunded`；不含 `cancelled`/`active`/`expired`（這兩者分別屬於 Service Period 與 Basic Agreement 的 domain）
+  - **`orders.payment_method`**：nullable、無 DB enum，付款經 Provider 驗證後由 Provider Adapter 正規化寫入；與 `provider`（誰處理付款）語意分開
+  - **Core／Provider Adapter 命名邊界**：Core function（如 `create-order-checkout`、`apply-order-payment`）不得含 `subscription`／`oen`；Provider Adapter（含 Oen webhook 接收端點）可合理保留 provider 名稱
+  - **Legacy**：`subscriptions`／`subscription_checkouts` 保留、不 DROP，新流程不依賴或建立它們，舊 Oen TEST Subscription 資料不自動 migration；未來若真的推出 Subscription 產品再重新評估這些 legacy 架構是否可重用
+  - **Existing Paid Members Migration = N/A**（JOTI 尚未正式上線，無正式付款資料需要遷移，deferred until post-launch）
+  - **Payment Expiration**：`payment_expires_at = created_at + 3 天`，由 trusted server-side logic 於 Order 建立時計算寫入（非 DB column default）；與 Contract Review 的 3 日審閱期無關
+  - **Refund**：不建立獨立 Refund status／表，Refund lifecycle 直接由 `orders.status` 表示（`paid → refund_processing → refunded` 或 `refund_failed`）；Refund ≠ Basic Agreement termination，不會重新啟動 Contract Review
+  - **Basic Agreement Termination**：需要獨立於 Order／Service Period 之外的 termination record，至少保存 `requested_at`／`effective_at`，不因申請提出就立即視為終止
+  - **Oen Integration 邊界**：Webhook 是 Oen → JOTI 通知、目前無 signature/HMAC、payload 不可直接當付款最終證據，須由 Provider Adapter 回查 Oen API 驗證；正式環境 JOTI → Oen API 需固定來源 IP；Fixed IP 屬於 Provider／infrastructure 層，不進入 Core domain
+  - **`payment_failed` 同一 Order 重試（Decision A）**：只要 `payment_expires_at`（3 天，重試不重置不延長）尚未到期，允許 `payment_failed → pending_payment`，使用者不需建立新 Order；新增 `orders.payment_attempt` 標示目前合法嘗試編號（不代表 provider transaction ID、不保存完整 attempt history）；trusted payment application function 轉為 `paid` 前須同時比對 order id、`status='pending_payment'`、`payment_attempt` 三者，防止舊嘗試晚到的 provider 事件誤標記新嘗試
+  - **CURRENT／FUTURE 邊界**：CURRENT＝JOTI Learning + One-time Order + Service Period + 不自動續訂；FUTURE Subscription/Automatic Renewal 屬於 `docs/business/future-product-direction.md` 的未來產品研究，不因此修改目前 CURRENT 模型
+- **Oen Webhook／固定 IP Verification**（唯讀盤點，支撐上述 Oen Integration 決策）：確認 Oen webhook 目前無簽章機制、payload 須經回查驗證；固定 IP 需求方向為 JOTI → Oen API（outbound），非 Oen → JOTI webhook 方向
+- **仍列為 Open Question**（不阻塞 Step 3 開始，待實作對應功能或建立對應表時再決定）：Basic Agreement termination 完整 lifecycle/status enum；Refund failed 後是否允許 retry；Oen refund 在銀行處理延遲情況下是否可能非同步（需要進一步 Oen verification）；Service Period 提前終止後 `status` 的具體落值方式
+
 ### JOTI Legal / Business Model v1（法律／商業付款規則）
 - **架構模型確立**：Membership Service Basic Agreement（會員服務基本契約）＋ Service Period（付費服務期間）兩層模型——基本契約持續存在，月／年方案是其下購買的付費服務期間，不再視每次付款為獨立固定期限契約
 - **Trial**：30 個日曆日或累計 30 小時有效使用時間，以先達成者為準（規則不變，僅重新整理進正式文件）
@@ -84,14 +103,11 @@
 
 ## Next Steps
 
-1. **Oen Payment Implementation Discovery**（目前最優先，唯讀盤點，尚未進入 coding）：
-   - 現有 `/checkout-schedule` 舊模型（recurring subscription）與新模型的落差
-   - 現有 Oen integration code（`_shared/oen.ts`、`create-subscription-checkout`、`oen-webhook`）
-   - 之前已驗證之「先綁卡 → 條件成就 → 一次性扣款」流程，如何對應到新模型的 Payment Authorization
-   - Order / Service Period / Payment / Membership 的資料流設計
-   - Trial / Contract Review / Purchase Confirmation / Payment Authorization 於 implementation 上的對應關係
-   - 現有 Supabase schema（`schema_subscriptions.sql`）與新模型的差異
-   - 前端（`SubscribePage.jsx`/`AccountPage.jsx`）需要新增的流程與 UI
+1. **Payment Rebuild — Step 2 人工 Review**（目前最優先，尚未進入 coding）：Review `docs/business/payment/order-schema-proposal.md`，確認 Proposal 與已確認決策一致後，明確授權進入 Step 3 Implementation。Step 3 範圍（待授權後才開始）：
+   - `contract_acceptances` / `orders` / `service_periods` 核心表、RLS 與 trusted RPC 建置（provider-independent 命名，如 `create-order-checkout` / `apply-order-payment`）
+   - Oen Adapter 重構（webhook 接收、回查驗證、固定 IP outbound 設定）
+   - `get_membership_status()` 擴充、前端（`SubscribePage.jsx`/`AccountPage.jsx`）改走新模型
+   - Proposal 中仍列為 Open Question 的事項（見上方「Payment Rebuild — Step 2」小節）待實作對應功能時再決定，不阻塞 Step 3 開始
 2. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
 3. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
 4. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
@@ -117,4 +133,4 @@
 
 ## Last Updated
 
-2026-09-17
+2026-09-19
