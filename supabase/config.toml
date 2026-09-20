@@ -20,3 +20,18 @@ verify_jwt = true
 # the function: every actionable event is re-queried against the Oen API
 # with our secret token before any entitlement is granted (see index.ts).
 verify_jwt = false
+
+[functions.start-contract-review]
+# Payment Rebuild Step 4. Must stay true -- only a signed-in caller may
+# have a Review Session pinned to them.
+verify_jwt = true
+
+[functions.agree-to-contract]
+# Payment Rebuild Step 4. Must stay true -- Agree is tied to the caller's
+# own pending Review Session (auth.uid()).
+verify_jwt = true
+
+[functions.reaccept-contract]
+# Payment Rebuild Step 4. Must stay true -- reacceptance is tied to the
+# caller's own identity (auth.uid()).
+verify_jwt = true

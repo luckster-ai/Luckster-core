@@ -15,6 +15,7 @@ import LoginPage from '../pages/LoginPage'
 import AccountPage from '../pages/AccountPage'
 import AuthCallbackPage from '../pages/AuthCallbackPage'
 import SubscribePage from '../pages/SubscribePage'
+import ContractReviewPage from '../pages/ContractReviewPage'
 import AdminPracticeListPage from '../pages/AdminPracticeListPage'
 import AdminPracticeEditPage from '../pages/AdminPracticeEditPage'
 
@@ -91,6 +92,11 @@ function AppRouter() {
       <Route
         path="/account"
         element={<AccountPage />}
+      />
+
+      <Route
+        path="/contract-review"
+        element={<ContractReviewPage />}
       />
 
       <Route
