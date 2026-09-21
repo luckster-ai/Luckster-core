@@ -14,9 +14,10 @@
 
 目前重心：
 
-1. **Payment Rebuild — Step 2（Order Schema / DB Migration Proposal）已完成撰寫並整理成 `docs/business/payment/order-schema-proposal.md`**，等待最後一次人工 Review、明確授權後才進入 Step 3 Implementation，**目前仍未進入 coding 階段**
-2. 內容擴充（新增 Module）
-3. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
+1. **Payment Readiness / Pre-submission preparation**——為 ECPay / PAYUNi 金流平台申請做網站審核準備。已完成 Gap Analysis（唯讀，未實作），下一個 Sprint 才會開始實際 Implementation（見 Next Steps）。
+2. **Payment Rebuild — Step 4（Contract Review & Acceptance Flow）已完成實作，通過 TEST Supabase 專案實際 DB/RPC 測試與 lint/build，已 commit + push（`e01fd57`）**。**Step 5（Payment Core / Provider Adapter）尚未開始**，排定下一個工作日再進行 Discovery / Planning。
+3. 內容擴充（新增 Module）
+4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
 > 注意：下方「Payment（Oen）—— Test 環境」小節記錄的 T-1/T-2 成果，是**舊付款模型（recurring subscription）**下的測試紀錄，與新確立的 Legal/Business Model v1（不採自動續約）存在已知架構落差，已由 `docs/business/payment/order-schema-proposal.md` 正式盤點（見下方「Payment Rebuild — Step 2」小節），現行程式碼本身尚未調整。
 
@@ -71,6 +72,26 @@
 - **Oen Webhook／固定 IP Verification**（唯讀盤點，支撐上述 Oen Integration 決策）：確認 Oen webhook 目前無簽章機制、payload 須經回查驗證；固定 IP 需求方向為 JOTI → Oen API（outbound），非 Oen → JOTI webhook 方向
 - **仍列為 Open Question**（不阻塞 Step 3 開始，待實作對應功能或建立對應表時再決定）：Basic Agreement termination 完整 lifecycle/status enum；Refund failed 後是否允許 retry；Oen refund 在銀行處理延遲情況下是否可能非同步（需要進一步 Oen verification）；Service Period 提前終止後 `status` 的具體落值方式
 
+### Payment Rebuild — Step 4（Contract Review & Acceptance Flow）
+- **Implementation 已完成**：`contract_versions`（Registry，authoritative source for current applicable Basic Agreement）／`contract_acceptances`（immutable、append-only 的正式同意紀錄）／`profiles.review_contract_version`＋`review_presented_at`（pending Review Session，Version Binding：一旦開始審閱即釘住當時版本，不因後續 current version 更新而改變）三組 DB 結構＋`start_contract_review()`／`agree_to_contract()`／`reaccept_contract()` 三個 trusted RPC（SECURITY DEFINER，僅 `service_role` 可執行）＋對應的三支 Edge Function（`start-contract-review`／`agree-to-contract`／`reaccept-contract`）＋前端 `/contract-review` route（`ContractReviewPage.jsx`）與 `docs/legal/versions/v1.0.md` 版本化內容管線
+- **TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）實際 DB/RPC 測試完成**：對真實 TEST 專案套用 schema 並用 throwaway 測試帳號跑過新使用者 3 日審閱流程、Review 中途版本更新不影響已綁定版本、一般版本更新不觸發重新接受、`requires_reacceptance=true` 觸發既有會員重新接受（無 3 日等待）、並發 race condition、Historical Content 正確對應舊版本內容等情境；過程中發現並修正 `agree_to_contract()` 的 `UPDATE ... RETURNING` 邏輯錯誤，修正後重新驗證通過；測試資料已全數清理，TEST 專案已回復乾淨狀態
+- `npm run lint`／`npm run build` 皆通過
+- **Git checkpoint**：`e01fd57` — "Implement contract review and acceptance flow"，**已成功 push 到 `origin/main`**
+- **Step 4 已完成**
+
+### JOTI Business & Legal Framework
+- 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
+- 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
+- **Git checkpoint**：`c26916a` — "Add JOTI business/legal framework and source index"，**已 commit，尚未 push**
+
+### Payment Readiness Gap Analysis（ECPay / PAYUNi 金流申請準備）
+- **Gap Analysis 已完成**（Discovery / Audit only，**未進行任何 Implementation**）：以既有 `docs/development/website-refinement.md`（Website Refinement Audit）與其 Cross-check 結果為 baseline，額外套用「金流平台審核」這個新判斷維度，區分哪些既有 Refinement 缺口會實際影響 ECPay/PAYUNi 審核、哪些是一般網站優化可以延後。
+- **已確認的 P0 缺口**（金流申請前必須處理）：Pricing/Plan 頁面不存在；Monthly NT$333／Annual NT$3,333 尚未在網站曝光；Trial 規則、Trial 不立即扣款、取消／退款規則尚未在網站曝光；Terms／Privacy／Refund／Cancellation 尚未有任何網站路由或連結；業者／客服資訊未曝光；「訂閱會員」CTA 目前仍與「免費體驗」一樣導向 `/login`，兩者無區別（已查證 `HeroSection.jsx` 兩個 CTA 皆為 `to="/login"`）。
+- **已確認**：上述法律／商業規則的**內容本身已經存在於 repo**（`payment-legal-spec.md`、`joti-online-teaching-contract.md`、`joti-privacy-policy.md`、`joti-trial-and-usage-notice.md`），缺口是「尚未透過公開網站曝光／連結」，不是規則本身未定案。
+- P1（建議申請前一併處理，非必須）：W2 按鈕視覺對比度。
+- 明確延後（與金流審核無直接關係，維持既有 Refinement 順序）：M5（404）、W7（Module Library 導覽入口）、N1（Header mobile 收合）、W13（text-align）、W3（CSS/dark mode 整併）、M4（Module 詳細頁美化）、PWA/manifest、其餘一般 Website Refinement 項目。
+- 本次**沒有**建立 Pricing 頁、Legal route、修改 Footer 或 CTA——這些是下一個 Sprint（Implementation）才會做的事。
+
 ### JOTI Legal / Business Model v1（法律／商業付款規則）
 - **架構模型確立**：Membership Service Basic Agreement（會員服務基本契約）＋ Service Period（付費服務期間）兩層模型——基本契約持續存在，月／年方案是其下購買的付費服務期間，不再視每次付款為獨立固定期限契約
 - **Trial**：30 個日曆日或累計 30 小時有效使用時間，以先達成者為準（規則不變，僅重新整理進正式文件）
@@ -103,14 +124,11 @@
 
 ## Next Steps
 
-1. **Payment Rebuild — Step 2 人工 Review**（目前最優先，尚未進入 coding）：Review `docs/business/payment/order-schema-proposal.md`，確認 Proposal 與已確認決策一致後，明確授權進入 Step 3 Implementation。Step 3 範圍（待授權後才開始）：
-   - `contract_acceptances` / `orders` / `service_periods` 核心表、RLS 與 trusted RPC 建置（provider-independent 命名，如 `create-order-checkout` / `apply-order-payment`）
-   - Oen Adapter 重構（webhook 接收、回查驗證、固定 IP outbound 設定）
-   - `get_membership_status()` 擴充、前端（`SubscribePage.jsx`/`AccountPage.jsx`）改走新模型
-   - Proposal 中仍列為 Open Question 的事項（見上方「Payment Rebuild — Step 2」小節）待實作對應功能時再決定，不阻塞 Step 3 開始
-2. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
-3. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
-4. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
+1. **Payment Readiness Implementation Sprint（尚未開始，下一個 Sprint）**：Pricing/Plan 頁面 ＋ Legal 頁面曝光（Terms／Privacy／Refund／Cancellation）＋ Footer 業者/客服資訊 ＋「訂閱會員」CTA 導向調整——對應本次 Gap Analysis 已確認的 P0 缺口，範圍不含 Oen 正式付款串接。完成後才進行 Vercel Production 狀態驗證，再進行 ECPay / PAYUNi 申請準備。
+2. **Payment Rebuild — Step 5（Payment Core / Provider Adapter）**：**尚未開始**，排定下一個工作日再進行 Discovery / Planning（本文件撰寫時尚未執行，不寫成已完成）。範圍依先前已確認的規劃：`orders` / `service_periods` 核心表、RLS 與 trusted RPC 建置（provider-independent 命名，如 `create-order-checkout` / `apply-order-payment`）、Oen Adapter 重構（webhook 接收、回查驗證、固定 IP outbound 設定）、`get_membership_status()` 擴充、前端（`SubscribePage.jsx`/`AccountPage.jsx`）改走新模型。
+3. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
+4. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
+5. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 
 ---
 
@@ -133,4 +151,4 @@
 
 ## Last Updated
 
-2026-09-19
+2026-09-21
