@@ -35,3 +35,13 @@ verify_jwt = true
 # Payment Rebuild Step 4. Must stay true -- reacceptance is tied to the
 # caller's own identity (auth.uid()).
 verify_jwt = true
+
+[functions.create-order-checkout]
+# Payment Rebuild Step 5 (Payment Core). Must stay true -- Order creation
+# is tied to the caller's own identity and Contract Acceptance.
+verify_jwt = true
+
+[functions.retry-order-payment]
+# Payment Rebuild Step 5 (Payment Core). Must stay true -- retry is tied to
+# the caller's own Order (auth.uid()).
+verify_jwt = true
