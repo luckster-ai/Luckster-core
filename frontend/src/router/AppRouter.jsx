@@ -16,8 +16,12 @@ import AccountPage from '../pages/AccountPage'
 import AuthCallbackPage from '../pages/AuthCallbackPage'
 import SubscribePage from '../pages/SubscribePage'
 import ContractReviewPage from '../pages/ContractReviewPage'
+import PricingPage from '../pages/PricingPage'
+import LegalHubPage from '../pages/LegalHubPage'
+import LegalPage from '../pages/LegalPage'
 import AdminPracticeListPage from '../pages/AdminPracticeListPage'
 import AdminPracticeEditPage from '../pages/AdminPracticeEditPage'
+import NotFoundPage from '../pages/NotFoundPage'
 
 // Payment Phase 1 -- Oen TEST first-subscription MVP. /subscribe is
 // enabled ONLY when VITE_ENABLE_SUBSCRIBE === 'true', which is set only on
@@ -100,6 +104,21 @@ function AppRouter() {
       />
 
       <Route
+        path="/pricing"
+        element={<PricingPage />}
+      />
+
+      <Route
+        path="/legal"
+        element={<LegalHubPage />}
+      />
+
+      <Route
+        path="/legal/:doc"
+        element={<LegalPage />}
+      />
+
+      <Route
         path="/auth/callback"
         element={<AuthCallbackPage />}
       />
@@ -125,6 +144,11 @@ function AppRouter() {
           element={<SubscribePage />}
         />
       )}
+
+      <Route
+        path="*"
+        element={<NotFoundPage />}
+      />
     </Routes>
   )
 }

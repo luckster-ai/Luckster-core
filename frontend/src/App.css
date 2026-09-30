@@ -141,15 +141,24 @@ button {
   padding: 12px 24px;
   border-radius: 10px;
   margin: 0 10px;
-  background: #f4e7a1;
-  color: #3a3a3a;
+  background: #e3b93f;
+  color: #2f2712;
   text-decoration: none;
   cursor: pointer;
   font: inherit;
+  font-weight: 600;
 }
 
+/* Website Refinement W2 (P1, folded into this Sprint): primary/secondary
+   were near-identical low-contrast tones on the cream background, so
+   neither read as "the main action". Primary is now a more saturated
+   gold with bold text; secondary stays a visually distinct, calmer
+   tone. Same box model as before (no border/padding change) -- no
+   layout impact anywhere .button is already used. */
 .button.secondary {
-  background: #d9c6a5;
+  background: #c9b28c;
+  color: #2f2712;
+  font-weight: 500;
 }
 
 .about,
@@ -2521,4 +2530,164 @@ footer {
 
 .learning-status {
   margin: 16px 0;
+}
+
+/* ============================================================
+   Payment Readiness Implementation Sprint (2026-09)
+   Pricing / Plan page (/pricing) and public Legal pages
+   (/legal, /legal/:doc). New page-scoped classes only -- does not
+   touch the site-wide text-align: center pattern (W13, deferred),
+   just gives this new long-form content left-aligned, readable
+   typography from the start.
+   ============================================================ */
+
+.pricing-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 24px;
+  text-align: left;
+}
+
+.pricing-page h1 {
+  text-align: center;
+}
+
+.pricing-page .subtitle {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.pricing-plans {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 320px));
+  justify-content: center;
+  text-align: center;
+}
+
+.pricing-plan-card h2 {
+  margin: 0 0 4px;
+}
+
+.pricing-plan-name-en {
+  margin: 0 0 16px;
+  color: #8a7b54;
+}
+
+.pricing-plan-price {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 0 4px;
+}
+
+.pricing-plan-period {
+  margin: 0;
+  color: #6b6b6b;
+}
+
+.pricing-note-section {
+  margin-top: 40px;
+  line-height: 1.8;
+}
+
+.pricing-note-section h2 {
+  margin-bottom: 12px;
+}
+
+.pricing-cta {
+  margin-top: 48px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.legal-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 24px;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.legal-back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  color: #8a7b54;
+}
+
+.legal-hub-cards {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 340px));
+  text-align: left;
+}
+
+.legal-content h2 {
+  margin-top: 40px;
+}
+
+.footer-legal-nav {
+  margin-top: 12px;
+  font-size: 0.9em;
+}
+
+.footer-business {
+  margin-top: 20px;
+  font-size: 0.85em;
+  color: #6b6b6b;
+}
+
+.footer-business p {
+  margin: 4px 0;
+}
+
+/* ============================================================
+   Production Publication Polish (2026-09)
+   .cards / .card mobile breakpoints -- Website Refinement Audit M6:
+   the 3-column grid (.cards) + .card's min-width: 180px / padding: 32px
+   had no narrow-viewport handling, so /foundations, /modules, /practice
+   (and /foundations/:slug via .foundation-page .cards) overflowed or
+   were badly cramped on phone-width screens. .courses .cards already
+   has its own auto-fit rule (unaffected, higher specificity). Padding
+   is trimmed at the narrowest step so card content doesn't fight the
+   page's own 24px side gutter.
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .cards,
+  .foundation-page .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .cards,
+  .foundation-page .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 24px;
+  }
+}
+
+/* ============================================================
+   Mobile Legal / Contract RWD fix (2026-09)
+   The contract's fenced code blocks (review-period calculation,
+   purchase flow diagram, refund formulas) render as <pre>, whose
+   browser default (white-space: pre, no width limit) doesn't wrap --
+   measured on the live Preview: unwrapped these need ~420-500px,
+   which overflows any phone-width container (~342px available),
+   dragging the whole page into horizontal scroll. pre-wrap keeps the
+   deliberate line breaks/indentation (it's whitespace-preserving,
+   just wrap-permitting) while letting long lines fold; overflow-wrap
+   catches any single token that still can't fit; overflow-x is a
+   last-resort safety net scoped to the <pre> itself, not the page.
+   Applies to both public /legal pages (.legal-content) and the
+   Contract Review Gate (.contract-review-content, /contract-review --
+   same contract text, different CSS scope, same underlying bug).
+   Desktop is unaffected: at 760px/480px these blocks already fit
+   unwrapped, so pre-wrap changes nothing visually there. */
+.legal-content pre,
+.contract-review-content pre {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: auto;
 }

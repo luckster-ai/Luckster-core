@@ -17,7 +17,7 @@
 
 | 文件 | 給誰看 | 內容 |
 |---|---|---|
-| [`joti-online-teaching-contract.md`](./joti-online-teaching-contract.md) | 準備成為正式付費會員的使用者 | JOTI 會員服務基本契約（Membership Service Basic Agreement）草案——**會員準備成為正式付費會員時會看到的完整正式契約**，需經至少 3 日審閱期。 |
+| [`joti-online-teaching-contract.md`](./joti-online-teaching-contract.md) | 準備成為正式付費會員的使用者 | JOTI 會員服務基本契約（Membership Service Basic Agreement）——**JOTI 正式發布時採用之第一版正式合約（v1）**，目前為正式發布前之準備內容；會員準備成為正式付費會員時會看到的完整正式契約，需經至少 3 日審閱期。 |
 | [`joti-trial-and-usage-notice.md`](./joti-trial-and-usage-notice.md) | 剛註冊、開始免費試用的使用者 | 白話版試用與使用須知——說明試用規則、有效使用時間定義、帳號使用、安全提醒等，**不是**完整法律契約。 |
 | [`joti-privacy-policy.md`](./joti-privacy-policy.md) | 所有使用者 | 隱私權政策——說明 JOTI 實際蒐集、處理個人資料的方式。 |
 
@@ -41,8 +41,12 @@ Code
 
 本資料夾的文件是規則的**源頭**，其他文件（例如 `docs/business/payment/` 底下的商業／工程規格）都必須與這裡的內容一致，不得互相矛盾。
 
+## 目前治理狀態
+
+JOTI 目前正在準備第一次正式發布。現行線上教學服務合約即為預定正式發布時使用的第一版合約（v1）。目前尚未有正式會員 acceptance。正式發布後，v1 將成為第一個正式使用的合約版本；未來若在 v1 已實際使用後需要修改契約，再依版本管理建立 v1.1、v1.2 等後續版本。詳細 Operational Status／Contract Status／Contract Versioning，見 [`docs/development/project-status.md`](../development/project-status.md)。
+
 ## 重要提醒
 
-- 本資料夾內的契約草案是**依目前已確認的商業規則整理而成**，尚未經過執業律師審閱確認符合台灣現行法規（包含但不限於《消費者保護法》及主管機關公告之《網際網路教學服務定型化契約應記載及不得記載事項》）。**正式對外使用前，應由具資格之法律專業人士審閱。**
+- 本資料夾內的文件是**依目前已確認的商業規則整理而成**，內容須符合台灣現行法規（包含但不限於《消費者保護法》及主管機關公告之《網際網路教學服務定型化契約應記載及不得記載事項》）；本專案會持續依適用法規、消費者保護要求及金流平台要求進行合規與文件檢查。
 - 修改本資料夾內任何文件，等同於修改 JOTI 對會員的法律承諾，**不應在未與經營者（甲方）確認的情況下自行變更**。
 - 工程實作如果與這裡的規則衝突，應先提出問題，不應自行決定改變規則本身（見 `payment-integration-rules.md` 「不得自行改變的規則」章節）。

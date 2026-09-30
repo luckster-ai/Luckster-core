@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import about from '../data/about'
 import homepage from '../data/homepage'
-import openingImage from '../assets/about/about-hero-triptych.png.png'
-import yoga2012Image from '../assets/about/about-2012-yoga.png'
-import yoga2018Image from '../assets/about/about-2018-yoga.png'
-import teacherImage from '../assets/about/about-teacher-journey.png'
+import openingImage from '../assets/about/about-hero-triptych.webp'
+import yoga2012Image from '../assets/about/about-2012-yoga.webp'
+import yoga2018Image from '../assets/about/about-2018-yoga.webp'
+import teacherImage from '../assets/about/about-teacher-journey.webp'
 
 const YEAR_IMAGES = {
   2012: { src: yoga2012Image, alt: '2012 年，一次安靜的伸展練習，晨光灑落在室內' },

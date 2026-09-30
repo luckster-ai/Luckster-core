@@ -14,12 +14,77 @@
 
 目前重心：
 
-1. **Payment Readiness / Pre-submission preparation**——為 ECPay / PAYUNi 金流平台申請做網站審核準備。已完成 Gap Analysis（唯讀，未實作），下一個 Sprint 才會開始實際 Implementation（見 Next Steps）。
+1. **Payment Readiness / Pre-submission preparation**——為 ECPay / PAYUNi 金流平台申請做網站審核準備。Gap Analysis、Implementation Sprint（Pricing/Legal/Footer/CTA）、Legal/Contract Publication Refinement（Discovery＋Implementation）、Production Publication Readiness Audit＋Polish、Vercel Deployment Architecture 修正、Mobile Legal/Contract RWD 修正、Contract Terminology Consistency（Audit＋2 輪 Implementation）**皆已完成**。**已知阻塞項**：Supabase Auth 的 `Site URL`／`Redirect URLs` 設定過期，目前任何環境（Preview 或 Production）點擊登入都會被導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`——根因已診斷確認，**修正需要到 Supabase Dashboard 手動操作**，尚未執行（見 Next Steps、Blockers）。這一整批工作**尚未 commit／push**。
 2. **Payment Rebuild — Step 4（Contract Review & Acceptance Flow）已完成實作，通過 TEST Supabase 專案實際 DB/RPC 測試與 lint/build，已 commit + push（`e01fd57`）**。**Step 5（Payment Core / Provider Adapter）尚未開始**，排定下一個工作日再進行 Discovery / Planning。
 3. 內容擴充（新增 Module）
 4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
 > 注意：下方「Payment（Oen）—— Test 環境」小節記錄的 T-1/T-2 成果，是**舊付款模型（recurring subscription）**下的測試紀錄，與新確立的 Legal/Business Model v1（不採自動續約）存在已知架構落差，已由 `docs/business/payment/order-schema-proposal.md` 正式盤點（見下方「Payment Rebuild — Step 2」小節），現行程式碼本身尚未調整。
+
+---
+
+## Operational Status
+
+**Pre-launch / 正式發布前**
+
+- JOTI 尚未正式對外營運。
+- 目前沒有正式會員。
+- 目前沒有正式付費會員。
+- 目前沒有任何正式會員 acceptance record。
+- 尚未有消費者依 JOTI 合約完成正式訂閱／接受契約。
+- Vercel 上已有網站部署，**不代表** JOTI 已經正式開始商業營運。
+
+### Contract Status
+
+- 目前的合約內容（`docs/legal/joti-online-teaching-contract.md`）就是接下來 JOTI 正式發布時預定採用的**第一版正式合約（v1）**，不是另外等待律師審閱的草案。
+- 目前正在進行的是正式發布前的最後整理與網站呈現準備。
+- 正式上線後，這份合約即作為 v1 使用。
+- 目前尚未有會員 acceptance，因此 v1 尚未產生正式 acceptance history。
+- **不建立 v1.1。**
+- 未來只有在 v1 已正式使用、已有實際會員接受契約後，如果契約內容需要修改，才建立 v1.1 / v1.2 等後續版本。
+- 契約與 `v1.0.md` 的會員閱讀呈現已完成清理：移除「草案」聲明、移除誤混入的系統欄位名稱（`contract_version` 等）與冗餘英文工程術語、統一中英文術語呈現規則、移除計算式與流程圖的 Markdown code block 呈現（改為一般段落／編號列表）；詳見下方「Contract Publication Refinement」與「Contract Terminology & Readability Cleanup」小節。兩份文件全程保持逐字一致。
+
+### Legal Review Status
+
+- JOTI 目前沒有安排在正式上線前進行律師審閱。
+- JOTI 不把律師審閱列為本次正式發布的必要步驟。
+- 本專案後續仍會依適用法規、消費者保護要求及金流平台要求進行合規與文件檢查。
+- 「是否需要律師審閱」不列為目前專案的 blocker、待辦事項或上線條件。
+
+### Contract Versioning
+
+**Current release target: v1**
+
+```
+Pre-launch → 正式發布 → v1
+```
+
+目前：
+- v1 的內容正在正式發布前整理。
+- 尚無正式會員。
+- 尚無正式 acceptance。
+- 因此尚無 v1 的實際 acceptance history。
+
+未來：
+
+```
+v1 正式使用 → 發生需要修改契約的情況 → v1.1
+```
+
+不因為目前仍在正式發布前調整內容，就建立 v1.1。
+
+### Business / Address Status
+
+- 已確認並可公開使用的 JOTI 地址：**臺北市松山區吉祥路55之1號7樓**。
+- 此地址已由使用者確認可以對外公開，不再標記為「待確認」或「不可公開」。
+- 此地址是目前 JOTI 對外資訊（契約、`data/business.js`、Footer）應使用的地址。
+- 後續 development / legal 文件若需要同步業者地址，應以此地址為 authoritative value。
+
+### Final Website Domain
+
+- JOTI 最終正式網站網域**尚未確定／尚未完成設定**。
+- 因此目前不能自行把 Vercel deployment URL 當成最終正式網站網址。
+- 法律文件中的 `[待填寫]`（網站欄位）目前仍存在，**是因為最終正式網域尚未確定**，不是因為合約仍處於法律草案狀態。
 
 ---
 
@@ -92,6 +157,44 @@
 - 明確延後（與金流審核無直接關係，維持既有 Refinement 順序）：M5（404）、W7（Module Library 導覽入口）、N1（Header mobile 收合）、W13（text-align）、W3（CSS/dark mode 整併）、M4（Module 詳細頁美化）、PWA/manifest、其餘一般 Website Refinement 項目。
 - 本次**沒有**建立 Pricing 頁、Legal route、修改 Footer 或 CTA——這些是下一個 Sprint（Implementation）才會做的事。
 
+### Payment Readiness Implementation Sprint（Pricing / Legal / Footer / CTA）
+- **Pricing／Plan**：新增 `/pricing`（`PricingPage.jsx` ＋ `data/pricing.js`）——清楚列出 Monthly NT$333／Annual NT$3,333、Trial 規則（30 天或 30 小時先到者、不立即扣款）、不自動續約／無需取消訂閱、退款摘要＋連結；內容皆轉錄自 `payment-legal-spec.md`／`joti-online-teaching-contract.md`／`joti-trial-and-usage-notice.md` 既有已確認規則，未新增任何商業規則
+- **Legal 曝光**：新增 `/legal`（Hub，`LegalHubPage.jsx`）＋ `/legal/:doc`（`LegalPage.jsx`，`doc` ∈ terms／privacy／refund／cancellation）。Terms／Privacy 渲染 `docs/legal/` 內對應文件全文；Refund／Cancellation 沒有獨立來源文件，改由新增的 `utils/legalDocuments.js`（`extractContractSection()`）直接從 `joti-online-teaching-contract.md` 擷取「第十一條 提前終止與退款」／「第九條 服務期間屆滿與續購」條文全文顯示，避免另外手寫摘要造成與契約文字不一致；已用實際擷取結果核對兩段文字皆在下一條「## 」標題前正確截斷
+- **Content pipeline**：沿用既有 `react-markdown`；新增 `remark-gfm` 依賴（`frontend/package.json`）以正確渲染 `joti-privacy-policy.md`／契約內的 Markdown 表格（原本會顯示成裸露的 `| a | b |` 文字）。**順帶發現但本次未處理**：`ContractReviewPage.jsx`（Step 4，/contract-review）與其 `contractContent.js` 管線有相同的表格渲染缺口（`v1.0.md` 內也有表格），因與本 Sprint 無關，維持原狀，留待日後處理
+- **Footer／業者資訊**：新增 `data/business.js`（姓名／個人經營者／客服信箱／客服電話，逐字取自 `joti-online-teaching-contract.md` 第一條），`Footer.jsx` 新增四個 Legal 頁連結與業者聯絡資訊區塊
+- **CTA**：`HeroSection.jsx`／`FinalCtaSection.jsx` 的「訂閱會員」改為導向 `/pricing`（原為 `/login`，與「免費體驗」完全相同）；「免費體驗」維持 `/login` 不變。`Header.jsx` 新增「方案」導覽連結（供一般瀏覽與金流審核人員直接找到 Pricing 頁，不只依賴 CTA）
+- **視覺（W2，P1，本次順帶處理）**：`.button`／`.button.secondary` 對比度調整（更飽和的金色主色＋粗體、更明確區隔的次要色），純色彩調整、無 box model／padding 變動，全站沿用 `.button` 的既有按鈕（Hero、Practice Player、Builder 等）同步受益，未做全站 CSS 重構
+- **範圍排除（依 Sprint 指示，確認未觸碰）**：Warm Up Modules、既有課程內容、Oen 正式付款串接、ECPay/PAYUNi API 串接、Vercel／Domain／DNS、PWA、Module 詳細頁美化、404/loading/error（P2）、全站 CSS 重構——皆未變更
+- `npm run lint`／`npm run build` 皆通過；已於本機 dev server 逐頁檢視 `/pricing`、`/legal`、`/legal/terms`、`/legal/privacy`、`/legal/refund`、`/legal/cancellation`、首頁 CTA、Header、Footer 連結與 `/modules`（既有頁面回歸檢查），無 console error
+- **未 commit／未 push**（依指示，等待使用者另行確認）
+
+### Legal / Contract Publication Refinement（Discovery ＋ Implementation）
+- **Discovery**：盤點 `joti-online-teaching-contract.md`／`v1.0.md`／`joti-privacy-policy.md`／`joti-trial-and-usage-notice.md` 四份會員可見文件的文件角色、draft/final 狀態；確認 `v1.0.md` 與 live 契約逐字一致；**發現公開 JS bundle 意外打包了 `docs/legal/README.md`／`joti-business-legal-framework.md` 全文**（內部治理文件，含對 Claude Code / Luckster AI Agent 的指示與法律研究筆記），因 `legalDocuments.js` 原本用資料夾層級 glob（`docs/legal/*.md`）；同時發現公開契約頁面直接暴露 repo 內部路徑與壞連結（如 `docs/legal/README.md`、`./joti-privacy-policy.md` 相對連結）
+- **Implementation**：四份文件的「草案，尚未經法律專業人士審閱」聲明（含契約標題本身的「（草案）」）全部移除，改為「文件版本：v1」定位，符合 `project-status.md` 已確認之 Pre-launch／v1 治理狀態；`legalDocuments.js` 改為明確檔名白名單（排除 README.md／business-legal-framework.md），已重新 build 並核對 bundle 確認內部文件內容不再被打包；契約與隱私政策內的內部路徑交叉引用改為站內連結（`/legal/privacy`、`/legal/terms`）；`v1.0.md` 地址同步為「臺北市松山區吉祥路55之1號7樓」（與 live 契約一致）；`ContractReviewPage.jsx` 補上 `remark-gfm`（修正 Markdown 表格裸露渲染缺口，呼應上方 Sprint 已知但未處理的問題）；`joti-business-legal-framework.md` §2 地址狀態由「CURRENT／待最終確認」改為「CONFIRMED」；隱私政策 2 處「⚠️ 待確認」（Cookie 技術細節、交易資料保存期間）正式定案為既定文字
+- `npm run lint`／`npm run build` 皆通過；未 commit／未 push
+
+### Production Publication Readiness Audit ＋ Polish
+- **Audit 發現**：`index.html` 的 `<html lang="en">` 語系錯誤（應為 `zh-TW`）、`<title>frontend</title>` 為 Vite 預設值、無 `meta description`／Open Graph 標籤（社群分享會顯示空白預覽）、完全沒有 404 頁（未匹配路徑渲染成空白 `<main>`）、`.cards`／`.card` 手機版面溢出（原 Website Refinement Audit M6，重新確認仍未修）、Hero／About 5 張 PNG 圖片共約 9.9MB 未壓縮；另外重新核對舊版 `website-refinement.md` 發現其中兩項（M1 Module Library 樣式、M4 Module 詳細頁內部 metadata 外洩）其實已在更早的工作中修好，該文件本身已過時
+- **Polish Implementation**：`lang="zh-TW"`、`<title>JOTI Kundalini ABC Yoga</title>`、補 `meta description` 與 Open Graph／Twitter Card（`og:image` 用相對路徑，未因最終網域未定而自行填入 Vercel 網址）；新增 `NotFoundPage.jsx` ＋ catch-all route；`.cards`／`.foundation-page .cards` 補 `1024px`／`640px` 手機斷點；5 張圖片 PNG→WebP（quality 82，總大小降至約 530KB，降幅 94.6%），並產出 `public/og-image.jpg` 社群分享圖；順手清理 Trial Notice 內一處裸露的 `.md` 內部連結
+- `npm run lint`／`npm run build` 皆通過；未 commit／未 push
+
+### Vercel Deployment Architecture（Monorepo 修正）
+- **Discovery 發現根因**：Vercel Project `joti` 的 Root Directory 原設定為 `.`（未正確反映 monorepo 結構），且**此專案從未接過 Git Integration**（一直是 CLI 手動 `vercel deploy`）；因為每次部署都是從 `frontend/` 子目錄執行，CLI 只會上傳 `frontend/` 本身的內容，repo 根目錄的 `docs/legal/` 完全沒有進入 build context，導致 `import.meta.glob('../../../docs/legal/...')` 在 Vercel 上找不到任何檔案——這正是「Legal / Contract Review 頁面顯示『目前無法載入內容』」的根因，已用 `vercel curl` 直接下載線上部署的 bundle 逐字核對確認
+- **Fix**：Vercel Project Root Directory 改為 `frontend`；往後一律從 **repo root**（`C:\Luckster-core`）執行 `vercel deploy`（已驗證新部署「Downloading 439 deployment files」，確認 `docs/` 有進入 build context）；此設定為 Project 層級，Preview 與 Production 共用同一套規則
+- 已產出多個新 Preview 供實機驗收（最新：`https://joti-dow6az9bp-jotiyoga.vercel.app`），皆為 Preview，未部署 Production
+
+### Mobile Legal / Contract RWD Fix
+- **Diagnosis**：契約內原本用 fenced code block（```）呈現的流程圖與計算公式，渲染成 `<pre>`，瀏覽器預設 `white-space: pre` 不換行；實測在 342px（iPhone 可用寬度）下，這些區塊的真實內容需要 419～502px，撐破整頁造成水平溢出、文字被截斷
+- **Fix**：`.legal-content pre`／`.contract-review-content pre` 補 `white-space: pre-wrap` + `overflow-wrap: break-word` + `overflow-x: auto`；`ContractReviewPage.jsx` 新增 `.contract-review-content` wrapper 讓 `/contract-review`（`.auth-page` scope，與公開 `/legal` 頁不同）套用同一條規則；已用「強制容器寬度至 342px 量測 scrollWidth」方式驗證桌面與模擬手機寬度皆無溢出
+- `npm run lint`／`npm run build` 皆通過；未 commit／未 push
+
+### Contract Terminology & Readability Cleanup
+- **Text Audit 發現**：契約與隱私政策混入系統欄位名稱／工程事件名稱——`contract_version`、`contract_presented_at`、`contract_review_available_at`、`contract_acceptance_at`、`trial_start`、`review_completed`（契約）；`trial_started_at`、`module_usage_seconds`、`marketing_consent`／`marketing_consent_at`（隱私政策）——逐一核對 `supabase/schema*.sql` 確認何者為真實 DB 欄位、何者僅為 `payment-legal-spec.md` 的概念性命名
+- **Implementation**：以上 10 項全部改為自然中文（如「契約版本」「基本契約成立時點」），`v1.0.md` 同步；隱私政策未動（依指示範圍限定）
+- **Terminology Consistency Audit**：完整掃描契約全文中英文混用情況——`Membership Service Basic Agreement`／`Service Period`／`Order`／`Purchase Intent`／`Purchase Confirmation`／`Payment Authorization` 多處重複加註英文；Foundation／Module／Practice 三者呈現方式不一致（且網站本身 Header/Module Library/Practice Hub 對這三者的呈現也彼此不一致，非契約獨有問題）；`foreground`／`background`／`minimized`／`sleep`／`paused`／`buffering / stalled` 等技術狀態詞（`joti-trial-and-usage-notice.md` 已有現成純中文寫法可沿用）；`calendar days`／`checkbox`／`Day 0`／`no auto-renewal`／`login days`／`video watch time`／`lesson completion`／`UI` 等冗餘英文；`Monthly`／`Annual` 加註與附件一純中文寫法不一致；「三日」／「3 日」數字格式不一致（全文其餘數字皆用阿拉伯數字，「三日」才是例外）
+- **Implementation（2 輪）**：正式法律／商業術語改為「僅於全文最早定義處保留英文，後續統一中文」；Foundation／Module／Practice 統一為「英文固定名稱＋通用中文名詞」（不加中文括號翻譯，不自創新譯名）；技術狀態詞全部改為自然中文；冗餘英文全數移除；`Monthly`／`Annual` 統一為純中文；「三日」統一為「3 日」（改採全文既有的阿拉伯數字慣例）；3 個計算式（審閱期公式、月／年方案退款公式）由 code block 改為一般段落；第八條購買流程圖由 code block 改為 Markdown 編號列表——**契約全文現已完全沒有 `<pre>`／code block**
+- 每一步修改皆同步套用到 `joti-online-teaching-contract.md` 與 `v1.0.md`，並用 `diff` 逐次確認兩份文件逐字一致；`npm run lint`／`npm run build` 皆通過；未 commit／未 push
+
 ### JOTI Legal / Business Model v1（法律／商業付款規則）
 - **架構模型確立**：Membership Service Basic Agreement（會員服務基本契約）＋ Service Period（付費服務期間）兩層模型——基本契約持續存在，月／年方案是其下購買的付費服務期間，不再視每次付款為獨立固定期限契約
 - **Trial**：30 個日曆日或累計 30 小時有效使用時間，以先達成者為準（規則不變，僅重新整理進正式文件）
@@ -119,24 +222,29 @@
 
 - **新增 3 個 Warm Up Module**（`MW005` 脊椎彎曲熱身、`MW006` 脊椎扭轉熱身、`MW007` 貓牛式熱身）：`.md` 內容（Summary / Description / Learning Outcomes / Tags / Prerequisites）已撰寫，**尚未上傳 Bunny 影片**（`.md` 的 `Primary Video URL` 是空的），**尚未加入 `data/modules.js`**，未 commit。
 - **Payment Backend 固定 IP proxy 技術驗證**：Discovery 已完成並提出建議方案，**尚未開始實際驗證**（需先選定供應商、申請試用帳號）。
+- **登入導向 localhost 問題**：根因診斷已完成（用 `supabase config diff` 直接核對遠端 Supabase 專案設定確認，非猜測）——Supabase Auth 的 `site_url` 仍是本機開發殘留值 `http://localhost:4190`，`additional_redirect_urls` 只涵蓋 Vercel 改名前的舊網址格式，完全沒涵蓋改名後的新格式或目前實際的 Production 別名；已在 Preview 上實際重現（點擊登入後導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`），確認不是程式碼問題（`AuthProvider.jsx` 的 `redirectTo` 動態計算正確）。**修正尚未執行**——需要到 Supabase Dashboard 手動更新 `Site URL`／`Redirect URLs`，不在 repo／CLI 範圍內。Production 很可能有同樣問題，尚未實際重現驗證。
 
 ---
 
 ## Next Steps
 
-1. **Payment Readiness Implementation Sprint（尚未開始，下一個 Sprint）**：Pricing/Plan 頁面 ＋ Legal 頁面曝光（Terms／Privacy／Refund／Cancellation）＋ Footer 業者/客服資訊 ＋「訂閱會員」CTA 導向調整——對應本次 Gap Analysis 已確認的 P0 缺口，範圍不含 Oen 正式付款串接。完成後才進行 Vercel Production 狀態驗證，再進行 ECPay / PAYUNi 申請準備。
-2. **Payment Rebuild — Step 5（Payment Core / Provider Adapter）**：**尚未開始**，排定下一個工作日再進行 Discovery / Planning（本文件撰寫時尚未執行，不寫成已完成）。範圍依先前已確認的規劃：`orders` / `service_periods` 核心表、RLS 與 trusted RPC 建置（provider-independent 命名，如 `create-order-checkout` / `apply-order-payment`）、Oen Adapter 重構（webhook 接收、回查驗證、固定 IP outbound 設定）、`get_membership_status()` 擴充、前端（`SubscribePage.jsx`/`AccountPage.jsx`）改走新模型。
-3. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
-4. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
-5. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
+1. **修正 Supabase Auth 的 `Site URL`／`Redirect URLs`（目前唯一會阻塞金流申請的問題）**：需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
+2. **大批累積工作的 Git checkpoint**：本文件所述 Payment Readiness Implementation Sprint 之後的所有工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）**全部尚未 commit／push**，待使用者 Review 後指示建立 Git checkpoint（範圍涵蓋多輪工作，commit 時注意 `docs/legal/versions/v1.0.md` 與 `joti-online-teaching-contract.md` 需一起進、保持逐字一致）。
+3. **Vercel Production 正式部署**：待第 1、2 項完成後，用已確認正確的部署方式（repo root、Root Directory=`frontend`）部署到 Production，取代目前落後的 Production 內容。
+4. **ECPay / PAYUNi 申請準備**：待前述項目完成後進行。
+5. **Payment Rebuild — Step 5（Payment Core / Provider Adapter）**：**尚未開始**，排定另一個工作日再進行 Discovery / Planning（本文件撰寫時尚未執行，不寫成已完成）。範圍依先前已確認的規劃：`orders` / `service_periods` 核心表、RLS 與 trusted RPC 建置（provider-independent 命名，如 `create-order-checkout` / `apply-order-payment`）、Oen Adapter 重構（webhook 接收、回查驗證、固定 IP outbound 設定）、`get_membership_status()` 擴充、前端（`SubscribePage.jsx`/`AccountPage.jsx`）改走新模型。
+6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
+7. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
+8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 
 ---
 
 ## Blockers
 
+- **Supabase Auth `Site URL`／`Redirect URLs` 過期**：目前會導致任何環境（Preview 或 Production）點擊登入都被導向 `localhost:4190` 並失敗。需要使用者本人到 Supabase Dashboard 手動更新，AI 無法代為修改外部服務設定。這是目前唯一會直接阻塞「會員實際完成登入」的問題，詳見上方「登入導向 localhost 問題」小節。
 - **固定 IP proxy PoC** 需要建立第三方服務帳號（含免費試用），此步驟需使用者本人操作，AI 無法代為建立帳號或輸入付款資訊。
 - **新 Warm Up Module** 需要先把來源影片上傳到 Bunny 才能繼續（非程式碼工作，需人工操作 Bunny Dashboard）。
-- Production Vercel 部署與目前 `main` 分支程式碼是否同步，本文件撰寫時**未重新驗證**（上次確認為 2026-09-10，當時發現落後數個 commit）。
+- Production Vercel 部署與目前 `main` 分支程式碼是否同步：**根因已找到**（見上方「Vercel Deployment Architecture」小節，過去 CLI 部署方式不會帶到 `docs/`），但實際 Production 尚未用正確方式重新部署，目前 Production 內容仍是落後版本。
 
 ## Open Questions（法律／商業模型，待決）
 
@@ -144,11 +252,9 @@
 - Payment Authorization 具體採用哪一個 Oen API 端點／參數組合實現「先綁卡、僅扣款一次」，且如何技術上保證不會變成持續扣款——工程決策，未決定。
 - 會員如何實際取消 Service Period（網站自助按鈕 vs 聯繫客服辦理）——未定義。
 - 退款金流實際執行方式（呼叫 Oen 退款 API 原路退回 vs 人工處理）——未定義。
-- 付款相關個資之法定保存期限——`docs/legal/joti-privacy-policy.md` 已標示待確認。
-- Vercel／Supabase 底層是否設定任何技術性 Cookie——`docs/legal/joti-privacy-policy.md` 已標示待確認。
 
 ---
 
 ## Last Updated
 
-2026-09-21
+2026-09-30

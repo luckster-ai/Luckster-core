@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useAuth } from '../state/useAuth'
 import { supabase } from '../lib/supabaseClient'
 import { getContractContent } from '../utils/contractContent'
@@ -27,6 +28,16 @@ import { getContractContent } from '../utils/contractContent'
 // This page never decides Current version / Acceptance validity / 3-day
 // eligibility / requires_reacceptance itself -- every one of those is a
 // server response value, rendered as-is.
+//
+// Legal / Contract Publication Refinement (2026-09): remark-gfm added so
+// GFM tables in the pinned versions/*.md content (e.g. the plan pricing
+// table) render as actual tables, matching the public /legal pages.
+//
+// Mobile RWD fix (2026-09): the rendered markdown is wrapped in
+// .contract-review-content so App.css can target its <pre> blocks the
+// same way it targets .legal-content's (see App.css) -- this page uses
+// .auth-page, a different scope from the public /legal pages, but
+// renders the same contract text and hits the same overflow bug.
 function ContractReviewPage() {
   const { loading, user } = useAuth()
   const [searchParams] = useSearchParams()
@@ -162,7 +173,9 @@ function ContractReviewPage() {
           )}
 
           {content ? (
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <div className="contract-review-content">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            </div>
           ) : (
             <p>目前無法載入契約內容（版本：{review.contractVersion}）。</p>
           )}

@@ -44,11 +44,11 @@ JOTI Kundalini ABC Yoga 目前提供純線上 Kundalini Yoga 教學服務。本�
 
 ## 2. JOTI 網站／契約「營業所地址」
 
-**Status: CURRENT（目前最需要落地的事項之一）**
+**Status: CONFIRMED**
 
 - JOTI 目前為純線上教學，**沒有實體瑜伽教室**。
 - 依第 1 節之規範，契約基本資料中需要記載「營業所地址」。
-- **目前規劃**使用「臺北市松山區吉祥路55之1號7樓」作為 JOTI 對外網站／契約揭露的營業所／聯絡地址。
+- 使用「臺北市松山區吉祥路55之1號7樓」作為 JOTI 對外網站／契約揭露的營業所／聯絡地址，已由專案決策確認可對外公開（見 [`docs/development/project-status.md`](../development/project-status.md) 之 Business / Address Status）。
 
 **重要區分（不得混淆）**：
 
@@ -59,9 +59,7 @@ JOTI Kundalini ABC Yoga 目前提供純線上 Kundalini Yoga 教學服務。本�
 
 這些是完全不同的問題，分別見第 9、10 節（FUTURE）。
 
-**目前狀態**：CURRENT／待最終確認對外使用權。本文件記錄為「目前規劃地址」，**不宣稱政府已核准 JOTI 使用該地址**，因目前無官方資料可支持該結論。
-
-**未來實作提醒（不代表現在要修改）**：未來 Website Footer／Contact、Membership Service Basic Agreement 及其他依法應揭露的服務資訊，應使用一致的企業經營者基本資料。**本文件不因此現在修改網站。**
+**目前狀態**：CONFIRMED——對外揭露地址已確認可公開使用，並已同步至 `joti-online-teaching-contract.md`、`docs/legal/versions/v1.0.md`、網站 Footer（`data/business.js`）。**本節之確認僅限於「網站／契約對外揭露地址」**，不宣稱政府已核准 JOTI 使用該地址為登記營業場所，因目前無官方資料可支持該結論（見上方「重要區分」）。
 
 ---
 
@@ -224,7 +222,7 @@ JOTI Kundalini ABC Yoga 目前提供純線上 Kundalini Yoga 教學服務。本�
 - JOTI 純線上網際網路教學服務的法律定位
 - 契約至少 3 日審閱
 - 契約／網站應揭露企業經營者基本資料
-- 營業所地址目前規劃為「臺北市松山區吉祥路55之1號7樓」
+- 營業所地址已確認為「臺北市松山區吉祥路55之1號7樓」，可對外公開使用
 - 網站／契約資訊應保持一致
 - 廣告及效果宣稱需要注意公平交易法第 21 條
 - 音樂授權需要依實際使用方式確認

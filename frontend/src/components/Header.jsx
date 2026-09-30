@@ -15,6 +15,7 @@ function Header() {
       <nav>
         <Link to="/foundations">新手必修</Link>
         <Link to="/practice">完整練習</Link>
+        <Link to="/pricing">方案</Link>
         <Link to="/about">關於 JOTI</Link>
         {isAdmin && <Link to="/admin/practices">Admin</Link>}
         <Link to={user ? '/account' : '/login'}>{user ? '我的帳號' : '登入'}</Link>

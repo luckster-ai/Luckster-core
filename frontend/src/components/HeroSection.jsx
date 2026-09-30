@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import heroImage from '../assets/hero/hero-desktop.png'
+import heroImage from '../assets/hero/hero-desktop.webp'
 
 // Homepage Hero (2026-09): the first viewport -- desktop AND mobile --
 // must show the CTAs without the visitor first scrolling past the long
@@ -13,6 +13,10 @@ import heroImage from '../assets/hero/hero-desktop.png'
 // hero.mission is JOTI's brand / mission statement -- given a clear step
 // above body copy (.hero-mission), but kept below the H1 and the CTAs in
 // visual weight.
+//
+// Payment Readiness Implementation Sprint (2026-09): 訂閱會員 now points
+// at /pricing (was /login, indistinguishable from 免費體驗). 免費體驗
+// keeps its existing /login behaviour -- unchanged, per Sprint scope.
 function HeroSection({ homepage }) {
   const { hero } = homepage
 
@@ -30,7 +34,7 @@ function HeroSection({ homepage }) {
           免費體驗
         </Link>
 
-        <Link to="/login" className="button secondary">
+        <Link to="/pricing" className="button secondary">
           訂閱會員
         </Link>
       </div>
