@@ -15,7 +15,7 @@
 目前重心：
 
 1. **Payment Readiness / Pre-submission preparation**——金流平台現況：**Oen 已通過相關申請／審核**；**ECPay（綠界）與 PAYUNi 目前正在申請中**，兩者現階段皆為候選平台，用於申請、測試與比較整合便利性、費用、操作方式及實際測試結果，**最終採用哪一個金流平台尚未決定**，不應視 ECPay 或 PAYUNi 為已確定採用之平台。以下為網站審核準備工作：Gap Analysis、Implementation Sprint（Pricing/Legal/Footer/CTA）、Legal/Contract Publication Refinement（Discovery＋Implementation）、Production Publication Readiness Audit＋Polish、Vercel Deployment Architecture 修正、Mobile Legal/Contract RWD 修正、Contract Terminology Consistency（Audit＋2 輪 Implementation）**皆已完成**。**已知阻塞項**：Supabase Auth 的 `Site URL`／`Redirect URLs` 設定過期，目前任何環境（Preview 或 Production）點擊登入都會被導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`——根因已診斷確認，**修正需要到 Supabase Dashboard 手動操作**，尚未執行（見 Next Steps、Blockers）。這一整批工作**尚未 commit／push**。
-2. **Payment Rebuild — Step 4（Contract Review & Acceptance Flow）已完成實作，通過 TEST Supabase 專案實際 DB/RPC 測試與 lint/build，已 commit + push（`e01fd57`）**。**Step 5（Payment Core / Provider Adapter）尚未開始**，排定下一個工作日再進行 Discovery / Planning。
+2. **Payment Rebuild — 第 1–4 階段已完成**；**第 5 階段（Payment Core / Provider Adapter）Payment Core 實作已完成、Provider-agnostic 架構驗證已通過，不需要進行 Payment Core 架構重構**（詳見下方「Payment Rebuild — Step 5」小節）。**Oen Provider Adapter 尚未實作**，Payment Core 的 4 個 trusted RPC 尚缺 TEST Supabase 實際執行驗證（屬於驗證工作，不代表需要重新設計 Core）。下一個正式工作階段為 **Step 6：Oen One-time Checkout**——以 Oen 作為目前第一個 Provider 打通 Payment Core，**不代表最終選定 Oen**；Step 7（Webhook + Server-side Verification）／Step 8（Membership / Entitlement）／Step 9（Refund / Cancellation / Edge Cases）／Step 10（Production Readiness）維持原順序，尚未開始。
 3. 內容擴充（新增 Module）
 4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
@@ -144,6 +144,13 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Git checkpoint**：`e01fd57` — "Implement contract review and acceptance flow"，**已成功 push 到 `origin/main`**
 - **Step 4 已完成**
 
+### Payment Rebuild — Step 5（Payment Core / Provider Adapter）
+- **Payment Core Implementation 已完成**：`orders`／`service_periods` 兩張表＋ RLS（`schema_payment_core.sql`）、四個 trusted RPC（`apply_order_payment()`／`mark_payment_failed()`／`retry_order_payment()`／`expire_pending_orders()`）、Edge Function `create-order-checkout`（provider-independent，驗證 Contract Acceptance 存在、server-side 價格表、Order 建立於 `pending_payment`，`provider` 欄位刻意留 NULL）與 `retry-order-payment`、Provider Adapter 型別邊界（`_shared/paymentProviderAdapter.ts`，純型別介面宣告，無 runtime 實作）
+- **Git checkpoint**：`91dc8ff` — "Implement payment core and provider adapter boundary"，**已 commit + push 到 `origin/main`**
+- **Provider-agnostic Architecture Validation 已完成並通過**：確認 `orders.provider` 為 nullable 純文字欄位、Core 內無任何 Oen-specific 命名／欄位／流程、`apply_order_payment()` 等 RPC 僅接受已標準化之純量參數（不接受原始 provider payload）、Core function 命名符合 provider-neutral 邊界規則。**結論：不需要進行 Payment Core 架構重構**，Step 6-10 可自然接續。
+- **尚未完成**：Oen Provider Adapter 尚未實作（目前僅有型別介面）；Payment Core 的 4 個 trusted RPC 尚未在 TEST Supabase 專案做實際執行驗證（不同於 Step 4 已有完整 TEST 專案驗證紀錄）——**這是驗證工作尚待執行，不代表架構設計有缺陷**；`get_membership_status()` 尚未擴充讀取 `service_periods`（Step 8 範圍）；webhook／server-side verification 尚未接上 `apply_order_payment()`（Step 6/7 範圍）
+- **Legacy Subscription 路徑**（`create-subscription-checkout`／`oen-webhook`／`subscriptions`／`subscription_checkouts`）**目前仍存在、暫不退場**，與 Payment Core 完全分開、互不相依，**不是**新 Payment Core 路徑的一部分；working tree 目前有一筆未 commit 的 Legacy 修正（Oen `/checkout-subscription` → `/checkout-schedule`），與 Step 6 是兩條獨立工作
+
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -232,7 +239,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 2. **大批累積工作的 Git checkpoint**：本文件所述 Payment Readiness Implementation Sprint 之後的所有工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）**全部尚未 commit／push**，待使用者 Review 後指示建立 Git checkpoint（範圍涵蓋多輪工作，commit 時注意 `docs/legal/versions/v1.0.md` 與 `joti-online-teaching-contract.md` 需一起進、保持逐字一致）。
 3. **Vercel Production 正式部署**：待第 1、2 項完成後，用已確認正確的部署方式（repo root、Root Directory=`frontend`）部署到 Production，取代目前落後的 Production 內容。
 4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。
-5. **Payment Rebuild — Step 5（Payment Core / Provider Adapter）**：**尚未開始**，排定另一個工作日再進行 Discovery / Planning（本文件撰寫時尚未執行，不寫成已完成）。範圍依先前已確認的規劃：`orders` / `service_periods` 核心表、RLS 與 trusted RPC 建置（provider-independent 命名，如 `create-order-checkout` / `apply-order-payment`）、Oen Adapter 重構（webhook 接收、回查驗證、固定 IP outbound 設定）、`get_membership_status()` 擴充、前端（`SubscribePage.jsx`/`AccountPage.jsx`）改走新模型。
+5. **Payment Rebuild — Step 6（Oen One-time Checkout）**：下一個正式工作階段。以 Oen 作為目前第一個 Provider（已通過審核、已有 API／測試整合能力）打通 Payment Core，**不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中，屬於未來比較／可能替換的 Provider，最終平台尚未決定。範圍：`_shared/oen.ts` 新增一次性 checkout client（`payment-legal-spec.md` §9 已確認之 T-1 one-time checkout 端點，非 Legacy 的 `/checkout-schedule`）、實作 `PaymentProviderAdapter` 介面、`create-order-checkout`／`retry-order-payment` 接上 Adapter。Step 7（Webhook + Server-side Verification）／Step 8（Membership / Entitlement）／Step 9（Refund / Cancellation / Edge Cases）／Step 10（Production Readiness）維持原順序，尚未開始。
 6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
 7. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
@@ -257,4 +264,4 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Last Updated
 
-2026-09-30
+2026-10-01
