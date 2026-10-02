@@ -38,6 +38,21 @@ import { getContractContent } from '../utils/contractContent'
 // same way it targets .legal-content's (see App.css) -- this page uses
 // .auth-page, a different scope from the public /legal pages, but
 // renders the same contract text and hits the same overflow bug.
+//
+// Payment Rebuild -- Step 6 (Oen One-time Checkout): once mode === 'initial'
+// reaches 'agreed', this is the earliest point a new Order is actually
+// allowed to exist (create-order-checkout's Contract Acceptance Gate), so
+// the plan choice + checkout trigger lives here rather than on /pricing --
+// /pricing still only routes a new visitor INTO this page (unchanged).
+// 'reacceptance' mode deliberately does NOT get these buttons: a member
+// routed here for reacceptance already has an active relationship with
+// JOTI, and deciding whether/when they should be prompted to buy again is
+// Step 8 (Membership/Entitlement) territory, not something to attach here.
+const CHECKOUT_PLANS = [
+  { code: 'monthly', label: '月方案 NT$333' },
+  { code: 'annual', label: '年方案 NT$3,333' }
+]
+
 function ContractReviewPage() {
   const { loading, user } = useAuth()
   const [searchParams] = useSearchParams()
@@ -46,6 +61,11 @@ function ContractReviewPage() {
   const [state, setState] = useState('loading') // loading | ready | agreeing | agreed | error
   const [review, setReview] = useState(null) // { contractVersion, presentedAt, reviewAvailableAt, contentIdentifier }
   const [message, setMessage] = useState(null)
+  // Separate from `state` above (which governs the Review/Agree flow) --
+  // checkout only ever starts after state === 'agreed', and a checkout
+  // failure should not reset the already-successful agreement state.
+  const [checkoutPlanCode, setCheckoutPlanCode] = useState(null) // which plan button is in flight, or null
+  const [checkoutError, setCheckoutError] = useState(null)
   // Derived from review.reviewAvailableAt, but Date.now() may only be
   // read inside an effect (not during render, per React's purity rule) --
   // recomputed on an interval so the button flips to enabled without
@@ -150,6 +170,28 @@ function ContractReviewPage() {
     setState('agreed')
   }
 
+  async function handleCheckout(planCode) {
+    setCheckoutPlanCode(planCode)
+    setCheckoutError(null)
+
+    const { data, error } = await supabase.functions.invoke('create-order-checkout', {
+      body: { planCode }
+    })
+
+    if (error || data?.error || !data?.redirectUrl) {
+      setCheckoutPlanCode(null)
+      setCheckoutError(data?.error || error?.message || '無法建立訂單，請稍後再試。')
+      return
+    }
+
+    // Full navigation (not react-router) -- Oen's hosted checkout page is
+    // an external origin, not a route inside this SPA. .assign() (not a
+    // `window.location.href =` property write) to satisfy this repo's
+    // react-hooks immutability lint rule -- same pattern as
+    // SubscribePage.jsx's existing Legacy checkout redirect.
+    window.location.assign(data.redirectUrl)
+  }
+
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
 
@@ -191,7 +233,29 @@ function ContractReviewPage() {
             </button>
           )}
 
-          {state === 'agreed' && <p>已完成同意，感謝您的審閱。</p>}
+          {state === 'agreed' && mode === 'initial' && (
+            <div className="contract-review-checkout">
+              <p>已完成同意，感謝您的審閱。選擇方案即可前往付款：</p>
+
+              {checkoutError && <p>{checkoutError}</p>}
+
+              <div className="pricing-cta">
+                {CHECKOUT_PLANS.map((plan) => (
+                  <button
+                    key={plan.code}
+                    type="button"
+                    className="button"
+                    onClick={() => handleCheckout(plan.code)}
+                    disabled={checkoutPlanCode !== null}
+                  >
+                    {checkoutPlanCode === plan.code ? '前往付款頁…' : plan.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {state === 'agreed' && mode === 'reacceptance' && <p>已完成同意，感謝您的審閱。</p>}
         </>
       )}
     </div>

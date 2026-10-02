@@ -12,14 +12,19 @@
 // published -- whether that should block new Orders is an undecided
 // product rule and is Step 8's concern, not something to invent here.
 //
-// Deliberately does NOT call any Payment Provider Adapter and does NOT
-// return a checkout URL -- Step 5 stops at orders.status='pending_payment'.
-// The Provider Adapter boundary this function will delegate to in Step 6
-// is defined (type-only, no implementation) in
-// ../_shared/paymentProviderAdapter.ts.
+// Payment Rebuild -- Step 6: after the Order row exists, delegates to the
+// active Provider Adapter's startCheckout() to actually start a payment
+// attempt. This function imports exactly one Adapter (oenAdapter, from
+// ../_shared/oenAdapter.ts) -- that single import is the only place this
+// file knows "Oen" exists; everything else below (pricing, the Contract
+// Acceptance Gate, the Order insert) is unchanged from Step 5 and remains
+// provider-independent. Swapping to a different Provider later means
+// changing this one import, not this file's other logic.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
+import { OEN_PROVIDER_NAME, oenAdapter } from "../_shared/oenAdapter.ts";
+import type { StartCheckoutResult } from "../_shared/paymentProviderAdapter.ts";
 
 // payment-legal-spec.md §2 -- server-side price table. Never trust a
 // client-supplied amount.
@@ -114,16 +119,59 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: "order_create_failed" }, 500);
   }
 
-  // STEP 6 TODO: once the Oen Adapter exists, delegate here to
-  // PaymentProviderAdapter.startCheckout() (see
-  // ../_shared/paymentProviderAdapter.ts) and merge its
-  // { providerCheckoutRef, redirectUrl } into this response and into
-  // orders.provider_checkout_ref. Step 5 deliberately stops here -- no
-  // checkout URL yet.
+  // Order exists at this point regardless of what happens below -- a
+  // Provider start-checkout failure does not roll back the Order. It stays
+  // pending_payment with provider still NULL; retry-order-payment (or a
+  // future "resume checkout" call) can attempt a Provider checkout again
+  // without creating a second Order.
+  const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/+$/, "");
+  let checkout: StartCheckoutResult;
+  try {
+    checkout = await oenAdapter.startCheckout({
+      orderId: order.id,
+      paymentAttempt: order.payment_attempt,
+      amount: pricing.amount,
+      currency: pricing.currency,
+      planCode,
+      successUrl: `${siteUrl}/checkout/return?order=${order.id}&result=success`,
+      failureUrl: `${siteUrl}/checkout/return?order=${order.id}&result=failed`,
+    });
+  } catch (e) {
+    console.error("provider startCheckout failed:", (e as Error).message);
+    return json({
+      error: "checkout_start_failed",
+      orderId: order.id,
+      status: order.status,
+      paymentAttempt: order.payment_attempt,
+      paymentExpiresAt: order.payment_expires_at,
+    }, 502);
+  }
+
+  const { error: updateErr } = await svc
+    .from("orders")
+    .update({
+      provider: OEN_PROVIDER_NAME,
+      provider_checkout_ref: checkout.providerCheckoutRef,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", order.id);
+
+  if (updateErr) {
+    console.error("order provider update failed:", updateErr.message);
+    return json({
+      error: "checkout_start_failed",
+      orderId: order.id,
+      status: order.status,
+      paymentAttempt: order.payment_attempt,
+      paymentExpiresAt: order.payment_expires_at,
+    }, 502);
+  }
+
   return json({
     orderId: order.id,
     status: order.status,
     paymentAttempt: order.payment_attempt,
     paymentExpiresAt: order.payment_expires_at,
+    redirectUrl: checkout.redirectUrl,
   });
 });

@@ -109,6 +109,55 @@ export function createSubscriptionCheckout(params: {
   });
 }
 
+// POST /checkout -- single one-time payment, no recurring behaviour
+// whatsoever (no paymentInterval, no startDate -- this is a DIFFERENT Oen
+// endpoint from /checkout-schedule above).
+//
+// Payment Rebuild -- Step 6: this is the function the Oen Provider Adapter
+// (../_shared/oenAdapter.ts) calls on behalf of the new, provider-agnostic
+// Payment Core (create-order-checkout / retry-order-payment). Do not call
+// this from, or merge it with, the Legacy createSubscriptionCheckout()
+// above -- the two are deliberately kept separate (see
+// docs/development/project-status.md, "Payment Rebuild — Step 5").
+//
+// FIELD SHAPE EMPIRICALLY VERIFIED against Oen's TEST API (2026-10-02,
+// Step 6 TEST Runtime Verification): the first attempt omitted
+// productDetails (the documented "minimum request" example doesn't show
+// it) and Oen's /checkout rejected it with
+// `{"code":"V0001","data":{},"message":"must have required property
+// 'productDetails'"}` -- confirming /checkout requires productDetails the
+// same as /checkout-schedule, contrary to the documented minimal example.
+// productDetails shape copied from createSubscriptionCheckout() above
+// (already verified working for that endpoint), not invented here.
+export function createOneTimeCheckout(params: {
+  amount: number;
+  currency: string;
+  orderId: string;
+  successUrl: string;
+  failureUrl: string;
+  customId: string;
+  planId: string;
+  planName: string;
+}): Promise<OenResult<{ id: string }>> {
+  return oenFetch("POST", "/checkout", {
+    merchantId: MERCHANT_ID,
+    amount: params.amount,
+    currency: params.currency,
+    orderId: params.orderId,
+    successUrl: params.successUrl,
+    failureUrl: params.failureUrl,
+    productDetails: [{
+      productionCode: params.planId,
+      description: params.planName,
+      quantity: 1,
+      unit: "份",
+      unitPrice: params.amount,
+    }],
+    customId: params.customId,
+    note: `JOTI order (${OEN_MODE})`,
+  });
+}
+
 // GET /subscriptions/:id  -- used by the webhook to re-verify.
 export function getSubscription(
   subscriptionId: string,
@@ -125,4 +174,10 @@ export function getTransaction(
 
 export function checkoutRedirectUrl(checkoutId: string): string {
   return `${CHECKOUT_BASE}/checkout/subscription/${checkoutId}`;
+}
+
+// One-time checkout's hosted page URL has no "schedule" segment -- a
+// different path shape from checkoutRedirectUrl() above. Step 6 only.
+export function oneTimeCheckoutRedirectUrl(checkoutId: string): string {
+  return `${CHECKOUT_BASE}/checkout/${checkoutId}`;
 }

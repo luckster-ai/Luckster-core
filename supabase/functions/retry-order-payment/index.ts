@@ -1,15 +1,16 @@
 // Payment Rebuild -- Step 5: Payment Core.
 //
 // Retries payment for an existing Order still within its 3-day payment
-// window (order-schema-proposal.md Decision A). Only performs the
-// Core-owned state transition (payment_failed -> pending_payment,
-// payment_attempt + 1) via retry_order_payment(); this function does not
-// call any Payment Provider Adapter. Step 6 will extend it to also
-// delegate to the Adapter's startCheckout() for the new attempt (see
-// ../_shared/paymentProviderAdapter.ts).
+// window (order-schema-proposal.md Decision A). Performs the Core-owned
+// state transition (payment_failed -> pending_payment, payment_attempt + 1)
+// via retry_order_payment(), then (Step 6) delegates to the active Provider
+// Adapter's startCheckout() for the new attempt -- same single-import
+// pattern as create-order-checkout/index.ts, see that file's header.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
+import { OEN_PROVIDER_NAME, oenAdapter } from "../_shared/oenAdapter.ts";
+import type { StartCheckoutResult } from "../_shared/paymentProviderAdapter.ts";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -48,7 +49,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // runs as service_role and does not itself check auth.uid().
   const { data: order, error: ownerErr } = await svc
     .from("orders")
-    .select("id")
+    .select("id, amount, currency, plan_code")
     .eq("id", orderId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -68,7 +69,41 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: "retry_failed" }, 500);
   }
 
-  // STEP 6 TODO: delegate to PaymentProviderAdapter.startCheckout() here
-  // with the new payment_attempt and merge its result into this response.
-  return json({ orderId, status: "pending_payment", paymentAttempt: newAttempt });
+  const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/+$/, "");
+  let checkout: StartCheckoutResult;
+  try {
+    checkout = await oenAdapter.startCheckout({
+      orderId: order.id,
+      paymentAttempt: newAttempt,
+      amount: order.amount,
+      currency: order.currency,
+      planCode: order.plan_code,
+      successUrl: `${siteUrl}/checkout/return?order=${order.id}&result=success`,
+      failureUrl: `${siteUrl}/checkout/return?order=${order.id}&result=failed`,
+    });
+  } catch (e) {
+    console.error("provider startCheckout failed (retry):", (e as Error).message);
+    return json({ error: "checkout_start_failed", orderId, paymentAttempt: newAttempt }, 502);
+  }
+
+  const { error: updateErr } = await svc
+    .from("orders")
+    .update({
+      provider: OEN_PROVIDER_NAME,
+      provider_checkout_ref: checkout.providerCheckoutRef,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orderId);
+
+  if (updateErr) {
+    console.error("order provider update failed (retry):", updateErr.message);
+    return json({ error: "checkout_start_failed", orderId, paymentAttempt: newAttempt }, 502);
+  }
+
+  return json({
+    orderId,
+    status: "pending_payment",
+    paymentAttempt: newAttempt,
+    redirectUrl: checkout.redirectUrl,
+  });
 });

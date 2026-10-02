@@ -16,6 +16,7 @@ import AccountPage from '../pages/AccountPage'
 import AuthCallbackPage from '../pages/AuthCallbackPage'
 import SubscribePage from '../pages/SubscribePage'
 import ContractReviewPage from '../pages/ContractReviewPage'
+import CheckoutReturnPage from '../pages/CheckoutReturnPage'
 import PricingPage from '../pages/PricingPage'
 import LegalHubPage from '../pages/LegalHubPage'
 import LegalPage from '../pages/LegalPage'
@@ -101,6 +102,11 @@ function AppRouter() {
       <Route
         path="/contract-review"
         element={<ContractReviewPage />}
+      />
+
+      <Route
+        path="/checkout/return"
+        element={<CheckoutReturnPage />}
       />
 
       <Route
