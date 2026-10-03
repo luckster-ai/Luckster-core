@@ -31,9 +31,27 @@ export function AuthProvider({ children }) {
       return
     }
 
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+    // Payment Rebuild -- Step 8 (Membership / Entitlement): service_periods
+    // is a separate table (public.service_periods, not a profiles column),
+    // fetched alongside the profile row and merged on as `servicePeriods`
+    // so utils/membershipStatus.js's still-single-argument getMembershipStatus()
+    // can read both without every call site needing to pass a second
+    // argument. Filtered server-side to rows that could still matter
+    // (not terminated, not yet ended) -- a currently-active OR a
+    // future-start ("到期後開始", Plan Change, not yet implemented) row;
+    // already-elapsed rows are excluded here rather than left for the
+    // client to filter out of a growing, unbounded history.
+    const [{ data: profileData }, { data: periodsData }] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', userId).single(),
+      supabase
+        .from('service_periods')
+        .select('plan_code, service_period_start, service_period_end, terminated_at')
+        .eq('user_id', userId)
+        .is('terminated_at', null)
+        .gt('service_period_end', new Date().toISOString())
+    ])
 
-    setProfile(data || null)
+    setProfile(profileData ? { ...profileData, servicePeriods: periodsData || [] } : null)
   }, [])
 
   useEffect(() => {

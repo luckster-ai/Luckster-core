@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../state/useAuth'
-import { getMembershipStatus, getTrialUsageSummary, MEMBERSHIP_STATUS } from '../utils/membershipStatus'
+import {
+  getMembershipStatus,
+  getTrialUsageSummary,
+  getActivePaidServicePeriod,
+  getUpcomingServicePeriod,
+  MEMBERSHIP_STATUS
+} from '../utils/membershipStatus'
 import { formatVideoDuration } from '../utils/formatDuration'
 import { usePracticeHistory } from '../hooks/usePracticeHistory'
 import PracticeHistory from '../components/PracticeHistory'
@@ -11,6 +17,14 @@ const STATUS_LABEL = {
   [MEMBERSHIP_STATUS.SUBSCRIBER]: '付費會員',
   [MEMBERSHIP_STATUS.TRIAL]: '免費體驗中',
   [MEMBERSHIP_STATUS.TRIAL_EXPIRED]: '免費體驗已結束'
+}
+
+// Payment Rebuild -- Step 8: display-only label, not used for any pricing
+// or entitlement decision -- those already live elsewhere (data/pricing.js,
+// the entitlement check in utils/membershipStatus.js).
+const PLAN_LABEL = {
+  monthly: '月方案',
+  annual: '年方案'
 }
 
 // Payment Phase 1 -- Oen TEST first-subscription MVP. The subscribe entry
@@ -34,6 +48,8 @@ function AccountPage() {
   const checkoutResult = SUBSCRIBE_ENABLED ? searchParams.get('checkout') : null
 
   const status = getMembershipStatus(profile)
+  const activePeriod = getActivePaidServicePeriod(profile)
+  const upcomingPeriod = getUpcomingServicePeriod(profile)
   const activating =
     checkoutResult === 'success' && status !== MEMBERSHIP_STATUS.SUBSCRIBER
 
@@ -86,6 +102,27 @@ function AccountPage() {
         <p>
           <strong>會員狀態：</strong>
           {STATUS_LABEL[status]}
+        </p>
+      )}
+
+      {activePeriod && (
+        <>
+          <p>
+            <strong>目前方案：</strong>
+            {PLAN_LABEL[activePeriod.plan_code] ?? activePeriod.plan_code}
+          </p>
+          <p>
+            <strong>服務期間到期日：</strong>
+            {new Date(activePeriod.service_period_end).toLocaleDateString('zh-TW')}
+          </p>
+        </>
+      )}
+
+      {upcomingPeriod && (
+        <p>
+          <strong>下一個方案：</strong>
+          {PLAN_LABEL[upcomingPeriod.plan_code] ?? upcomingPeriod.plan_code}，將於
+          {new Date(upcomingPeriod.service_period_start).toLocaleDateString('zh-TW')} 開始
         </p>
       )}
 
