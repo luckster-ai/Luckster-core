@@ -15,7 +15,7 @@
 目前重心：
 
 1. **Payment Readiness / Pre-submission preparation**——金流平台現況：**Oen 已通過相關申請／審核**；**ECPay（綠界）與 PAYUNi 目前正在申請中**，兩者現階段皆為候選平台，用於申請、測試與比較整合便利性、費用、操作方式及實際測試結果，**最終採用哪一個金流平台尚未決定**，不應視 ECPay 或 PAYUNi 為已確定採用之平台。以下為網站審核準備工作：Gap Analysis、Implementation Sprint（Pricing/Legal/Footer/CTA）、Legal/Contract Publication Refinement（Discovery＋Implementation）、Production Publication Readiness Audit＋Polish、Vercel Deployment Architecture 修正、Mobile Legal/Contract RWD 修正、Contract Terminology Consistency（Audit＋2 輪 Implementation）**皆已完成**。**已知阻塞項**：Supabase Auth 的 `Site URL`／`Redirect URLs` 設定過期，目前任何環境（Preview 或 Production）點擊登入都會被導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`——根因已診斷確認，**修正需要到 Supabase Dashboard 手動操作**，尚未執行（見 Next Steps、Blockers）。這一整批工作**尚未 commit／push**。
-2. **Payment Rebuild — 第 1–7 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）皆已完成並在 TEST Supabase 專案實測成功（詳見下方對應小節）。**Oen one-time 付款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。目前進度：**Step 8（Membership / Entitlement）Discovery 已完成，Implementation 尚未開始**，待若干產品規則裁示後才會進入實作；同時完成「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作，**但 Plan Change 的技術（DB／RPC）實作尚未開始**（詳見下方對應小節）。Step 9（Refund / Cancellation / Edge Cases）／Step 10（Production Readiness）維持原順序，尚未開始。
+2. **Payment Rebuild — 第 1–7 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）皆已完成並在 TEST Supabase 專案實測成功（詳見下方對應小節）。**Oen one-time 付款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。目前進度：**Step 8（Membership / Entitlement）已完成**——`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；同時完成「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作，**但 Plan Change 的技術（DB／RPC）實作尚未開始**（詳見下方對應小節）。Step 9（Refund / Cancellation / Edge Cases）／Step 10（Production Readiness）維持原順序，尚未開始。
 3. 內容擴充（新增 Module）
 4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
@@ -172,6 +172,16 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **PayUNi**：已研讀官方文件（`docs.payuni.com.tw`），確認其一次性付款（整合式支付頁 UPP）、webhook（NotifyURL 逐筆隨 request 帶入，非 Oen 式全域單一設定）、交易查詢 API 皆可在不修改 Payment Core／`PaymentProviderAdapter` 介面的前提下實作對應 Adapter；PayUNi 採 AES-256-GCM 加密＋SHA256 簽章（HashKey/HashIV）的 Form POST 模式，比 Oen 複雜，但複雜度完全侷限於未來 Adapter 內部，不影響 Core 邊界。**尚缺**：`EncryptInfo` 完整欄位 schema、PAYUNi SDK 實際內容、TEST 環境金鑰與測試卡、實際 webhook payload 範例——這些在 PayUNi 真正獲選前不需要補齊
 - **ECPay**：已研讀官方文件（`developers.ecpay.com.tw`），確認全方位金流付款（AIO）屬 Hosted Redirect 模式，與目前 Oen 整合方向一致；具備訂單查詢 API（`QueryTradeInfo`），官方文件本身即建議搭配 webhook 做 server-side 二次驗證，與 Core 既有「mandatory re-query」設計理念相符。**發現一個 Adapter 層級（非 Core）的結構差異**：ECPay 的付款啟動是前端表單直接 POST 到 ECPay（無「建立 checkout 取得 ID」的 server-to-server 步驟），未來 Adapter 需要多一個中介頁面產生 `redirectUrl`，但 `PaymentProviderAdapter` 介面本身不需要修改。**「站內付」一詞在已讀取的官方文件頁面中完全沒有出現**，為明確的文件缺口，待確認其確切來源後再補查
 - **結論**：兩者皆未發現需要修改 Payment Core／`PaymentProviderAdapter` 介面的架構阻塞，進一步驗證 Step 5 Core 設計的 provider-agnostic 邊界成立，不只對 Oen 適用
+- **後續窄範圍 Boundary Check 已重新確認同一結論**：逐一核對 `PaymentProviderAdapter`／`StartCheckoutResult`／`oenAdapter.ts`／`oen-webhook` server-side verification／Order-Adapter 交界，確認 `redirectUrl` 可由 Adapter 自行產生 JOTI bridge URL 而不需修改 Core 介面；Oen 固定 outbound IP／allowlist 維持在 Provider／infrastructure 層（`order-schema-proposal.md` Decision 11），未進入 Core domain；**沒有發現需要修改 Payment Core、Order schema 或既有 RPC 的實際 incompatibility**
+
+### Payment Rebuild — Step 8（Membership / Entitlement）
+- **Implementation 已完成**：`get_membership_status()`（SQL）新增於新檔案 `supabase/schema_membership_entitlement.sql`（additive CREATE OR REPLACE，比照 `schema_subscriptions.sql` 當初疊加 `schema.sql` 的既有慣例，未修改 `schema_subscriptions.sql` 本身），`frontend/src/utils/membershipStatus.js`（`getMembershipStatus()` 新增 service_periods 分支＋新增 `hasActiveServicePeriod()`／`getActivePaidServicePeriod()`／`getUpcomingServicePeriod()`）、`frontend/src/state/AuthProvider.jsx`（`loadProfile()` 併行查詢 `service_periods` 並合併為 `profile.servicePeriods`）、`frontend/src/pages/AccountPage.jsx`（新增「目前方案」／「服務期間到期日」／「下一個方案」顯示）
+- **Entitlement 規則**：雙邊界 `terminated_at IS NULL AND now() >= service_period_start AND now() < service_period_end`，SQL／JS 兩邊邏輯一致；多筆 Service Period 採 EXISTS 判定，不以 latest row 判斷；future-start Service Period 不計入目前 Paid Access，但 UI 可顯示其未來開始日期
+- **`getMembershipStatus(profile)` 簽章未變**：改由 `AuthProvider` 把 `service_periods` 合併進 `profile.servicePeriods`，9 個既有呼叫點（`VideoModule.jsx`／`ModulePage.jsx`／`Header.jsx` 等）零修改
+- **Legacy 相容**：`profiles.subscription_status='active'` 與新的 service_periods 判定維持 OR 關係並存，皆輸出既有 `'subscriber'` 值，**未進行 Legacy 重構，未新增狀態命名**（命名 Open Question 仍未裁示，本次不自行決定）
+- **TEST 環境驗證完成**：已套用到 TEST Supabase 專案；`+trial2` 帳號（`subscription_status='none'`，有一筆有效 `service_periods`）確認 `get_membership_status()` 正確回傳 `subscriber`（修正前為 `trial_expired`）；3 個無 `service_periods` 的既有帳號確認無回歸（`trial_expired`／`admin` 不變）；JS 端 11 項純函式單元驗證全數通過（EXISTS 語意、future-start 排除、`terminated_at` 排除、Legacy 相容路徑、admin 優先序）；`npm run lint`／`npm run build` 皆通過
+- **Git checkpoint**：`39d6035` — "Implement membership entitlement from service periods"，**已 commit + push 到 `origin/main`**
+- **Step 8 已完成（最小必要範圍）**：未擴大到 Plan Change UI／Refund／PayUNi／ECPay Adapter／到期提醒／續購導流／`retry-order-payment` UI／Legacy subscription 重構，依指示維持原樣
 
 ### Payment Rebuild — Plan Change（方案變更）
 - **Discovery／Design／Reconciliation 已完成**：確認「方案變更」本質上是既有「第十一條提前終止退款」＋「第八條正常購買」兩個既有機制的組合，不建立新的 Payment Type／Order Type／獨立制度；「立即變更」幾乎不需要 Plan Change 專屬的新技術能力（所需的是 Step 9 退款功能本來就要建的通用「提前終止＋退款記錄」能力的最小切片）；「到期後開始」是唯一真正需要新技術能力的地方（讓 Service Period 可以未來生效），且範圍很小
@@ -259,11 +269,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Payment Backend 固定 IP proxy 技術驗證**：Discovery 已完成並提出建議方案，**尚未開始實際驗證**（需先選定供應商、申請試用帳號）。
 - **登入導向 localhost 問題**：根因診斷已完成（用 `supabase config diff` 直接核對遠端 Supabase 專案設定確認，非猜測）——Supabase Auth 的 `site_url` 仍是本機開發殘留值 `http://localhost:4190`，`additional_redirect_urls` 只涵蓋 Vercel 改名前的舊網址格式，完全沒涵蓋改名後的新格式或目前實際的 Production 別名；已在 Preview 上實際重現（點擊登入後導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`），確認不是程式碼問題（`AuthProvider.jsx` 的 `redirectTo` 動態計算正確）。**修正尚未執行**——需要到 Supabase Dashboard 手動更新 `Site URL`／`Redirect URLs`，不在 repo／CLI 範圍內。Production 很可能有同樣問題，尚未實際重現驗證。
   - **2026-10-01 更新——已從推論提升為可重現、有第一手證據的問題**：Payment Rebuild Step 6 TEST Runtime Verification 過程中，用授權的 TEST 帳號（`luckster.ai.workspace+trial2@gmail.com`）實際完成 Magic Link 登入，**核對了兩封不同時間（下午 6:24、下午 6:30）由 `supabase.auth.signInWithOtp()` 寄出的信件**：即使呼叫時明確指定 `emailRedirectTo: http://localhost:5173/auth/callback`，**兩封信實際產生的 Magic Link，`redirect_to` 參數都是 `http://localhost:4190`**，不是只在 Preview 環境、也不是只在點擊後才出現的現象，而是連結本身在寄出當下就已經是錯的。驗證當下為了讓 session 能成功建立，**手動把 `redirect_to` 改成 `http://localhost:5173/auth/callback` 後直接呼叫 `/auth/v1/verify`**，確認可以取得有效 session（回傳的 `sb-auth-user-id` 與該帳號相符）——**這個手動替換只是為了驗證 Step 6，不是修正，Supabase Auth 設定本身完全未被更動**。
-- **Payment Rebuild — Step 8 Discovery（Membership / Entitlement）：Discovery 已完成，Implementation 尚未開始**。
-  - **已確認的缺口（非猜測，含即時 TEST 資料驗證）**：現行 `get_membership_status()`（SQL，`schema.sql`／`schema_subscriptions.sql`）與前端鏡像 `getMembershipStatus()`（`membershipStatus.js`，被 `VideoModule.jsx`／`ModulePage.jsx`／`AccountPage.jsx`／`Header.jsx` 等多處實際用於權限判斷）完全不知道 `orders`／`service_periods` 存在，唯一的「付費」判斷依據是 Legacy 的 `profiles.subscription_status='active'`（只有 `apply_oen_subscription_charge()` 會寫入）。**已用即時 TEST 資料驗證**：`+trial2` 測試帳號已有真實成功付款、`service_periods` 有效期至 2026/11/2，但其 `subscription_status` 仍是 `'none'`，目前系統會把它判斷為 `trial_expired`，完全無法反映其付費狀態。
-  - **已確認需要補的環節**：新增一個從 `service_periods` 推導「目前是否有效為付費會員」的邏輯，接進 `get_membership_status()`（SQL）與 `getMembershipStatus()`（JS）；entitlement 公式需同時檢查 `now() >= service_period_start AND now() < service_period_end`（而非只看 `status`，因為目前沒有任何背景程式會把過期列的 `status` 轉成 `expired`）。
-  - **待裁示的 Open Questions**：付費會員狀態命名（沿用 `subscriber` vs 新命名）、與 Legacy `subscription_status` 的共存方式、多筆 Service Period 時的 entitlement 與畫面顯示規則、到期提醒／續購導流／`retry-order-payment` 前端 UI 是否納入本次範圍。
-  - `create-order-checkout` 目前完全不檢查使用者是否已有未到期的 Service Period——若不特別處理會靜默產生重疊，此缺口已併入「Payment Rebuild — Plan Change」規則一併規劃解決，見上方 Completed 小節。
+- **Payment Rebuild — Step 8（Membership / Entitlement）已完成，詳見上方 Completed 小節**。唯一尚未處理的相關缺口：`create-order-checkout` 目前完全不檢查使用者是否已有未到期的 Service Period——若不特別處理會靜默產生重疊，此缺口已併入「Payment Rebuild — Plan Change」規則一併規劃解決，見上方 Completed 小節，屬於 Plan Change 技術實作範圍，非 Step 8。
 
 ---
 
@@ -273,12 +279,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 2. **大批累積工作的 Git checkpoint**：本文件所述 Payment Readiness Implementation Sprint 之後的所有工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）**全部尚未 commit／push**，待使用者 Review 後指示建立 Git checkpoint（範圍涵蓋多輪工作，commit 時注意 `docs/legal/versions/v1.0.md` 與 `joti-online-teaching-contract.md` 需一起進、保持逐字一致）。
 3. **Vercel Production 正式部署**：待第 1、2 項完成後，用已確認正確的部署方式（repo root、Root Directory=`frontend`）部署到 Production，取代目前落後的 Production 內容。
 4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。
-5. **Payment Rebuild — Step 8（Membership / Entitlement）Implementation**：Discovery 已完成（見上方「In Progress」小節），**待使用者對命名、Legacy 共存方式、多筆 Service Period 規則、到期提醒／續購導流／`retry-order-payment` UI 範圍等 Open Questions 裁示後才會開始實作**。
-6. **Payment Rebuild — Plan Change 技術實作**：Contract／`payment-legal-spec.md` 文字已完成並 commit/push（見上方 Completed 小節），**DB／RPC／Edge Function 實作尚未開始**，待使用者確認 Design 細節（Step 9 最小切片 RPC 範圍、`service_periods` 是否採用 DB 層 EXCLUDE constraint 等）後再進入 Implementation。
-7. Step 9（Refund / Cancellation / Edge Cases）／Step 10（Production Readiness）維持原順序，尚未開始。
-8. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
-9. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
-10. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
+5. **Payment Rebuild — Plan Change 技術實作**：Contract／`payment-legal-spec.md` 文字已完成並 commit/push（見上方 Completed 小節），**DB／RPC／Edge Function 實作尚未開始**，待使用者確認 Design 細節（Step 9 最小切片 RPC 範圍、`service_periods` 是否採用 DB 層 EXCLUDE constraint 等）後再進入 Implementation。
+6. Step 9（Refund / Cancellation / Edge Cases）／Step 10（Production Readiness）維持原順序，尚未開始。
+7. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
+8. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
+9. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 
 ---
 
