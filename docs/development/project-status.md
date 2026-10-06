@@ -15,7 +15,7 @@
 目前重心：
 
 1. **Payment Readiness / Pre-submission preparation**——金流平台現況：**Oen 已通過相關申請／審核**；**ECPay（綠界）與 PAYUNi 目前正在申請中**，兩者現階段皆為候選平台，用於申請、測試與比較整合便利性、費用、操作方式及實際測試結果，**最終採用哪一個金流平台尚未決定**，不應視 ECPay 或 PAYUNi 為已確定採用之平台。以下為網站審核準備工作：Gap Analysis、Implementation Sprint（Pricing/Legal/Footer/CTA）、Legal/Contract Publication Refinement（Discovery＋Implementation）、Production Publication Readiness Audit＋Polish、Vercel Deployment Architecture 修正、Mobile Legal/Contract RWD 修正、Contract Terminology Consistency（Audit＋2 輪 Implementation）**皆已完成**。**已知阻塞項**：Supabase Auth 的 `Site URL`／`Redirect URLs` 設定過期，目前任何環境（Preview 或 Production）點擊登入都會被導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`——根因已診斷確認，**修正需要到 Supabase Dashboard 手動操作**，尚未執行（見 Next Steps、Blockers）。這一整批工作**尚未 commit／push**。
-2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；同時完成「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作，**Plan Change 所需的 Core 層底層能力（提前終止退款、排程未來生效）已隨 Step 9 就緒，但 Plan Change 自己的協調流程與前端尚未實作**（詳見下方對應小節）。Step 10（Production Readiness）維持原順序，尚未開始。
+2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作已完成，**Plan Change 自己的協調流程與前端（Step 10）亦已完成並在 TEST Supabase 專案實測成功**（Eligibility Gate、After-Expiry 排程、Immediate Change 協調、Overlap 防護回歸驗證，詳見下方對應小節）。Step 11（Production Readiness）維持原順序，尚未開始。
 3. 內容擴充（新增 Module）
 4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
@@ -195,7 +195,22 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Discovery／Design／Reconciliation 已完成**：確認「方案變更」本質上是既有「第十一條提前終止退款」＋「第八條正常購買」兩個既有機制的組合，不建立新的 Payment Type／Order Type／獨立制度；「立即變更」幾乎不需要 Plan Change 專屬的新技術能力（所需的是 Step 9 退款功能本來就要建的通用「提前終止＋退款記錄」能力的最小切片——**該切片已於 Step 9 完成並實測**）；「到期後開始」是唯一真正需要新技術能力的地方（讓 Service Period 可以未來生效，`apply_order_payment()` 的新 `p_service_period_start` 參數已於 Step 9 補上），且範圍很小
 - **Contract / Legal Implementation 已完成**：契約新增「第九條之一　方案變更」（`joti-online-teaching-contract.md`／`v1.0.md`，逐字同步，採「之一」編號避免重新編號後續條文）；`payment-legal-spec.md` 新增對應「§7A 方案變更」。規則涵蓋：月→年可選立即變更或到期後開始、年→月僅提供到期後開始（如需立即變更沿用既有第十一條提前終止＋另行購買路徑，不另建專屬流程）、不同服務期間之實際服務期間不得重疊、新舊方案為獨立交易且退款遲延/失敗不影響已成立之新方案權益（未擴張 `refund_failed` 後續處理規則）、不重新啟動 3 日審閱期、付款前須明確告知並取得確認
 - **Git checkpoint**：`a6047d3` — "Finalize plan change contract rules"，**已 commit + push 到 `origin/main`**
-- **尚未開始**：Plan Change 自己的 Edge Function 流程（呼叫 Step 9 的終止 RPC＋既有正常購買流程依序組合）、eligibility 判斷、`orders` 是否需要額外欄位記錄「這是方案變更」、overlap constraint 的歸屬確認——**Core 層的底層能力（終止＋退款、排程未來生效）已經就緒**，缺的是 Plan Change 自己的協調流程與前端
+- **協調流程與前端已完成，詳見下方「Payment Rebuild — Step 10」小節**
+
+### Payment Rebuild — Step 10（Plan Change Coordination & UI）
+- **Implementation 已完成**：新檔案 `supabase/schema_plan_change.sql`——`orders.scheduled_service_start`（additive nullable timestamptz，**已套用到 TEST** 專案 `ngznngqmbhxejkjbqomh`）；`create-order-checkout` 新增 Plan Change eligibility gate——已有有效 Service Period 的使用者必須明確帶 `afterExpiry: true` 才可購買，否則回 409 `active_service_period_exists`（一般首購流程因永遠不會有有效 period，完全不受影響）；`afterExpiry` 時由 server-side 計算 `scheduled_service_start` = 該會員現有 period 的 `service_period_end`（不信任前端）；`oen-webhook` 的 onetime 分支讀出該值並原封不動傳給既有 `apply_order_payment()` 第七參數（Step 9 已建、本次第一次被實際呼叫）；新 Edge Function `create-plan-change-checkout`——僅處理 Monthly→Annual Immediate，依序呼叫既有、已測試過的 `terminate-service-period`（Step 9）再呼叫 `create-order-checkout`，不重做 Step 9 邏輯；Annual→Monthly Immediate 一律回 400 `immediate_change_not_available_for_this_plan`，導向既有「終止＋另購」路徑；`AuthProvider.jsx` 的 `service_periods` select 補 `id`；`AccountPage.jsx` 新增「方案變更」UI 區塊（`activePeriod && !upcomingPeriod` 時顯示），含 After-Expiry 購買、Immediate 升級、提前終止三種按鈕
+- **TEST 環境驗證完成**：因瀏覽器視窗持續回報 `0x0` viewport（環境限制，非程式缺陷，已嘗試 resize/新分頁/navigate 皆無法恢復），改用已登入分頁的 `javascript_tool` 直接對已部署的 Edge Function 發真實 HTTP 請求，搭配 SQL 層驗證（含 rolled-back transaction）：
+  - Eligibility gate 正確擋下已有有效 Monthly／Annual period 時的一般購買（409 `active_service_period_exists`）
+  - After-Expiry 排程正確（Monthly→Monthly、Annual→Annual），`scheduledServiceStart` 與該會員現有 period 的 `service_period_end` 經 DB 查詢逐字元核對相符
+  - Webhook→RPC 接線正確：以 rolled-back transaction 模擬 webhook 呼叫 `apply_order_payment(..., p_service_period_start)`，產生的 `service_periods.service_period_start` 與排程值完全一致，`service_period_end` 正確為 start + 1 month
+  - `service_periods_no_overlap` EXCLUDE constraint 在新增 nullable 欄位後仍正確擋下重疊 insert（回歸驗證，`23P01`）
+  - Immediate Change（Monthly→Annual）正確終止舊 period（`terminated_at` 寫入、退款金額依既有公式算出）、建立新 Annual 一般訂單（`scheduledServiceStart: null`，走一般路徑無需特殊旗標）
+  - Immediate Change 拒絕路徑正確：Annual 使用者呼叫 Immediate→Annual（400）、呼叫 Immediate→Monthly（400）、無有效 period 時呼叫（409 `no_active_service_period`）
+  - 所有測試用合成資料（synthetic orders／service_periods）已於驗證後清除，TEST 帳號已還原為測試前狀態
+  - `npm run lint`／`npm run build` 皆通過
+- **已知限制（環境問題，非功能缺陷）**：未能透過 Oen 真實 hosted checkout 頁面完成一次視覺化刷卡的端到端測試；上述驗證改以「API 層計算」＋「RPC 層套用」兩端分別驗證同一條鏈路，應可視為等效覆蓋，但尚無一次「真實刷卡 → Oen callback → `oen-webhook` 實際收到 → 寫入新 period」的完整真實請求記錄
+- **Git checkpoint**：`4e5d827` — "Implement Plan Change coordination and UI"，**已 commit + push 到 `origin/main`**
+- **Step 10 已完成（本次核定範圍）**：未擴大到「已有排程中的方案變更時再次變更」的 UI（目前僅在 `activePeriod && !upcomingPeriod` 時顯示方案變更區塊）、PayUNi／ECPay、Payment Adapter boundary 重新設計
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -277,8 +292,6 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Payment Backend 固定 IP proxy 技術驗證**：Discovery 已完成並提出建議方案，**尚未開始實際驗證**（需先選定供應商、申請試用帳號）。
 - **登入導向 localhost 問題**：根因診斷已完成（用 `supabase config diff` 直接核對遠端 Supabase 專案設定確認，非猜測）——Supabase Auth 的 `site_url` 仍是本機開發殘留值 `http://localhost:4190`，`additional_redirect_urls` 只涵蓋 Vercel 改名前的舊網址格式，完全沒涵蓋改名後的新格式或目前實際的 Production 別名；已在 Preview 上實際重現（點擊登入後導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`），確認不是程式碼問題（`AuthProvider.jsx` 的 `redirectTo` 動態計算正確）。**修正尚未執行**——需要到 Supabase Dashboard 手動更新 `Site URL`／`Redirect URLs`，不在 repo／CLI 範圍內。Production 很可能有同樣問題，尚未實際重現驗證。
   - **2026-10-01 更新——已從推論提升為可重現、有第一手證據的問題**：Payment Rebuild Step 6 TEST Runtime Verification 過程中，用授權的 TEST 帳號（`luckster.ai.workspace+trial2@gmail.com`）實際完成 Magic Link 登入，**核對了兩封不同時間（下午 6:24、下午 6:30）由 `supabase.auth.signInWithOtp()` 寄出的信件**：即使呼叫時明確指定 `emailRedirectTo: http://localhost:5173/auth/callback`，**兩封信實際產生的 Magic Link，`redirect_to` 參數都是 `http://localhost:4190`**，不是只在 Preview 環境、也不是只在點擊後才出現的現象，而是連結本身在寄出當下就已經是錯的。驗證當下為了讓 session 能成功建立，**手動把 `redirect_to` 改成 `http://localhost:5173/auth/callback` 後直接呼叫 `/auth/v1/verify`**，確認可以取得有效 session（回傳的 `sb-auth-user-id` 與該帳號相符）——**這個手動替換只是為了驗證 Step 6，不是修正，Supabase Auth 設定本身完全未被更動**。
-- **Payment Rebuild — Step 8（Membership / Entitlement）已完成，詳見上方 Completed 小節**。唯一尚未處理的相關缺口：`create-order-checkout` 目前完全不檢查使用者是否已有未到期的 Service Period——若不特別處理會靜默產生重疊，此缺口已併入「Payment Rebuild — Plan Change」規則一併規劃解決，見上方 Completed 小節，屬於 Plan Change 技術實作範圍，非 Step 8。
-
 ---
 
 ## Next Steps
@@ -287,11 +300,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 2. **大批累積工作的 Git checkpoint**：本文件所述 Payment Readiness Implementation Sprint 之後的所有工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）**全部尚未 commit／push**，待使用者 Review 後指示建立 Git checkpoint（範圍涵蓋多輪工作，commit 時注意 `docs/legal/versions/v1.0.md` 與 `joti-online-teaching-contract.md` 需一起進、保持逐字一致）。
 3. **Vercel Production 正式部署**：待第 1、2 項完成後，用已確認正確的部署方式（repo root、Root Directory=`frontend`）部署到 Production，取代目前落後的 Production 內容。
 4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。
-5. **Payment Rebuild — Plan Change 自身的協調流程與前端**：Contract／`payment-legal-spec.md` 文字已完成並 commit/push，**Core 層所需的底層能力（提前終止退款、排程未來生效）已隨 Step 9 完成並實測**（見上方 Completed 小節）；尚待實作的是 Plan Change 自己的 Edge Function（依序呼叫 Step 9 的終止 RPC＋既有正常購買流程）、eligibility 判斷、是否需要在 `orders` 記錄「這是方案變更」、`service_periods_no_overlap` constraint 的既有存在是否已足夠。
-6. Step 10（Production Readiness）維持原順序，尚未開始。
-7. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
-8. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
-9. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
+5. Step 11（Production Readiness）維持原順序，尚未開始。
+6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
+7. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
+8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
+9. Plan Change（Step 10）尚缺一次透過 Oen 真實 hosted checkout 頁面的視覺化端到端刷卡驗證（見上方「Payment Rebuild — Step 10」小節已知限制）——待瀏覽器自動化環境問題排除，或改用其他方式驗證。
 
 ---
 
@@ -306,7 +319,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 - 契約條款發生重大變更時，審閱／通知程序具體如何處理（是否需要新的審閱期、期間多長）——待法律顧問或經營者確認。
 - Payment Authorization 具體採用哪一個 Oen API 端點／參數組合實現「先綁卡、僅扣款一次」，且如何技術上保證不會變成持續扣款——工程決策，未決定。
-- 會員如何實際觸發提前終止（網站自助按鈕 vs 聯繫客服辦理）——後端能力（`terminate-service-period`）已於 Step 9 完成並實測，**缺的是前端入口，不是機制本身**——未定義。
+- **會員如何實際觸發提前終止已解決**：Step 10 已在 `AccountPage.jsx` 新增「提前終止目前方案並退款」按鈕作為前端入口，呼叫既有 `terminate-service-period`（Step 9），見上方「Payment Rebuild — Step 10」小節。
 - **退款金流實際執行方式已解決**：Step 9 已實作並實測，呼叫 Oen 退款 API 原路退回（非人工處理），見上方「Payment Rebuild — Step 9」小節。
 - `refund_failed` 之後是否允許重新發起退款——Step 9 刻意維持 `refund_failed` 為 resting terminal state，未實作重試機制，仍待裁示。
 
@@ -314,4 +327,4 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Last Updated
 
-2026-10-06
+2026-10-06（Payment Rebuild Step 10 完成後更新）
