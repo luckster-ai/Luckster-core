@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../state/useAuth'
+import { supabase } from '../lib/supabaseClient'
 import {
   getMembershipStatus,
   getTrialUsageSummary,
@@ -52,6 +53,86 @@ function AccountPage() {
   const upcomingPeriod = getUpcomingServicePeriod(profile)
   const activating =
     checkoutResult === 'success' && status !== MEMBERSHIP_STATUS.SUBSCRIBER
+
+  // Payment Rebuild -- Step 10: Plan Change entry point. `planChangeBusy`
+  // names which specific action is in flight (not a bare boolean) so the
+  // right button -- and only that one -- shows "處理中…"; every button is
+  // still disabled while any one of them is busy, same as
+  // ContractReviewPage's checkoutPlanCode pattern.
+  const [planChangeBusy, setPlanChangeBusy] = useState(null)
+  const [planChangeError, setPlanChangeError] = useState(null)
+  const [planChangeMessage, setPlanChangeMessage] = useState(null)
+
+  // After-Expiry purchase of either plan while a Service Period is still
+  // active -- create-order-checkout's own Plan Change eligibility gate
+  // (Step 10) computes and stores the actual scheduled start server-side;
+  // this call never claims a date itself. Valid for every current-plan /
+  // new-plan combination (Monthly->Monthly, Monthly->Annual,
+  // Annual->Annual, Annual->Monthly) per the confirmed rules.
+  async function handleAfterExpiryPurchase(planCode) {
+    setPlanChangeBusy(`afterExpiry:${planCode}`)
+    setPlanChangeError(null)
+    setPlanChangeMessage(null)
+
+    const { data, error } = await supabase.functions.invoke('create-order-checkout', {
+      body: { planCode, afterExpiry: true }
+    })
+
+    if (error || data?.error || !data?.redirectUrl) {
+      setPlanChangeBusy(null)
+      setPlanChangeError(data?.error || error?.message || '無法建立訂單，請稍後再試。')
+      return
+    }
+
+    window.location.assign(data.redirectUrl)
+  }
+
+  // Immediate Change -- Monthly -> Annual only, per the confirmed rules.
+  // create-plan-change-checkout (Step 10) terminates the current Monthly
+  // period (refund per 第十一條) and only then starts the new Annual
+  // purchase -- this page does not orchestrate those two steps itself.
+  async function handleImmediateUpgradeToAnnual() {
+    setPlanChangeBusy('immediate:annual')
+    setPlanChangeError(null)
+    setPlanChangeMessage(null)
+
+    const { data, error } = await supabase.functions.invoke('create-plan-change-checkout', {
+      body: { newPlanCode: 'annual' }
+    })
+
+    if (error || data?.error || !data?.redirectUrl) {
+      setPlanChangeBusy(null)
+      setPlanChangeError(data?.error || error?.message || '無法建立訂單，請稍後再試。')
+      return
+    }
+
+    window.location.assign(data.redirectUrl)
+  }
+
+  // Generic 第十一條 early termination -- the only UI path for Annual's
+  // "Immediate" switch to Monthly (confirmed rule: walk the generic
+  // termination + refund flow, then purchase Monthly separately below),
+  // and also usable on its own for a member who just wants to stop and be
+  // refunded. Reuses Step 9's terminate-service-period unchanged.
+  async function handleEarlyTermination() {
+    if (!activePeriod) return
+    setPlanChangeBusy('terminate')
+    setPlanChangeError(null)
+    setPlanChangeMessage(null)
+
+    const { data, error } = await supabase.functions.invoke('terminate-service-period', {
+      body: { servicePeriodId: activePeriod.id }
+    })
+
+    setPlanChangeBusy(null)
+    if (error || data?.error) {
+      setPlanChangeError(data?.error || error?.message || '提前終止失敗，請稍後再試。')
+      return
+    }
+
+    setPlanChangeMessage('已提前終止目前方案，退款將依契約第十一條辦理。')
+    await refreshProfile()
+  }
 
   // refreshProfile is a fresh function identity every AuthProvider render
   // (not memoized) -- keep it in a ref so the polling effect below doesn't
@@ -124,6 +205,81 @@ function AccountPage() {
           {PLAN_LABEL[upcomingPeriod.plan_code] ?? upcomingPeriod.plan_code}，將於
           {new Date(upcomingPeriod.service_period_start).toLocaleDateString('zh-TW')} 開始
         </p>
+      )}
+
+      {/* Payment Rebuild -- Step 10: Plan Change entry point. Hidden once a
+          next plan is already scheduled (upcomingPeriod) -- choosing
+          another change on top of an already-pending one is not a
+          confirmed scenario, so this round does not offer it. */}
+      {activePeriod && !upcomingPeriod && (
+        <div className="plan-change-section">
+          <h2>方案變更</h2>
+          <p className="plan-change-note">
+            「立即升級」會提前結束目前方案並依契約第十一條計算退款，新方案立即開始；「到期後開始」不影響目前方案，新方案於目前方案到期後才開始，且不辦理退款。
+          </p>
+
+          {planChangeError && <p className="plan-change-error">{planChangeError}</p>}
+          {planChangeMessage && <p>{planChangeMessage}</p>}
+
+          {activePeriod.plan_code === 'monthly' && (
+            <div className="plan-change-actions">
+              <button
+                type="button"
+                className="button"
+                disabled={Boolean(planChangeBusy)}
+                onClick={() => handleAfterExpiryPurchase('monthly')}
+              >
+                {planChangeBusy === 'afterExpiry:monthly' ? '處理中…' : '續購月方案（到期後開始）'}
+              </button>
+              <button
+                type="button"
+                className="button"
+                disabled={Boolean(planChangeBusy)}
+                onClick={handleImmediateUpgradeToAnnual}
+              >
+                {planChangeBusy === 'immediate:annual' ? '處理中…' : '立即升級為年方案'}
+              </button>
+              <button
+                type="button"
+                className="button"
+                disabled={Boolean(planChangeBusy)}
+                onClick={() => handleAfterExpiryPurchase('annual')}
+              >
+                {planChangeBusy === 'afterExpiry:annual' ? '處理中…' : '年方案（到期後開始）'}
+              </button>
+            </div>
+          )}
+
+          {activePeriod.plan_code === 'annual' && (
+            <div className="plan-change-actions">
+              <button
+                type="button"
+                className="button"
+                disabled={Boolean(planChangeBusy)}
+                onClick={() => handleAfterExpiryPurchase('annual')}
+              >
+                {planChangeBusy === 'afterExpiry:annual' ? '處理中…' : '續購年方案（到期後開始）'}
+              </button>
+              <button
+                type="button"
+                className="button"
+                disabled={Boolean(planChangeBusy)}
+                onClick={() => handleAfterExpiryPurchase('monthly')}
+              >
+                {planChangeBusy === 'afterExpiry:monthly' ? '處理中…' : '月方案（到期後開始）'}
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="button secondary"
+            disabled={Boolean(planChangeBusy)}
+            onClick={handleEarlyTermination}
+          >
+            {planChangeBusy === 'terminate' ? '處理中…' : '提前終止目前方案並退款'}
+          </button>
+        </div>
       )}
 
       {checkoutResult === 'success' && (

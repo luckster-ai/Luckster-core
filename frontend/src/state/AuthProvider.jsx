@@ -38,14 +38,17 @@ export function AuthProvider({ children }) {
     // can read both without every call site needing to pass a second
     // argument. Filtered server-side to rows that could still matter
     // (not terminated, not yet ended) -- a currently-active OR a
-    // future-start ("到期後開始", Plan Change, not yet implemented) row;
+    // future-start ("到期後開始", Plan Change, Step 10) row;
     // already-elapsed rows are excluded here rather than left for the
     // client to filter out of a growing, unbounded history.
     const [{ data: profileData }, { data: periodsData }] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).single(),
       supabase
         .from('service_periods')
-        .select('plan_code, service_period_start, service_period_end, terminated_at')
+        // Payment Rebuild -- Step 10: `id` added so Plan Change UI
+        // (AccountPage) can reference the active period when calling
+        // terminate-service-period -- not used by entitlement logic itself.
+        .select('id, plan_code, service_period_start, service_period_end, terminated_at')
         .eq('user_id', userId)
         .is('terminated_at', null)
         .gt('service_period_end', new Date().toISOString())

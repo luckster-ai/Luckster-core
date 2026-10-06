@@ -384,7 +384,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // never an identity fallback, same principle as the subscription
     // branch's subscription_checkouts lookup).
     const { data: order } = await svc.from("orders")
-      .select("id, user_id, amount, currency, payment_attempt")
+      .select("id, user_id, amount, currency, payment_attempt, scheduled_service_start")
       .eq("id", orderIdFromBody)
       .eq("provider", "oen")
       .eq("provider_checkout_ref", checkoutRef)
@@ -422,6 +422,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     // 6. atomic activation via the one trusted writer (Core's own RPC --
     // this is the first real caller since it was defined in Step 5).
+    // Payment Rebuild -- Step 10: orders.scheduled_service_start (set at
+    // Order-creation time by create-order-checkout's Plan Change
+    // eligibility gate, never recomputed here) passes straight through to
+    // apply_order_payment()'s optional 7th parameter -- null for an
+    // ordinary purchase, which is byte-identical to omitting it.
     const { error: rpcErr } = await svc.rpc("apply_order_payment", {
       p_order_id: order.id,
       p_payment_attempt: order.payment_attempt,
@@ -429,6 +434,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       p_provider_ref: hid,
       p_payment_method: String(body.paymentMethod ?? "card"),
       p_verified_amount: order.amount,
+      p_service_period_start: order.scheduled_service_start,
     });
 
     if (rpcErr) {

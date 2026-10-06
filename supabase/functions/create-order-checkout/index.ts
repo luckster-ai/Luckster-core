@@ -20,6 +20,29 @@
 // Acceptance Gate, the Order insert) is unchanged from Step 5 and remains
 // provider-independent. Swapping to a different Provider later means
 // changing this one import, not this file's other logic.
+//
+// Payment Rebuild -- Step 10: Plan Change eligibility gate. A caller with
+// an existing, currently-valid Service Period MUST pass `afterExpiry: true`
+// to express Plan Change intent explicitly -- an ordinary call (the
+// existing ContractReviewPage first-purchase flow, which can never have an
+// active period yet) is never silently reinterpreted as a Plan Change, and
+// a caller who has an active period but omits the flag is rejected rather
+// than guessed at. When `afterExpiry` is set, the new Order's
+// scheduled_service_start is computed HERE, server-side, from the
+// member's own current period (never trusted from the client) -- the
+// webhook (oen-webhook's onetime branch) reads it back unchanged once
+// payment is verified and passes it through to apply_order_payment().
+// After-Expiry is valid for every plan-code combination (Monthly->Monthly,
+// Monthly->Annual, Annual->Annual, Annual->Monthly) -- there is no
+// transition-specific restriction at this layer.
+//
+// Immediate Change (Monthly->Annual only) does not need any of this: the
+// create-plan-change-checkout Edge Function terminates the member's old
+// Service Period FIRST (reusing Step 9's apply_service_period_early_termination()
+// via the existing terminate-service-period function), so by the time it
+// calls this function the member has no active period left and this gate
+// naturally falls through to the ordinary (non-Plan-Change) path below --
+// no separate "immediate" branch exists in this file.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
@@ -62,7 +85,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const user = userData?.user;
   if (userErr || !user) return json({ error: "unauthorized" }, 401);
 
-  let body: { planCode?: string };
+  let body: { planCode?: string; afterExpiry?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -74,6 +97,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!pricing || !planCode) {
     return json({ error: "invalid_plan_code" }, 400);
   }
+  const afterExpiry = body.afterExpiry === true;
 
   // Contract Acceptance Gate: existence-only check (see file header).
   const { data: acceptance, error: acceptanceErr } = await svc
@@ -92,6 +116,45 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: "no_contract_acceptance" }, 409);
   }
 
+  // Plan Change eligibility gate (see file header). Only non-terminated,
+  // not-yet-ended periods are relevant -- same filter AuthProvider.jsx uses
+  // for profile.servicePeriods, same double-bound check Step 8's entitlement
+  // formula uses.
+  const { data: candidatePeriods, error: periodsErr } = await svc
+    .from("service_periods")
+    .select("plan_code, service_period_start, service_period_end")
+    .eq("user_id", user.id)
+    .is("terminated_at", null)
+    .gt("service_period_end", new Date().toISOString());
+
+  if (periodsErr) {
+    console.error("service_periods lookup failed:", periodsErr.message);
+    return json({ error: "order_create_failed" }, 500);
+  }
+
+  const nowMs = Date.now();
+  const activePeriod = (candidatePeriods ?? []).find(
+    (p) =>
+      nowMs >= new Date(p.service_period_start).getTime() &&
+      nowMs < new Date(p.service_period_end).getTime(),
+  );
+
+  let scheduledServiceStart: string | null = null;
+  if (activePeriod) {
+    if (!afterExpiry) {
+      // Active period exists but the caller did not express Plan Change
+      // intent -- reject rather than silently guessing. The existing
+      // first-purchase flow (ContractReviewPage) never reaches this branch
+      // (a member there cannot yet have an active period); a caller that
+      // does and wants a Plan Change must pass afterExpiry explicitly.
+      return json({ error: "active_service_period_exists" }, 409);
+    }
+    // afterExpiry === true but no active period was found: harmless --
+    // falls through to the ordinary now()-start path below, same as if
+    // the flag had not been sent at all.
+    scheduledServiceStart = activePeriod.service_period_end;
+  }
+
   const paymentExpiresAt = new Date(Date.now() + PAYMENT_WINDOW_MS);
 
   const { data: order, error: insertErr } = await svc
@@ -106,12 +169,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       status: "pending_payment",
       payment_attempt: 1,
       payment_expires_at: paymentExpiresAt.toISOString(),
+      scheduled_service_start: scheduledServiceStart,
       // provider is deliberately left unset (NULL) -- Payment Core does
       // not know or decide which provider will process this Order; a
       // Provider Adapter (Step 6+) sets it when it actually starts a
       // checkout attempt.
     })
-    .select("id, status, payment_attempt, payment_expires_at")
+    .select("id, status, payment_attempt, payment_expires_at, scheduled_service_start")
     .single();
 
   if (insertErr || !order) {
@@ -172,6 +236,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     status: order.status,
     paymentAttempt: order.payment_attempt,
     paymentExpiresAt: order.payment_expires_at,
+    scheduledServiceStart: order.scheduled_service_start,
     redirectUrl: checkout.redirectUrl,
   });
 });
