@@ -172,6 +172,42 @@ export function getTransaction(
   return oenFetch("GET", `/transactions/${encodeURIComponent(idOrHid)}`);
 }
 
+// POST /refunds/:transactionHid -- Payment Rebuild -- Step 9.
+//
+// transactionHid (NOT transactionId) is the path parameter -- this is the
+// same value already stored as orders.provider_ref (written by
+// apply_order_payment() via oen-webhook's p_provider_ref, Step 7), so no
+// new data needs to be captured anywhere to call this.
+//
+// Synchronous API: Oen's own response carries the final result directly
+// (code/data.status/data.refundAmount/data.refundedAt) -- there is no
+// webhook notification for refund completion (consistent with the
+// existing project-status.md note on this). The caller only needs to
+// re-query (getTransaction above, already exists, reused as-is) when the
+// HTTP call itself is ambiguous (timeout / connection drop), not as a
+// blanket "never trust the response" rule the way webhook payloads are
+// treated -- this is a response WE requested over an authenticated
+// connection, not an unauthenticated inbound notification.
+//
+// Each transaction can only be refunded once (Oen's own rule) and only
+// credit-card transactions are refundable via this endpoint -- CVS/ATM
+// require the Oen CRM dashboard. JOTI currently only ever charges by
+// card, so that restriction does not block anything today, but the caller
+// (oenAdapter.ts) still checks orders.payment_method before calling this.
+export function createRefund(params: {
+  transactionHid: string;
+  amount: number;
+  reason?: string;
+}): Promise<
+  OenResult<{ id: string; status: string; refundAmount: number; refundedAt?: string }>
+> {
+  return oenFetch("POST", `/refunds/${encodeURIComponent(params.transactionHid)}`, {
+    merchantId: MERCHANT_ID,
+    amount: params.amount,
+    ...(params.reason ? { reason: params.reason } : {}),
+  });
+}
+
 export function checkoutRedirectUrl(checkoutId: string): string {
   return `${CHECKOUT_BASE}/checkout/subscription/${checkoutId}`;
 }

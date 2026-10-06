@@ -15,9 +15,11 @@
 
 import {
   createOneTimeCheckout,
+  createRefund,
   OEN_MODE,
   oenConfigError,
   oneTimeCheckoutRedirectUrl,
+  type OenResult,
 } from "./oen.ts";
 import type {
   PaymentProviderAdapter,
@@ -77,3 +79,33 @@ export const oenAdapter: PaymentProviderAdapter = {
     };
   },
 };
+
+// Payment Rebuild -- Step 9: Oen's refund capability.
+//
+// Deliberately NOT part of the PaymentProviderAdapter interface
+// (./paymentProviderAdapter.ts) -- that type is the Core-facing contract
+// and this round's instructions are explicit that it is not being
+// redesigned. This is a plain, Oen-specific export living in the Adapter
+// module, the same way OEN_PROVIDER_NAME is -- the calling Edge Function
+// (terminate-service-period) imports it directly by name, exactly as
+// create-order-checkout/retry-order-payment already import oenAdapter
+// directly. A future second Provider would add its own sibling export in
+// its own Adapter module; Core does not need a shared interface for this
+// because nothing in Core calls it -- only the Step 9 orchestration layer
+// does, after Core's own apply_service_period_early_termination() RPC has
+// already committed.
+export async function refundOenOrder(input: {
+  transactionHid: string;
+  amount: number;
+  reason?: string;
+}): Promise<OenResult<{ id: string; status: string; refundAmount: number; refundedAt?: string }>> {
+  if (OEN_MODE !== "test") {
+    throw new Error("oen_not_test_mode");
+  }
+  const cfgErr = oenConfigError();
+  if (cfgErr) {
+    throw new Error(`oen_misconfigured: ${cfgErr}`);
+  }
+
+  return createRefund(input);
+}
