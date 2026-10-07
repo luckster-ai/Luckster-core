@@ -15,7 +15,7 @@
 目前重心：
 
 1. **Payment Readiness / Pre-submission preparation**——金流平台現況：**Oen 已通過相關申請／審核**；**ECPay（綠界）與 PAYUNi 目前正在申請中**，兩者現階段皆為候選平台，用於申請、測試與比較整合便利性、費用、操作方式及實際測試結果，**最終採用哪一個金流平台尚未決定**，不應視 ECPay 或 PAYUNi 為已確定採用之平台。以下為網站審核準備工作：Gap Analysis、Implementation Sprint（Pricing/Legal/Footer/CTA）、Legal/Contract Publication Refinement（Discovery＋Implementation）、Production Publication Readiness Audit＋Polish、Vercel Deployment Architecture 修正、Mobile Legal/Contract RWD 修正、Contract Terminology Consistency（Audit＋2 輪 Implementation）**皆已完成**。**已知阻塞項**：Supabase Auth 的 `Site URL`／`Redirect URLs` 設定過期，目前任何環境（Preview 或 Production）點擊登入都會被導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`——根因已診斷確認，**修正需要到 Supabase Dashboard 手動操作**，尚未執行（見 Next Steps、Blockers）。這一整批工作**尚未 commit／push**。
-2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作已完成，**Plan Change 自己的協調流程與前端（Step 10）亦已完成並在 TEST Supabase 專案實測成功**（Eligibility Gate、After-Expiry 排程、Immediate Change 協調、Overlap 防護回歸驗證，詳見下方對應小節）。Step 11（Production Readiness）維持原順序，尚未開始。
+2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作已完成，**Plan Change 自己的協調流程與前端（Step 10）亦已完成並在 TEST Supabase 專案實測成功**（Eligibility Gate、After-Expiry 排程、Immediate Change 協調、Overlap 防護回歸驗證，詳見下方對應小節）。Step 11（Production Readiness）維持原順序，尚未開始。**ECPay TEST 整合已完成並端到端驗證通過**（AIO formPost checkout → `ecpay-webhook` → QueryTradeInfo 回查 → `apply_order_payment()` → Service Period → 會員開通，詳見下方「ECPay Integration」小節）；退款程式已實作但尚未完成正式環境驗證；**最終金流平台仍未決定**。
 3. 內容擴充（新增 Module）
 4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
@@ -212,6 +212,30 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Git checkpoint**：`4e5d827` — "Implement Plan Change coordination and UI"，**已 commit + push 到 `origin/main`**
 - **Step 10 已完成（本次核定範圍）**：未擴大到「已有排程中的方案變更時再次變更」的 UI（目前僅在 `activePeriod && !upcomingPeriod` 時顯示方案變更區塊）、PayUNi／ECPay、Payment Adapter boundary 重新設計
 
+### ECPay Integration（綠界 TEST 環境）
+- **Discovery 已完成**：確認 ECPay AIO 可沿用既有 Payment Core（Order／`apply_order_payment()`／Service Period／退款 RPC 皆不修改），只需新增 provider-specific 部分。重要發現：AIO 必須由瀏覽器表單 POST 到綠界（不能只用 GET redirect）；Supabase 預設網域不能回傳 HTML（須 Custom Domain）；**ECPay 信用卡請退款 API（`CreditDetail/DoAction`）測試環境不支援**，退款只能在正式環境驗證。ReturnURL 依官方文件技術規格可使用 Supabase Edge Function URL；`payment.joti.yoga` 維持為 fallback，**未建立**，待綠界回覆再評估（Supabase Custom Domain 為付費 add-on、每專案僅能綁一個網域）
+- **Implementation 已完成**（方案 A：`formPost`，不採用 bridge URL）：
+  - `_shared/ecpay.ts`：CheckMacValue（SHA256、.NET UrlEncode 規則，已用綠界官方範例驗算一致）、`QueryTradeInfo/V5`（含回應驗章）、`CreditDetail/DoAction`
+  - `_shared/ecpayAdapter.ts`：實作 `PaymentProviderAdapter`；MerchantTradeNo 每次付款嘗試重新產生（`J`＋yyMMddHHmmss＋7 碼亂數＝20 碼英數字，**不使用 UUID order ID**），存於 `orders.provider_checkout_ref`；`ChoosePayment=Credit`；`ClientBackURL` 不帶 `result`；`CustomField1` 帶 orderId 僅作交叉比對；退款函式 `refundEcpayOrder()`（`Action=R`）
+  - `_shared/paymentProviders.ts`：Provider routing——新 Order 依 `ACTIVE_PAYMENT_PROVIDER`（**未設定時預設 `oen`，既有行為不變**）；`retry-order-payment` 沿用 `orders.provider`，不會中途換 provider
+  - `_shared/paymentProviderAdapter.ts`：`StartCheckoutResult` 新增選填 `formPost`（Oen 不設定，行為不變）
+  - 新 Edge Function `ecpay-webhook`（`verify_jwt = false`）：CheckMacValue 驗證 → `payment_events` idempotency 錨點（沿用 Oen 設計）→ 僅處理 `RtnCode=1` 且非 `SimulatePaid` → **強制 `QueryTradeInfo` 回查**（`TradeStatus=1`、金額、TradeNo 相符）→ 只從自己的 `orders` 解析 Order → `apply_order_payment()`；回應 `1|OK`，暫時性錯誤回 `0|…` 讓綠界重送。**付款失敗通知刻意不標記 `payment_failed`**（尚未確認同一 MerchantTradeNo 失敗後不會再成功），Order 停在 `pending_payment` 依 3 天期限過期
+  - `terminate-service-period`：依 `orders.provider` 分支，ECPay 走 `refundViaEcpay()`；網路不確定時停在 `refund_failed` 並註記需至綠界後台人工核對；Oen 路徑不變
+  - 前端：新增 `utils/startProviderCheckout.js`（有 `formPost` 時自動送出隱藏表單，否則照舊 redirect），`ContractReviewPage.jsx`／`AccountPage.jsx` 三個呼叫點改用；`CheckoutReturnPage.jsx` 改為 provider-neutral，讀取會員自己的 Order 狀態並輪詢（每 3 秒、最多 10 次），不再依賴 URL 的 `result`
+  - 新環境變數：`ECPAY_MODE`、`ECPAY_PAYMENT_BASE`、`ECPAY_MERCHANT_ID`、`ECPAY_HASH_KEY`、`ECPAY_HASH_IV`、`ECPAY_RETURN_URL`、`ACTIVE_PAYMENT_PROVIDER`；程式未寫死任何金鑰，非 `test` 模式或主機不符時拒絕執行
+- **TEST 環境端到端驗證完成（2026-10-07，TEST 專案 `ngznngqmbhxejkjbqomh`，綠界公開測試商店 `3002607`）**：
+  - 本機前端 → 測試帳號 `luckster.ai.workspace+trial2@gmail.com` → `/contract-review` 同意 → 月方案 → formPost 成功開啟綠界 TEST 付款頁
+  - 使用者手動以測試卡完成付款 → `ecpay-webhook` 實際收到綠界通知 → `payment_events` 一筆 `verified`（CheckMacValue＋QueryTradeInfo 回查一次通過，綠界未重送）→ Order `1438ce74…` 變為 `paid`（`provider_ref`＝綠界 TradeNo、`payment_method`＝`card`）→ Service Period `active`（2026-10-07 → 2026-11-07）
+  - `/checkout/return` 顯示「付款已確認」；`/account` 顯示付費會員／月方案／到期日 2026/11/7
+  - 另以本機測試驗證：簽章錯誤（400）、MerchantID 不符、`RtnCode≠1`、重送去重、`SimulatePaid=1`、找不到 Order、**簽章正確但綠界回查未付款時不開通**、竄改金額被綠界拒絕（`CheckMacValue Error`）
+  - `deno check`、`npm run lint`、`npm run build` 皆通過
+  - 測試後已移除 `ACTIVE_PAYMENT_PROVIDER`（TEST 新 Order 恢復預設 Oen）；`ECPAY_*` secrets 保留於 TEST 專案
+- **TEST 資料保留中（未清理）**：上述測試帳號新增 1 筆 `contract_acceptances`、1 筆 ECPay `paid` Order、1 筆 `active` Service Period、1 筆 `payment_events`
+- **TEST 尚未驗證**：付款失敗時綠界是否發通知、「返回商店」實際跳轉（TEST `SITE_URL` 仍指向 `frontend-oen-test.vercel.app`）、綠界當日 4 次重送全失敗時的對帳補救（尚未實作對帳）、透過 ECPay 的 Plan Change 流程
+- **Production 尚未驗證**：**退款程式已實作、尚未完成正式退款驗證**（測試環境不支援 DoAction，須以正式環境真實小額交易驗證，包含 `Action=R` 的 `TotalAmount` 語意；已授權未請款時的全額退款 `E`→`N` 未實作）；正式環境金鑰、`joti.yoga`、ReturnURL 網域、綠界審核
+- **已知待處理**：契約審閱頁付款方式欄仍寫「透過 Oen 金流服務」，若確定採用 ECPay 需另行處理法律文字
+- **Git checkpoint**：`299e386` — "Implement ECPay TEST integration (AIO checkout, webhook, provider routing)"，**已 commit，尚未 push**
+
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -299,12 +323,13 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 1. **修正 Supabase Auth 的 `Site URL`／`Redirect URLs`（目前唯一會阻塞金流申請的問題）**：需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
 2. **大批累積工作的 Git checkpoint**：本文件所述 Payment Readiness Implementation Sprint 之後的所有工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）**全部尚未 commit／push**，待使用者 Review 後指示建立 Git checkpoint（範圍涵蓋多輪工作，commit 時注意 `docs/legal/versions/v1.0.md` 與 `joti-online-teaching-contract.md` 需一起進、保持逐字一致）。
 3. **Vercel Production 正式部署**：待第 1、2 項完成後，用已確認正確的部署方式（repo root、Root Directory=`frontend`）部署到 Production，取代目前落後的 Production 內容。
-4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。
+4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。ECPay TEST 整合已完成（見「ECPay Integration」小節）。
 5. Step 11（Production Readiness）維持原順序，尚未開始。
 6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
 7. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 9. Plan Change（Step 10）尚缺一次透過 Oen 真實 hosted checkout 頁面的視覺化端到端刷卡驗證（見上方「Payment Rebuild — Step 10」小節已知限制）——待瀏覽器自動化環境問題排除，或改用其他方式驗證。
+10. **ECPay 後續**：等待綠界回覆已送出的 5 個確認問題（ReturnURL 是否接受 `*.supabase.co`、是否須商家自有網域／`payment.joti.yoga`、固定 IP／白名單、特約賣家、退款期限與 DoAction 可用性）；Push `299e386`；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
 
 ---
 
@@ -322,9 +347,10 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **會員如何實際觸發提前終止已解決**：Step 10 已在 `AccountPage.jsx` 新增「提前終止目前方案並退款」按鈕作為前端入口，呼叫既有 `terminate-service-period`（Step 9），見上方「Payment Rebuild — Step 10」小節。
 - **退款金流實際執行方式已解決**：Step 9 已實作並實測，呼叫 Oen 退款 API 原路退回（非人工處理），見上方「Payment Rebuild — Step 9」小節。
 - `refund_failed` 之後是否允許重新發起退款——Step 9 刻意維持 `refund_failed` 為 resting terminal state，未實作重試機制，仍待裁示。
+- **ECPay 待綠界確認**：正式環境是否接受 Supabase Edge Function URL 作為 ReturnURL（不接受時是否須使用 `payment.joti.yoga`）、是否要求固定 outbound IP／IP 白名單、是否需特約賣家審核、信用卡部分退刷（`Action=R`）的時間上限（年約可能於付款後 11 個月內申請退款）與一般會員帳號是否預設可用 DoAction。
 
 ---
 
 ## Last Updated
 
-2026-10-06（Payment Rebuild Step 10 完成後更新）
+2026-10-07（ECPay Integration TEST 完成後更新）
