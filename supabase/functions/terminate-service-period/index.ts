@@ -28,17 +28,107 @@
 //
 // refund_failed is a resting terminal state this round -- no retry
 // workflow is implemented here, per explicit instruction.
+//
+// ECPay integration: Orders with provider='ecpay' branch to
+// refundViaEcpay() below; the Oen path further down is unchanged.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
 import { getTransaction } from "../_shared/oen.ts";
 import { OEN_PROVIDER_NAME, refundOenOrder } from "../_shared/oenAdapter.ts";
+import { ECPAY_PROVIDER_NAME, refundEcpayOrder } from "../_shared/ecpayAdapter.ts";
+
+// deno-lint-ignore no-explicit-any
+type Svc = any;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// ECPay integration: steps 2-3 of the flow above for an ECPay Order.
+// Same finalization RPCs as the Oen path. One deliberate difference: when
+// the refund HTTP call itself is ambiguous (timeout / network error) there
+// is no ECPay re-query to fall back on -- CreditDetail/QueryTrade/V2 is
+// production-only and needs card-authorization values this flow never
+// captures -- so the Order rests in refund_failed with a
+// "network_uncertain" note for manual reconciliation in ECPay's merchant
+// backend (same resting state the Oen path reaches when its re-query
+// cannot confirm a refund).
+//
+// NOT VERIFIED IN PRODUCTION: ECPay's stage environment does not support
+// CreditDetail/DoAction, so an actual ECPay refund has never succeeded
+// through this path yet.
+async function refundViaEcpay(
+  svc: Svc,
+  order: {
+    id: string;
+    provider_checkout_ref: string | null;
+    provider_ref: string | null;
+    payment_method: string | null;
+    refund_amount: number;
+  },
+): Promise<Response> {
+  if (order.payment_method && order.payment_method !== "card") {
+    // Only credit card is ever offered (ChoosePayment=Credit) and
+    // DoAction is card-only -- checked rather than assumed, same as Oen.
+    return json({
+      orderId: order.id,
+      status: "refund_processing",
+      note: "manual_refund_required_non_card_payment_method",
+    });
+  }
+  if (!order.provider_ref || !order.provider_checkout_ref) {
+    console.error("ecpay order missing TradeNo/MerchantTradeNo, cannot refund:", order.id);
+    return json({ orderId: order.id, status: "refund_processing", note: "missing_provider_ref" });
+  }
+
+  let result;
+  try {
+    result = await refundEcpayOrder({
+      merchantTradeNo: order.provider_checkout_ref,
+      tradeNo: order.provider_ref,
+      amount: order.refund_amount,
+    });
+  } catch (e) {
+    console.error("refundEcpayOrder threw:", (e as Error).message);
+    const { error: failErr } = await svc.rpc("mark_refund_failed", {
+      p_order_id: order.id,
+      p_provider_refund_error:
+        `network_uncertain: ${(e as Error).message} -- verify in ECPay merchant backend`,
+    });
+    if (failErr) {
+      console.error("mark_refund_failed failed after ECPay network ambiguity:", failErr.message);
+      return json({ error: "refund_uncertain_and_mark_failed" }, 500);
+    }
+    return json({ orderId: order.id, status: "refund_failed" }, 502);
+  }
+
+  if (result.ok && result.data?.RtnCode === "1") {
+    const { error: markErr } = await svc.rpc("mark_refund_processed", {
+      p_order_id: order.id,
+      p_provider_refund_ref: result.data.TradeNo || order.provider_ref,
+    });
+    if (markErr) {
+      console.error("mark_refund_processed failed after ECPay success:", markErr.message);
+      return json({ error: "refund_succeeded_but_mark_failed" }, 500);
+    }
+    return json({ orderId: order.id, status: "refunded" });
+  }
+
+  const { error: failErr } = await svc.rpc("mark_refund_failed", {
+    p_order_id: order.id,
+    p_provider_refund_error:
+      `status=${result.status} RtnCode=${result.data?.RtnCode ?? "?"} ` +
+      `RtnMsg=${result.data?.RtnMsg ?? "?"} raw=${result.raw.slice(0, 300)}`,
+  });
+  if (failErr) {
+    console.error("mark_refund_failed failed after ECPay failure:", failErr.message);
+    return json({ error: "refund_failed_and_mark_failed" }, 500);
+  }
+  return json({ orderId: order.id, status: "refund_failed" }, 502);
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -99,7 +189,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const { data: order, error: orderErr } = await svc
     .from("orders")
-    .select("id, provider, provider_ref, payment_method, refund_amount")
+    .select("id, provider, provider_checkout_ref, provider_ref, payment_method, refund_amount")
     .eq("id", period.order_id)
     .single();
   if (orderErr || !order) {
@@ -110,6 +200,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Termination + refund calculation are already committed at this point
   // regardless of what happens below -- the Order sits in refund_processing
   // either way, which is the correct, already-visible state.
+  if (order.provider === ECPAY_PROVIDER_NAME) {
+    return await refundViaEcpay(svc, order);
+  }
   if (order.provider !== OEN_PROVIDER_NAME) {
     return json({
       orderId: order.id,

@@ -29,9 +29,20 @@ export interface StartCheckoutInput {
   failureUrl: string;
 }
 
+// ECPay integration: some providers (ECPay AIO) cannot be started by a
+// plain GET redirect -- the browser itself must POST a signed form to the
+// provider. `formPost` is optional and additive: when present, the
+// frontend submits these fields to `action` instead of navigating to
+// `redirectUrl`; Oen never sets it, so its behaviour is unchanged.
+export interface CheckoutFormPost {
+  action: string;
+  fields: Record<string, string>;
+}
+
 export interface StartCheckoutResult {
   providerCheckoutRef: string;
   redirectUrl: string;
+  formPost?: CheckoutFormPost;
 }
 
 export interface PaymentProviderAdapter {

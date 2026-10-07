@@ -43,10 +43,15 @@
 // calls this function the member has no active period left and this gate
 // naturally falls through to the ordinary (non-Plan-Change) path below --
 // no separate "immediate" branch exists in this file.
+//
+// ECPay integration: the Adapter is no longer imported by name -- it comes
+// from ../_shared/paymentProviders.ts (ACTIVE_PAYMENT_PROVIDER, default
+// "oen"). The response also passes through the Adapter's optional
+// `formPost` (ECPay AIO needs a browser form POST, not a redirect).
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
-import { OEN_PROVIDER_NAME, oenAdapter } from "../_shared/oenAdapter.ts";
+import { activeProviderName, getProviderAdapter } from "../_shared/paymentProviders.ts";
 import type { StartCheckoutResult } from "../_shared/paymentProviderAdapter.ts";
 
 // payment-legal-spec.md §2 -- server-side price table. Never trust a
@@ -155,6 +160,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     scheduledServiceStart = activePeriod.service_period_end;
   }
 
+  const providerName = activeProviderName();
+  const adapter = getProviderAdapter(providerName);
+  if (!adapter) {
+    console.error("unknown ACTIVE_PAYMENT_PROVIDER:", providerName);
+    return json({ error: "order_create_failed" }, 500);
+  }
+
   const paymentExpiresAt = new Date(Date.now() + PAYMENT_WINDOW_MS);
 
   const { data: order, error: insertErr } = await svc
@@ -191,7 +203,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/+$/, "");
   let checkout: StartCheckoutResult;
   try {
-    checkout = await oenAdapter.startCheckout({
+    checkout = await adapter.startCheckout({
       orderId: order.id,
       paymentAttempt: order.payment_attempt,
       amount: pricing.amount,
@@ -214,7 +226,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const { error: updateErr } = await svc
     .from("orders")
     .update({
-      provider: OEN_PROVIDER_NAME,
+      provider: providerName,
       provider_checkout_ref: checkout.providerCheckoutRef,
       updated_at: new Date().toISOString(),
     })
@@ -238,5 +250,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     paymentExpiresAt: order.payment_expires_at,
     scheduledServiceStart: order.scheduled_service_start,
     redirectUrl: checkout.redirectUrl,
+    formPost: checkout.formPost,
   });
 });

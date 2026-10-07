@@ -10,6 +10,7 @@ import {
   MEMBERSHIP_STATUS
 } from '../utils/membershipStatus'
 import { formatVideoDuration } from '../utils/formatDuration'
+import { startProviderCheckout } from '../utils/startProviderCheckout'
 import { usePracticeHistory } from '../hooks/usePracticeHistory'
 import PracticeHistory from '../components/PracticeHistory'
 
@@ -84,7 +85,7 @@ function AccountPage() {
       return
     }
 
-    window.location.assign(data.redirectUrl)
+    startProviderCheckout(data)
   }
 
   // Immediate Change -- Monthly -> Annual only, per the confirmed rules.
@@ -106,7 +107,7 @@ function AccountPage() {
       return
     }
 
-    window.location.assign(data.redirectUrl)
+    startProviderCheckout(data)
   }
 
   // Generic 第十一條 early termination -- the only UI path for Annual's

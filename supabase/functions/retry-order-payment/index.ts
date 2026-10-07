@@ -6,10 +6,15 @@
 // via retry_order_payment(), then (Step 6) delegates to the active Provider
 // Adapter's startCheckout() for the new attempt -- same single-import
 // pattern as create-order-checkout/index.ts, see that file's header.
+//
+// ECPay integration: an Order retries with the provider already recorded
+// on it (orders.provider), falling back to ACTIVE_PAYMENT_PROVIDER only if
+// no attempt ever reached a provider -- a retry never silently switches an
+// Order to a different provider.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
-import { OEN_PROVIDER_NAME, oenAdapter } from "../_shared/oenAdapter.ts";
+import { activeProviderName, getProviderAdapter } from "../_shared/paymentProviders.ts";
 import type { StartCheckoutResult } from "../_shared/paymentProviderAdapter.ts";
 
 function json(body: unknown, status = 200): Response {
@@ -49,12 +54,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // runs as service_role and does not itself check auth.uid().
   const { data: order, error: ownerErr } = await svc
     .from("orders")
-    .select("id, amount, currency, plan_code")
+    .select("id, amount, currency, plan_code, provider")
     .eq("id", orderId)
     .eq("user_id", user.id)
     .maybeSingle();
   if (ownerErr || !order) {
     return json({ error: "order_not_found" }, 404);
+  }
+
+  const providerName: string = order.provider ?? activeProviderName();
+  const adapter = getProviderAdapter(providerName);
+  if (!adapter) {
+    console.error("unknown provider for retry:", providerName);
+    return json({ error: "retry_failed" }, 500);
   }
 
   const { data: newAttempt, error } = await svc.rpc("retry_order_payment", {
@@ -72,7 +84,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/+$/, "");
   let checkout: StartCheckoutResult;
   try {
-    checkout = await oenAdapter.startCheckout({
+    checkout = await adapter.startCheckout({
       orderId: order.id,
       paymentAttempt: newAttempt,
       amount: order.amount,
@@ -89,7 +101,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const { error: updateErr } = await svc
     .from("orders")
     .update({
-      provider: OEN_PROVIDER_NAME,
+      provider: providerName,
       provider_checkout_ref: checkout.providerCheckoutRef,
       updated_at: new Date().toISOString(),
     })
@@ -105,5 +117,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     status: "pending_payment",
     paymentAttempt: newAttempt,
     redirectUrl: checkout.redirectUrl,
+    formPost: checkout.formPost,
   });
 });

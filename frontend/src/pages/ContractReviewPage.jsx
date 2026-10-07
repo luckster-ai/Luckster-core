@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { useAuth } from '../state/useAuth'
 import { supabase } from '../lib/supabaseClient'
 import { getContractContent } from '../utils/contractContent'
+import { startProviderCheckout } from '../utils/startProviderCheckout'
 
 // Payment Rebuild -- Step 4: Contract Review & Acceptance Flow.
 //
@@ -184,12 +185,10 @@ function ContractReviewPage() {
       return
     }
 
-    // Full navigation (not react-router) -- Oen's hosted checkout page is
-    // an external origin, not a route inside this SPA. .assign() (not a
-    // `window.location.href =` property write) to satisfy this repo's
-    // react-hooks immutability lint rule -- same pattern as
-    // SubscribePage.jsx's existing Legacy checkout redirect.
-    window.location.assign(data.redirectUrl)
+    // Full navigation (not react-router) -- the provider's hosted checkout
+    // page is an external origin, not a route inside this SPA. Redirect
+    // (Oen) or signed form POST (ECPay) -- see startProviderCheckout.
+    startProviderCheckout(data)
   }
 
   if (loading) return null

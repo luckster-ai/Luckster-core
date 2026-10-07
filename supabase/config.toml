@@ -45,3 +45,11 @@ verify_jwt = true
 # Payment Rebuild Step 5 (Payment Core). Must stay true -- retry is tied to
 # the caller's own Order (auth.uid()).
 verify_jwt = true
+
+[functions.ecpay-webhook]
+# ECPay integration (ReturnURL). ECPay cannot send a Supabase JWT, so
+# transport-level auth is disabled here. Authenticity is enforced INSIDE
+# the function: every notification's CheckMacValue is verified and every
+# actionable payment is re-queried via QueryTradeInfo before any
+# entitlement is granted (see index.ts).
+verify_jwt = false
