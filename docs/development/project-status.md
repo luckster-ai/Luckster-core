@@ -234,7 +234,30 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **TEST 尚未驗證**：付款失敗時綠界是否發通知、「返回商店」實際跳轉（TEST `SITE_URL` 仍指向 `frontend-oen-test.vercel.app`）、綠界當日 4 次重送全失敗時的對帳補救（尚未實作對帳）、透過 ECPay 的 Plan Change 流程
 - **Production 尚未驗證**：**退款程式已實作、尚未完成正式退款驗證**（測試環境不支援 DoAction，須以正式環境真實小額交易驗證，包含 `Action=R` 的 `TotalAmount` 語意；已授權未請款時的全額退款 `E`→`N` 未實作）；正式環境金鑰、`joti.yoga`、ReturnURL 網域、綠界審核
 - **已知待處理**：契約審閱頁付款方式欄仍寫「透過 Oen 金流服務」，若確定採用 ECPay 需另行處理法律文字
-- **Git checkpoint**：`299e386` — "Implement ECPay TEST integration (AIO checkout, webhook, provider routing)"，**已 commit，尚未 push**
+- **Git checkpoint**：`299e386` — "Implement ECPay TEST integration (AIO checkout, webhook, provider routing)"＋`4a675fd`（project status），**已 commit + push 到 `origin/main`**
+
+### ECPay 官方文件查核（5 個待確認問題，Discovery only）
+- **範圍**：僅查官方來源（developers.ecpay.com.tw、support.ecpay.com.tw、www.ecpay.com.tw），未修改程式、資料庫或環境設定。結論：5 題中僅「退款期限」官方已有明確答案，且**影響 JOTI 退款的執行方式（非退款金額公式）**；其餘仍須向綠界確認
+- **Q1 ReturnURL 用 `*.supabase.co`**：官方已規範——須為特店 Server／主機 URL、僅 80／443 port、不支援中文網址、使用 CDN 時須填主機網址而非 CDN 網址、僅支援 TLS 1.2、須可由外部連線並回 `1|OK`。官方**未說明**是否禁止 serverless／第三方平台網域；Supabase 入口前有 Cloudflare 代理，是否觸及「CDN」條款未說明 → **需綠界確認**（TEST 已實際收到通知）
+- **Q2 是否須商家自有網域（`payment.joti.yoga`）**：官方僅要求申請時填寫網站網址、會員服務規範要求揭露交易網址；技術文件**未要求** ReturnURL 與登記網站同網域 → **需綠界審核單位確認**（不影響程式，ReturnURL 已由 env 設定）
+- **Q3 固定 outbound IP／白名單**：官方已說明「綠界主機 IP 不固定，請以 FQDN 方式設定」（商家防火牆放行 `payment.ecpay.com.tw:443`；入站來源 `postgate.ecpay.com.tw:443`），防火牆需要時可線上申請「主機 IP 鎖定」；AIO／QueryTradeInfo／DoAction 文件**皆未要求**商家固定 outbound IP（以 CheckMacValue 驗證）。合理判斷：**不需要 Oen 式固定 IP proxy**；「主機 IP 鎖定」是否僅為選用功能 → 建議向綠界確認
+- **Q4 特約賣家**：官方已說明一般賣家可「自行串接」全方位金流（導轉綠界付款頁），信用卡為國內卡一次付清（符合 JOTI 目前用法）；分期、銀聯、國外卡、站內付 2.0 才需特約。官方**未說明**：預收制線上課程是否須特約審核、一般賣家收款額度、一般賣家可否使用 DoAction → **需綠界確認**
+- **新發現（官方規範）**：會員服務規範（1140224）第一點第 8 款——「會員就所銷售之遞延性商品或服務，依相關法規規定辦理履約保證（含信託），並應揭露該履約保證資訊予交易相對人知悉」。年方案屬預收服務，可能適用；repo `docs/` 目前**無任何履約保證記載** → 需經營者／法律顧問與綠界確認
+- **Q5 退款期限（官方已有答案）**：付款後 **90 天內**可系統（後台／API）退刷；**90～360 天須至廠商後台人工申請退刷**（附授權碼、金額、簽署文件，約 7～10 個工作天）；**超過 360 天無法退刷**。另：一般授權才可部分退刷（分期、紅利折抵須全額）；帳戶餘額不足無法退刷（須先預付信用卡退刷款）；21 天內須完成關帳；TEST 不支援 DoAction。官方**未說明／不一致**：`Action=R` 的 `TotalAmount` 是退款金額或剩餘金額；一般會員可否使用 DoAction；關帳前可否部分退刷（support 頁與開發文件說法不同）；自動關帳時間（23:59 與 20:15 兩種說法）→ 需綠界確認＋正式環境小額驗證
+- **對 JOTI 退款規則的影響**（依 `payment-legal-spec.md` §11 與 `schema_refund.sql`：月方案約服務開始 30 天內有退款、年方案約 10 個月／約 300 天內有退款）：
+  - 一般購買月方案、立即升級（退原月方案）、年方案服務開始 90 天內：✅ 90 天內，API 可處理
+  - 年方案服務開始第 91～約 300 天：⚠️ **僅能人工退刷**，目前 API 路徑會失敗並停在 `refund_failed`
+  - 到期後開始（After-Expiry）：付款早於服務開始，最多約一整年——年→月約付款後 365～395 天、年→年約 365～665 天退款：❌ **大部分超過 360 天，無法退刷至原卡**；月→年約 31～331 天：⚠️ 前段 API、後段人工
+  - **退款金額公式不受影響**，但超過 90 天須人工處理、超過 360 天須以其他方式（如匯款）退款——屬經營／法律決策（契約是否載明退款方式、是否限制到期後開始的提前購買時間），待裁示
+  - 目前程式未區分 90 天內外；另退款金額為 0 時仍會呼叫退款 API（Oen 路徑相同），列為後續待檢查項目。**本次未修改任何程式**
+
+### ECPay 付款頁重用／付款重試實測（2026-10-10，Discovery only）
+- **範圍**：以獨立測試付款頁直接對 ECPay TEST（公開測試商店 `3002607`）實測，ReturnURL 為無效網址，**未連接 JOTI Order Flow、未寫入任何 JOTI 資料**；未修改程式、SQL、資料庫或設定
+- **同一 MerchantTradeNo 不可重新建立付款頁（已實測確認）**：第二次送出完全相同表單、或同編號更換日期／金額，ECPay 皆回「訂單編號重覆，建立失敗，請返回商店頁面重新下單。」；付款頁為表單 POST 的回應，無可保存的重新進入 URL（GET `/Cashier/AioCheckOut/V5` 不論是否帶原 session cookie 皆回 HTTP 500）。會員只能在原本仍開啟的分頁繼續付款
+- **3D OTP 失敗後可在同一付款頁重試並成功（已實測確認）**：MerchantTradeNo `JRETRY1613831753T1`——使用者以測試卡 `4311-9522-2222-2222` 付款，3D OTP 第一次故意輸入錯誤 `0000`，ECPay 顯示「OTP 密碼錯誤，請再試一次」；未離開頁面，於同一付款頁改輸入正確 OTP `1234` 後付款成功。QueryTradeInfo（回應 CheckMacValue 驗證通過）：`TradeStatus=1`、`TradeNo=2610101445512864`、`TradeAmt=333`、`PaymentType=Credit_CreditCard`、`TradeDate=2026/10/10 14:45:51`、`PaymentDate=2026/10/10 14:48:21`（送出前基準為 `TradeStatus=10200047`、無 TradeNo）
+- **結論**：同一個 MerchantTradeNo／同一付款頁在 OTP 錯誤後可直接重試並完成付款；**目前沒有任何證據顯示 OTP 失敗後必須建立新的 MerchantTradeNo／新付款頁**
+- **未付款交易狀態**：未付款的 AIO 交易於 ECPay 端維持 `TradeStatus=0`（2026-10-07 建立者至 2026-10-10 仍為 0），不會自動轉為過期／未完成，因此無法以 QueryTradeInfo 判斷舊付款頁是否仍可付款；付款頁前端程式無倒數／逾時邏輯（若有期限屬伺服器端 session，長度未知）
+- **仍無法確認**：發卡銀行實際拒絕授權（額度不足、卡片拒絕等，OTP 錯誤屬 3D 驗證階段，未送至發卡行；官方未提供模擬此類失敗的測試卡）後能否於同一頁重試；OTP 連續多次錯誤後是否鎖定或終止交易；未付款離開後付款頁伺服器端 session 有效期與逾時後能否付款。官方文件（付款失敗 FAQ、測試介接資訊、信用卡一次付清）皆無相關說明
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -329,7 +352,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 7. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 9. Plan Change（Step 10）尚缺一次透過 Oen 真實 hosted checkout 頁面的視覺化端到端刷卡驗證（見上方「Payment Rebuild — Step 10」小節已知限制）——待瀏覽器自動化環境問題排除，或改用其他方式驗證。
-10. **ECPay 後續**：等待綠界回覆已送出的 5 個確認問題（ReturnURL 是否接受 `*.supabase.co`、是否須商家自有網域／`payment.joti.yoga`、固定 IP／白名單、特約賣家、退款期限與 DoAction 可用性）；Push `299e386`；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
+10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
 
 ---
 
@@ -347,10 +370,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **會員如何實際觸發提前終止已解決**：Step 10 已在 `AccountPage.jsx` 新增「提前終止目前方案並退款」按鈕作為前端入口，呼叫既有 `terminate-service-period`（Step 9），見上方「Payment Rebuild — Step 10」小節。
 - **退款金流實際執行方式已解決**：Step 9 已實作並實測，呼叫 Oen 退款 API 原路退回（非人工處理），見上方「Payment Rebuild — Step 9」小節。
 - `refund_failed` 之後是否允許重新發起退款——Step 9 刻意維持 `refund_failed` 為 resting terminal state，未實作重試機制，仍待裁示。
-- **ECPay 待綠界確認**：正式環境是否接受 Supabase Edge Function URL 作為 ReturnURL（不接受時是否須使用 `payment.joti.yoga`）、是否要求固定 outbound IP／IP 白名單、是否需特約賣家審核、信用卡部分退刷（`Action=R`）的時間上限（年約可能於付款後 11 個月內申請退款）與一般會員帳號是否預設可用 DoAction。
+- **ECPay 待綠界確認**（已依官方文件查核更新，見「ECPay 官方文件查核」小節）：(1) 正式環境是否接受 `*.supabase.co`（前有 Cloudflare 代理）作為 ReturnURL；(2) ReturnURL 是否須與登記網站同網域、`payment.joti.yoga` 是否符合；(3)「主機 IP 鎖定」是否僅為選用；(4) 預收制線上課程可否以一般賣家申請、一般賣家可否使用 DoAction、收款額度、年方案是否適用遞延性服務履約保證；(5) 90／360 天起算點、超過 360 天有無其他退款管道、`Action=R` 的 `TotalAmount` 語意、關帳前可否部分退刷、自動關帳時間。
+- **退款期限對既定退款規則的處理方式（經營／法律決策，待裁示）**：年方案超過 90 天的人工退刷流程、超過 360 天（主要為到期後開始）的退款方式、是否限制到期後開始的提前購買時間、契約是否需載明退款方式。
 
 ---
 
 ## Last Updated
 
-2026-10-07（ECPay Integration TEST 完成後更新）
+2026-10-10（ECPay 付款頁重用／付款重試實測結果更新）
