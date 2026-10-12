@@ -9,10 +9,11 @@
 //     browser must POST a signed form to ECPay, so startCheckout() only
 //     builds and signs the fields and returns them as `formPost`.
 //   - MerchantTradeNo is max 20 alphanumeric chars and can NEVER be reused
-//     (not even across retries), so it cannot be the UUID orders.id. A
-//     fresh one is generated per payment attempt and stored as
-//     orders.provider_checkout_ref -- the key ecpay-webhook resolves the
-//     Order by.
+//     (not even across retries), so it cannot be a UUID. A fresh one is
+//     generated per checkout and stored as
+//     checkout_sessions.merchant_trade_no -- the key ecpay-webhook
+//     resolves the session by (and later the paid Order's
+//     provider_checkout_ref, which the refund flow reads).
 //   - ClientBackURL is a plain "back to shop" link that carries no payment
 //     result, so the return URL is sent without Core's `result` hint.
 
@@ -27,6 +28,7 @@ import {
   signParams,
 } from "./ecpay.ts";
 import type {
+  CheckoutFormPost,
   PaymentProviderAdapter,
   StartCheckoutInput,
   StartCheckoutResult,
@@ -63,50 +65,89 @@ function generateMerchantTradeNo(ms: number): string {
   return `J${stamp}${suffix}`;
 }
 
+// Builds and signs the AIO form fields. `reference` is echoed back in
+// CustomField1 (an extra cross-check only, never the identity source --
+// the webhook resolves by MerchantTradeNo).
+async function buildSignedCheckout(input: {
+  amount: number;
+  planCode: string;
+  backUrl: string;
+  reference: string;
+}): Promise<{ merchantTradeNo: string; formPost: CheckoutFormPost }> {
+  // Same fail-fast guard as oenAdapter: TEST (stage) only until the
+  // production rules ECPay has yet to confirm are settled.
+  if (ECPAY_MODE !== "test") {
+    throw new Error("ecpay_not_test_mode");
+  }
+  const cfgErr = ecpayConfigError();
+  if (cfgErr) {
+    throw new Error(`ecpay_misconfigured: ${cfgErr}`);
+  }
+
+  const nowMs = Date.now();
+  const merchantTradeNo = generateMerchantTradeNo(nowMs);
+
+  const fields: Record<string, string> = {
+    MerchantID: ECPAY_MERCHANT_ID,
+    MerchantTradeNo: merchantTradeNo,
+    MerchantTradeDate: formatUtc8DateTime(nowMs),
+    PaymentType: "aio",
+    TotalAmount: String(input.amount),
+    TradeDesc: "JOTI 線上課程",
+    ItemName: PLAN_DISPLAY_NAME[input.planCode] ?? input.planCode,
+    ReturnURL: ECPAY_RETURN_URL,
+    ChoosePayment: "Credit",
+    ClientBackURL: input.backUrl,
+    CustomField1: input.reference,
+    EncryptType: "1",
+  };
+  fields.CheckMacValue = await signParams(fields);
+
+  return { merchantTradeNo, formPost: { action: AIO_CHECKOUT_URL, fields } };
+}
+
+// Order-first adapter (PaymentProviderAdapter contract). No longer used
+// for new ECPay purchases -- create-order-checkout's ECPay branch uses
+// startEcpaySessionCheckout() below, and retry-order-payment refuses ECPay
+// Orders -- kept only so the provider registry stays type-complete.
 export const ecpayAdapter: PaymentProviderAdapter = {
   async startCheckout(input: StartCheckoutInput): Promise<StartCheckoutResult> {
-    // Same fail-fast guard as oenAdapter: TEST (stage) only until the
-    // production rules ECPay has yet to confirm are settled.
-    if (ECPAY_MODE !== "test") {
-      throw new Error("ecpay_not_test_mode");
-    }
-    const cfgErr = ecpayConfigError();
-    if (cfgErr) {
-      throw new Error(`ecpay_misconfigured: ${cfgErr}`);
-    }
-
-    const nowMs = Date.now();
-    const merchantTradeNo = generateMerchantTradeNo(nowMs);
-
     const backUrl = new URL(input.successUrl);
     backUrl.searchParams.delete("result");
 
-    const fields: Record<string, string> = {
-      MerchantID: ECPAY_MERCHANT_ID,
-      MerchantTradeNo: merchantTradeNo,
-      MerchantTradeDate: formatUtc8DateTime(nowMs),
-      PaymentType: "aio",
-      TotalAmount: String(input.amount),
-      TradeDesc: "JOTI 線上課程",
-      ItemName: PLAN_DISPLAY_NAME[input.planCode] ?? input.planCode,
-      ReturnURL: ECPAY_RETURN_URL,
-      ChoosePayment: "Credit",
-      ClientBackURL: backUrl.toString(),
-      // Echoed back in the payment notification; used only as an extra
-      // cross-check against the Order resolved from provider_checkout_ref,
-      // never as the identity source itself.
-      CustomField1: input.orderId,
-      EncryptType: "1",
-    };
-    fields.CheckMacValue = await signParams(fields);
+    const { merchantTradeNo, formPost } = await buildSignedCheckout({
+      amount: input.amount,
+      planCode: input.planCode,
+      backUrl: backUrl.toString(),
+      reference: input.orderId,
+    });
 
     return {
       providerCheckoutRef: merchantTradeNo,
       redirectUrl: AIO_CHECKOUT_URL,
-      formPost: { action: AIO_CHECKOUT_URL, fields },
+      formPost,
     };
   },
 };
+
+// Checkout Session flow: signs the AIO form for a checkout_sessions row
+// that does not exist yet (create-order-checkout inserts it right after,
+// with the MerchantTradeNo returned here). CustomField1 carries the
+// session id; the member comes back to /checkout/return?session=<id>.
+export async function startEcpaySessionCheckout(input: {
+  sessionId: string;
+  amount: number;
+  planCode: string;
+  returnUrl: string;
+}): Promise<{ merchantTradeNo: string; redirectUrl: string; formPost: CheckoutFormPost }> {
+  const { merchantTradeNo, formPost } = await buildSignedCheckout({
+    amount: input.amount,
+    planCode: input.planCode,
+    backUrl: input.returnUrl,
+    reference: input.sessionId,
+  });
+  return { merchantTradeNo, redirectUrl: AIO_CHECKOUT_URL, formPost };
+}
 
 // ECPay's refund capability -- same placement as oenAdapter.ts's
 // refundOenOrder(): a plain provider-specific export, deliberately NOT part

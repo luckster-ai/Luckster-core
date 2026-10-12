@@ -48,10 +48,22 @@
 // from ../_shared/paymentProviders.ts (ACTIVE_PAYMENT_PROVIDER, default
 // "oen"). The response also passes through the Adapter's optional
 // `formPost` (ECPay AIO needs a browser form POST, not a redirect).
+//
+// ECPay Checkout Session flow: when the active provider is ECPay, this
+// function no longer creates an Order at all. After the same Contract
+// Acceptance Gate and server-side pricing it signs the ECPay form and
+// records a checkout_sessions row (create_checkout_session(), which also
+// enforces "no valid Service Period" and "no purchase already in progress"
+// under a per-member lock). The paid Order is only created once the
+// payment is verified (fulfill_checkout_session(), via ecpay-webhook or
+// confirm-checkout-session). After-Expiry / Plan Change are not offered on
+// this path. Everything below the ECPay branch (the Oen order-first path)
+// is unchanged.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
 import { activeProviderName, getProviderAdapter } from "../_shared/paymentProviders.ts";
+import { ECPAY_PROVIDER_NAME, startEcpaySessionCheckout } from "../_shared/ecpayAdapter.ts";
 import type { StartCheckoutResult } from "../_shared/paymentProviderAdapter.ts";
 
 // payment-legal-spec.md §2 -- server-side price table. Never trust a
@@ -70,6 +82,71 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+// deno-lint-ignore no-explicit-any
+type Svc = any;
+
+// ECPay Checkout Session flow (see header). Plan, price and Contract
+// Acceptance are locked into the session here; nothing is written to
+// `orders`.
+async function startEcpayCheckoutSession(
+  svc: Svc,
+  userId: string,
+  planCode: string,
+  pricing: { amount: number; currency: string },
+  acceptance: { id: string; contract_version: string },
+  afterExpiry: boolean,
+): Promise<Response> {
+  if (afterExpiry) {
+    return json({ error: "after_expiry_not_supported" }, 409);
+  }
+
+  // The session id must exist before signing (it goes into CustomField1
+  // and the return URL); the row itself is only inserted once the form is
+  // signed, because the MerchantTradeNo is generated while signing.
+  const sessionId = crypto.randomUUID();
+  const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/+$/, "");
+
+  let checkout: Awaited<ReturnType<typeof startEcpaySessionCheckout>>;
+  try {
+    checkout = await startEcpaySessionCheckout({
+      sessionId,
+      amount: pricing.amount,
+      planCode,
+      returnUrl: `${siteUrl}/checkout/return?session=${sessionId}`,
+    });
+  } catch (e) {
+    console.error("ECPay session checkout signing failed:", (e as Error).message);
+    return json({ error: "checkout_start_failed" }, 502);
+  }
+
+  const { data: session, error } = await svc.rpc("create_checkout_session", {
+    p_id: sessionId,
+    p_user_id: userId,
+    p_provider: ECPAY_PROVIDER_NAME,
+    p_merchant_trade_no: checkout.merchantTradeNo,
+    p_plan_code: planCode,
+    p_amount: pricing.amount,
+    p_currency: pricing.currency,
+    p_contract_acceptance_id: acceptance.id,
+    p_contract_version: acceptance.contract_version,
+  });
+
+  if (error || !session) {
+    for (const known of ["active_service_period_exists", "checkout_session_in_progress"]) {
+      if (error?.message?.includes(known)) return json({ error: known }, 409);
+    }
+    console.error("create_checkout_session failed:", error?.message);
+    return json({ error: "checkout_start_failed" }, 500);
+  }
+
+  return json({
+    checkoutSessionId: session.id,
+    expiresAt: session.expires_at,
+    redirectUrl: checkout.redirectUrl,
+    formPost: checkout.formPost,
   });
 }
 
@@ -119,6 +196,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   if (!acceptance) {
     return json({ error: "no_contract_acceptance" }, 409);
+  }
+
+  if (activeProviderName() === ECPAY_PROVIDER_NAME) {
+    return await startEcpayCheckoutSession(svc, user.id, planCode, pricing, acceptance, afterExpiry);
   }
 
   // Plan Change eligibility gate (see file header). Only non-terminated,

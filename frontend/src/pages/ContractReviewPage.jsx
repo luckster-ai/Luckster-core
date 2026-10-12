@@ -6,6 +6,7 @@ import { useAuth } from '../state/useAuth'
 import { supabase } from '../lib/supabaseClient'
 import { getContractContent } from '../utils/contractContent'
 import { startProviderCheckout } from '../utils/startProviderCheckout'
+import { CHECKOUT_ERROR_TEXT, getOpenCheckoutSession } from '../utils/checkoutSession'
 
 // Payment Rebuild -- Step 4: Contract Review & Acceptance Flow.
 //
@@ -49,6 +50,11 @@ import { startProviderCheckout } from '../utils/startProviderCheckout'
 // routed here for reacceptance already has an active relationship with
 // JOTI, and deciding whether/when they should be prompted to buy again is
 // Step 8 (Membership/Entitlement) territory, not something to attach here.
+//
+// ECPay Checkout Session flow: if the member already has a purchase in
+// progress (an open, unexpired checkout session), the plan buttons are
+// replaced by a "付款進行中" notice -- no second purchase entry while one
+// is in progress. create-order-checkout enforces the same rule server-side.
 const CHECKOUT_PLANS = [
   { code: 'monthly', label: '月方案 NT$333' },
   { code: 'annual', label: '年方案 NT$3,333' }
@@ -67,6 +73,7 @@ function ContractReviewPage() {
   // failure should not reset the already-successful agreement state.
   const [checkoutPlanCode, setCheckoutPlanCode] = useState(null) // which plan button is in flight, or null
   const [checkoutError, setCheckoutError] = useState(null)
+  const [openSession, setOpenSession] = useState(null) // { id, plan_code, expires_at } or null
   // Derived from review.reviewAvailableAt, but Date.now() may only be
   // read inside an effect (not during render, per React's purity rule) --
   // recomputed on an interval so the button flips to enabled without
@@ -151,6 +158,18 @@ function ContractReviewPage() {
     return () => clearInterval(timer)
   }, [mode, review?.reviewAvailableAt])
 
+  useEffect(() => {
+    if (state !== 'agreed' || mode !== 'initial') return undefined
+
+    let cancelled = false
+    getOpenCheckoutSession().then((session) => {
+      if (!cancelled) setOpenSession(session)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [state, mode])
+
   async function handleAgree() {
     setState('agreeing')
     setMessage(null)
@@ -181,7 +200,12 @@ function ContractReviewPage() {
 
     if (error || data?.error || !data?.redirectUrl) {
       setCheckoutPlanCode(null)
-      setCheckoutError(data?.error || error?.message || '無法建立訂單，請稍後再試。')
+      setCheckoutError(
+        CHECKOUT_ERROR_TEXT[data?.error] || data?.error || error?.message || '無法建立訂單，請稍後再試。'
+      )
+      if (data?.error === 'checkout_session_in_progress') {
+        getOpenCheckoutSession().then(setOpenSession)
+      }
       return
     }
 
@@ -232,7 +256,16 @@ function ContractReviewPage() {
             </button>
           )}
 
-          {state === 'agreed' && mode === 'initial' && (
+          {state === 'agreed' && mode === 'initial' && openSession && (
+            <div className="contract-review-checkout">
+              <p>
+                付款進行中。請在原付款頁完成付款；若已放棄付款，可於
+                {new Date(openSession.expires_at).toLocaleString('zh-TW')} 後重新選擇方案。
+              </p>
+            </div>
+          )}
+
+          {state === 'agreed' && mode === 'initial' && !openSession && (
             <div className="contract-review-checkout">
               <p>已完成同意，感謝您的審閱。選擇方案即可前往付款：</p>
 

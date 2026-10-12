@@ -11,11 +11,19 @@
 // on it (orders.provider), falling back to ACTIVE_PAYMENT_PROVIDER only if
 // no attempt ever reached a provider -- a retry never silently switches an
 // Order to a different provider.
+//
+// ECPay Checkout Session flow: ECPay no longer has Orders awaiting
+// payment -- the paid Order is created only after payment
+// (checkout_sessions + fulfill_checkout_session()), and ecpay-webhook no
+// longer resolves order-first MerchantTradeNos. A retry for an ECPay Order
+// (or one that would start on ECPay) is therefore refused: it would hand
+// the member a payment page whose payment JOTI could never fulfil.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
 import { activeProviderName, getProviderAdapter } from "../_shared/paymentProviders.ts";
 import type { StartCheckoutResult } from "../_shared/paymentProviderAdapter.ts";
+import { ECPAY_PROVIDER_NAME } from "../_shared/ecpayAdapter.ts";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -63,6 +71,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const providerName: string = order.provider ?? activeProviderName();
+  if (providerName === ECPAY_PROVIDER_NAME) {
+    return json({ error: "retry_not_supported" }, 409);
+  }
   const adapter = getProviderAdapter(providerName);
   if (!adapter) {
     console.error("unknown provider for retry:", providerName);

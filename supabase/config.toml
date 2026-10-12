@@ -53,3 +53,9 @@ verify_jwt = true
 # actionable payment is re-queried via QueryTradeInfo before any
 # entitlement is granted (see index.ts).
 verify_jwt = false
+
+[functions.confirm-checkout-session]
+# ECPay Checkout Session flow. Must stay true -- a member may only confirm
+# their own checkout session (auth.uid()); fulfilment itself still goes
+# through the same QueryTradeInfo re-query as ecpay-webhook.
+verify_jwt = true

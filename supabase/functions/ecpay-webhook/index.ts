@@ -12,17 +12,19 @@
 //   4. MANDATORY re-query via QueryTradeInfo (A6) -- entitlement is only
 //      ever granted from the authenticated read-back, never from the
 //      notification body alone, even though it is signed
-//   5. resolve the Order ONLY from our own orders row (provider='ecpay' +
-//      provider_checkout_ref = MerchantTradeNo, A5); CustomField1 is only a
-//      cross-check, never an identity fallback
-//   6. atomic activation via Core's apply_order_payment()
+//   5. resolve the Checkout Session ONLY from our own checkout_sessions row
+//      (provider='ecpay' + merchant_trade_no = MerchantTradeNo, A5);
+//      CustomField1 (the session id) is only a cross-check, never an
+//      identity fallback
+//   6. fulfil via ../_shared/ecpayFulfillment.ts -- the same re-query +
+//      fulfill_checkout_session() path confirm-checkout-session uses, which
+//      creates the paid Order + Service Period (no Order exists before
+//      this point), or rejects the session for manual refund
 //
-// Non-success notifications (RtnCode != 1) are recorded but do NOT mark the
-// Order payment_failed: unlike Oen (verified terminal), it is not
-// established that a failed ECPay credit attempt cannot be followed by a
-// successful one for the same MerchantTradeNo, so marking it failed could
-// strand a later real payment. The Order stays pending_payment and expires
-// through the normal 3-day window; the member can start a new Order.
+// Non-success notifications (RtnCode != 1) are recorded and change
+// nothing: the session stays open (a later successful payment on the same
+// MerchantTradeNo is still accepted), and simply stops blocking a new
+// purchase once its expires_at passes.
 //
 // Response contract (ECPay docs): body "1|OK" acknowledges; anything else
 // makes ECPay resend every 5-15 minutes, up to 4 times that day. "1|OK" is
@@ -35,10 +37,10 @@ import {
   ECPAY_MERCHANT_ID,
   ECPAY_MODE,
   ecpayConfigError,
-  queryTradeInfo,
   verifyCheckMacValue,
 } from "../_shared/ecpay.ts";
 import { ECPAY_PROVIDER_NAME } from "../_shared/ecpayAdapter.ts";
+import { verifyAndFulfillEcpaySession } from "../_shared/ecpayFulfillment.ts";
 
 // deno-lint-ignore no-explicit-any
 type Svc = any;
@@ -76,13 +78,6 @@ async function finish(
     .update({ ...patch, processed_at: new Date().toISOString() })
     .eq("provider", ECPAY_PROVIDER_NAME)
     .eq("event_key", eventKey);
-}
-
-// ECPay PaymentType for a credit card charge is "Credit_CreditCard";
-// terminate-service-period's refund guard expects the provider-neutral
-// value "card" (the same one the Oen path stores).
-function normalizePaymentMethod(paymentType: string): string {
-  return paymentType.startsWith("Credit") ? "card" : paymentType;
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -166,89 +161,70 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return ack();
   }
 
-  // 5. resolve the Order ONLY from our own records (A5)
-  const { data: order } = await svc.from("orders")
-    .select("id, user_id, amount, payment_attempt, scheduled_service_start")
+  // 5. resolve the Checkout Session ONLY from our own records (A5).
+  // Historic order-first ECPay Orders (pending_payment TEST data) are
+  // deliberately NOT looked up -- there is no transition path for them.
+  const { data: session } = await svc.from("checkout_sessions")
+    .select("id, user_id, merchant_trade_no, amount, status")
     .eq("provider", ECPAY_PROVIDER_NAME)
-    .eq("provider_checkout_ref", merchantTradeNo)
+    .eq("merchant_trade_no", merchantTradeNo)
     .maybeSingle();
 
-  if (!order) {
+  if (!session) {
     await finish(svc, eventKey, {
       verification_status: "verification_failed",
-      note: "order_not_matched",
+      note: "session_not_matched",
     });
     return ack();
   }
 
-  // 4. MANDATORY re-query verification (A6). The call itself failing, or
-  // ECPay not yet reporting the trade as paid, is transient -> resend.
-  const requery = await queryTradeInfo(merchantTradeNo).catch((e) => {
-    console.error("QueryTradeInfo threw:", (e as Error).message);
-    return null;
-  });
-  if (!requery) return retry("requery_threw");
-  if (!requery.ok || !requery.data || !requery.macValid) {
-    console.error(
-      "QueryTradeInfo unavailable:",
-      requery.status,
-      `macValid=${requery.macValid}`,
-      requery.raw.slice(0, 200),
-    );
-    return retry("requery_unavailable");
-  }
-  const q = requery.data;
-  if (q.TradeStatus !== "1") {
-    console.error("QueryTradeInfo not yet paid:", q.TradeStatus);
-    return retry("requery_not_paid_yet");
-  }
-
-  const tradeNoOk = q.TradeNo === tradeNo;
-  const amountOk = Number(q.TradeAmt) === order.amount && bodyAmount === order.amount;
-  const customFieldOk = !body.CustomField1 || body.CustomField1 === order.id;
-
-  if (!tradeNoOk || !amountOk || !customFieldOk) {
+  if (body.CustomField1 && body.CustomField1 !== session.id) {
     await finish(svc, eventKey, {
-      order_id: order.id,
-      user_id: order.user_id,
+      user_id: session.user_id,
       verification_status: "verification_failed",
-      note: `tradeNoOk=${tradeNoOk} amountOk=${amountOk} customFieldOk=${customFieldOk}`,
+      note: "custom_field_mismatch",
     });
     return ack();
   }
 
-  // 6. atomic activation via Core's one trusted writer -- identical call
-  // shape to oen-webhook's onetime branch.
-  const { error: rpcErr } = await svc.rpc("apply_order_payment", {
-    p_order_id: order.id,
-    p_payment_attempt: order.payment_attempt,
-    p_provider: ECPAY_PROVIDER_NAME,
-    p_provider_ref: tradeNo,
-    p_payment_method: normalizePaymentMethod(q.PaymentType || body.PaymentType || ""),
-    p_verified_amount: order.amount,
-    p_service_period_start: order.scheduled_service_start,
+  // 4 + 6. MANDATORY re-query (A6) + idempotent fulfilment -- the same
+  // shared path confirm-checkout-session uses.
+  const result = await verifyAndFulfillEcpaySession(svc, session, {
+    tradeNo,
+    amount: bodyAmount,
+    paymentType: body.PaymentType || "",
   });
 
-  if (rpcErr) {
-    if (rpcErr.message?.includes("order_not_eligible_for_payment")) {
-      // Stale/duplicate attempt (already paid, expired, or a payment_attempt
-      // mismatch) -- terminal, not transient; do not ask ECPay to resend.
+  switch (result.kind) {
+    case "fulfilled":
       await finish(svc, eventKey, {
-        order_id: order.id,
-        user_id: order.user_id,
-        verification_status: "verification_failed",
-        note: "order_not_eligible_for_payment",
+        order_id: result.orderId,
+        user_id: session.user_id,
+        verification_status: "verified",
+        note: result.alreadyFulfilled ? "already_fulfilled" : null,
       });
       return ack();
-    }
-    console.error("apply_order_payment failed:", rpcErr.message);
-    return retry("apply_order_payment_rpc_failed");
+    case "rejected":
+      // Money taken, no Order / Service Period -> manual refund
+      // (checkout_sessions.status = 'rejected' is the work list).
+      await finish(svc, eventKey, {
+        user_id: session.user_id,
+        verification_status: "verification_failed",
+        note: `paid_but_rejected:${result.reason}`,
+      });
+      return ack();
+    case "mismatch":
+      await finish(svc, eventKey, {
+        user_id: session.user_id,
+        verification_status: "verification_failed",
+        note: result.note,
+      });
+      return ack();
+    case "not_paid":
+      // RtnCode=1 but ECPay does not report it paid yet -> resend.
+      console.error("QueryTradeInfo not yet paid:", result.tradeStatus);
+      return retry("requery_not_paid_yet");
+    case "unavailable":
+      return retry(result.note);
   }
-
-  await finish(svc, eventKey, {
-    order_id: order.id,
-    user_id: order.user_id,
-    verification_status: "verified",
-  });
-  return ack();
 });

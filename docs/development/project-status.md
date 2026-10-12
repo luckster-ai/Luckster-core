@@ -155,7 +155,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Implementation 已完成**：`create-order-checkout`／`retry-order-payment` 已部署到 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）並實際驗證成功；`_shared/oen.ts` 的 `createOneTimeCheckout()` 依 TEST API 實測結果（`/checkout` 實際要求 `productDetails`）修正後重新部署
 - **已實測確認成功**：Order 正確建立、`orders.provider`（`oen`）與 `provider_checkout_ref` 正確寫入、`redirectUrl` 正確導向 Oen TEST hosted checkout、用 Oen TEST 卡號完成測試付款並成功跳轉回 `/checkout/return?result=success`
 - **原本待 Step 7 解決的缺口（付款完成後 `orders.status` 仍是 `pending_payment`、一次性付款的 webhook 未串接）已在 Step 7 完整解決**，見下方
-- **環境備註（未解決，非 Step 6/7 功能缺陷）**：TEST 專案的 `SITE_URL` secret 仍指向既有的 `frontend-oen-test.vercel.app` 部署，該部署沒有 `/checkout/return` 路由的實際內容，付款完成跳轉回去的頁面目前仍是空白
+- **環境備註**：TEST 專案的 `SITE_URL` secret 已於 2026-10-12 改為目前的 Preview `https://joti-u9os97gw1-jotiyoga.vercel.app`（含 `/checkout/return` 新流程），見「ECPay Checkout Session Flow」小節
 - **Step 6 已完成**
 
 ### Payment Rebuild — Step 7（Webhook + Server-side Verification）
@@ -231,7 +231,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - `deno check`、`npm run lint`、`npm run build` 皆通過
   - 測試後已移除 `ACTIVE_PAYMENT_PROVIDER`（TEST 新 Order 恢復預設 Oen）；`ECPAY_*` secrets 保留於 TEST 專案
 - **TEST 資料保留中（未清理）**：上述測試帳號新增 1 筆 `contract_acceptances`、1 筆 ECPay `paid` Order、1 筆 `active` Service Period、1 筆 `payment_events`
-- **TEST 尚未驗證**：付款失敗時綠界是否發通知、「返回商店」實際跳轉（TEST `SITE_URL` 仍指向 `frontend-oen-test.vercel.app`）、綠界當日 4 次重送全失敗時的對帳補救（尚未實作對帳）、透過 ECPay 的 Plan Change 流程
+- **TEST 尚未驗證**：付款失敗時綠界是否發通知、「返回商店」實際跳轉（TEST `SITE_URL` 已於 2026-10-12 改為 Preview `https://joti-u9os97gw1-jotiyoga.vercel.app`；新流程付款後的返回頁實際顯示仍待驗證，見「ECPay Checkout Session Flow」小節）、綠界當日 4 次重送全失敗時的對帳補救（尚未實作對帳）、透過 ECPay 的 Plan Change 流程
 - **Production 尚未驗證**：**退款程式已實作、尚未完成正式退款驗證**（測試環境不支援 DoAction，須以正式環境真實小額交易驗證，包含 `Action=R` 的 `TotalAmount` 語意；已授權未請款時的全額退款 `E`→`N` 未實作）；正式環境金鑰、`joti.yoga`、ReturnURL 網域、綠界審核
 - **已知待處理**：契約審閱頁付款方式欄仍寫「透過 Oen 金流服務」，若確定採用 ECPay 需另行處理法律文字
 - **Git checkpoint**：`299e386` — "Implement ECPay TEST integration (AIO checkout, webhook, provider routing)"＋`4a675fd`（project status），**已 commit + push 到 `origin/main`**
@@ -258,6 +258,46 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **結論**：同一個 MerchantTradeNo／同一付款頁在 OTP 錯誤後可直接重試並完成付款；**目前沒有任何證據顯示 OTP 失敗後必須建立新的 MerchantTradeNo／新付款頁**
 - **未付款交易狀態**：未付款的 AIO 交易於 ECPay 端維持 `TradeStatus=0`（2026-10-07 建立者至 2026-10-10 仍為 0），不會自動轉為過期／未完成，因此無法以 QueryTradeInfo 判斷舊付款頁是否仍可付款；付款頁前端程式無倒數／逾時邏輯（若有期限屬伺服器端 session，長度未知）
 - **仍無法確認**：發卡銀行實際拒絕授權（額度不足、卡片拒絕等，OTP 錯誤屬 3D 驗證階段，未送至發卡行；官方未提供模擬此類失敗的測試卡）後能否於同一頁重試；OTP 連續多次錯誤後是否鎖定或終止交易；未付款離開後付款頁伺服器端 session 有效期與逾時後能否付款。官方文件（付款失敗 FAQ、測試介接資訊、信用卡一次付清）皆無相關說明
+
+### Payment Flow — 付款成功後才建立正式 Order（2026-10-11，Discovery only）
+- **範圍**：純 Read-only Design Discovery，未修改程式、SQL、資料庫、TEST 資料或設定；**尚未授權 Implementation**
+- **背景**：先前 Discovery 規劃的 Pending Order 生命週期（3 天付款期限、Continue Payment、`cancelled` 狀態、`order_payment_attempts`、取消後舊 ECPay 付款頁的放棄授權處理）複雜度高；本次探索更簡單的方向——會員 UX 只有「購買 → ECPay 付款頁（含 3DS／OTP）→ 回到 JOTI → 付費會員」，付款失敗／離開一律視為「沒有完成購買」，**沒有成功付款就沒有正式 JOTI Order**；ECPay 端殘留的未付款交易（`TradeStatus=0`）不需 JOTI 處理
+- **結論：可行，且值得進入下一階段 Implementation Discovery / Design**，但付款前仍需保存一筆輕量 **checkout session**（非 Order，無付款期限／重試／取消，會員看不到）
+- **現有實作的限制**：`ecpay-webhook` 以 `orders.provider_checkout_ref` 解析 Order（找不到 → `order_not_matched`）；`apply_order_payment()` 只能把既有 `pending_payment` Order 轉為 `paid`（條件含 `payment_attempt`、`payment_expires_at > now()`、`provider`）→ 需新增「付款確認時同交易建立 `paid` Order＋Service Period」的 RPC。Schema 允許直接寫入 `status='paid'`；唯一障礙是 `orders.payment_expires_at` 為 NOT NULL（填 `now()` 或改 nullable，待決定）
+- **可直接沿用**：MerchantTradeNo 產生、CheckMacValue 驗證、`payment_events` 去重、RtnCode／SimulatePaid 判斷、QueryTradeInfo 回查與金額比對、退款流程（新流程建立的 Order 欄位相同）、`service_periods_no_overlap`；需調整：CustomField1／ClientBackURL 改帶 session id、webhook 改以 session 解析、`create-order-checkout`（ECPay 路徑）改建 session、`CheckoutReturnPage` 改以 session 輪詢
+- **建議的 `checkout_sessions`（最小欄位）**：`user_id`、`plan_code`、`amount`、`contract_acceptance_id`、`contract_version`、`provider`、`merchant_trade_no`（unique）、`status`（`open`／`fulfilled`／`rejected`）、`order_id`（開通後填）、`trade_no`、時間戳、`note`；RLS 僅會員讀自己的，寫入只經 service role／SECURITY DEFINER RPC。不採「完全不存、只靠 CustomField1～4」：回傳頁無法辨識、無法對帳（不知道該查哪些 MerchantTradeNo）、稽核薄弱
+- **主要風險**：
+  - **ECPay 已付款但 JOTI 開通失敗**：暫時性失敗 → webhook 回 `0|…` 讓 ECPay 重送（一天 4 次），RPC 以 `merchant_trade_no` 冪等，建議加回傳頁的伺服器端主動確認（QueryTradeInfo → 同一 RPC）作為備援；永久性失敗（已有有效方案、金額不符）→ RPC 必須明確回傳拒絕而非丟出例外（避免現有 23P01 無限重試）→ session 標記 `rejected` → 回 `1|OK` → 進入退款清單（第一版人工；DoAction 僅正式環境可驗證）
+  - **重複付款**（兩個分頁、或舊付款頁延遲付款）：ECPay 無法讓舊頁失效，只能「第一筆開通、後到者拒絕＋退款」；在此方向下，舊付款頁付款若會員當時沒有有效方案，即視為正常購買
+  - 舊付款頁延遲付款時價格／契約版本已變更；Oen 路徑仍為「先建 Order」；法律文件（`payment-legal-spec.md`、`order-schema-proposal.md` Decision 8、契約）是否提及付款期限／待付款訂單**尚未逐條核對**
+- **採用後不再需要（ECPay 路徑）**：3 天付款期限與 `expire_pending_orders`、`retry_order_payment`／`retry-order-payment`、`mark_payment_failed`、`pending_payment`／`payment_failed`／`payment_expired` 狀態；先前規劃的 `cancelled`、`cancel-order`、`order_payment_attempts`、Pending 部分唯一索引、Continue Payment／取消 UI、取消後舊付款頁放棄授權流程；AccountPage 重試按鈕與 CheckoutReturnPage 的付款失敗／付款期限已過訊息。第一版不刪 schema，只停用（歷史資料與 Oen 仍使用）
+- **建議的下一階段最小 Implementation 範圍（待授權）**：(1) migration：`checkout_sessions`＋RLS＋開通 RPC（例如 `fulfill_checkout_session`），不改既有 RPC；(2) `create-order-checkout` ECPay 路徑改建 session（Oen 不動）；(3) `ecpayAdapter` CustomField1／ClientBackURL 改用 session id；(4) `ecpay-webhook` 改以 session 解析並呼叫新 RPC，拒絕時回 `1|OK` 並記錄；(5) `CheckoutReturnPage` 改以 session 輪詢；(6)（選用）`confirm-checkout-session` 以 QueryTradeInfo 主動確認；(7) AccountPage 對 ECPay 不顯示重試。不動：`oen-webhook`、`oenAdapter`、`oen.ts`、退款流程、`service_periods_no_overlap`
+- **待決策**：見下方「Open Questions」
+
+### ECPay Checkout Session Flow（2026-10-12，Implementation ＋ TEST 部署 ＋ E2E 驗證通過 — 未 commit）
+- **已確認決策**：付款成功前不建立 Order；Checkout Session 為付款中的暫時識別（非 Order）；同一會員同時只能有一個有效 open Session，**有效期 30 分鐘**（期間顯示「付款進行中」、不提供新購買入口）；有有效 Service Period 不得開始購買；不做 Continue／Retry／Cancel、Advance Purchase／After-Expiry／Plan Change；webhook 與 `confirm-checkout-session` 共用同一套冪等確認／開通邏輯；付款成功但無法開通 → 第一版人工退款；Session 鎖定建立當下的方案、價格與契約接受資訊；未付款 Session 不清理；TEST 既有 pending Order 不處理、不影響新流程；Oen 流程不變
+- **新增**：`supabase/schema_checkout_sessions.sql`（`checkout_sessions` 表＋RLS read own／admin、`create_checkout_session()`、`fulfill_checkout_session()`，皆 SECURITY DEFINER、僅 service_role 可執行）與 `_ROLLBACK.sql`；`_shared/ecpayFulfillment.ts`（QueryTradeInfo 回查＋TradeNo／金額比對＋呼叫 `fulfill_checkout_session()` 的共用邏輯）；Edge Function `confirm-checkout-session`（`verify_jwt = true`，僅限本人 Session）；`frontend/src/utils/checkoutSession.js`
+- **修改**：`create-order-checkout`（ECPay 時改建 Session、拒絕 `afterExpiry`；Oen 路徑不變）；`_shared/ecpayAdapter.ts`（新增 `startEcpaySessionCheckout()`，CustomField1／ClientBackURL 帶 session id）；`ecpay-webhook`（改以 `checkout_sessions.merchant_trade_no` 解析，不再查舊 Order → `session_not_matched`）；`retry-order-payment`（ECPay Order 回 409 `retry_not_supported`）；`create-plan-change-checkout`（ECPay 啟用時於終止前回 409 `plan_change_not_supported`）；`CheckoutReturnPage`（新增 `?session=` 模式，每 3 次輪詢呼叫一次 confirm；`?order=` 模式保留給 Oen）；`ContractReviewPage`、`AccountPage`（顯示「付款進行中」；AccountPage 移除到期後開始／立即升級按鈕，保留提前終止）；`config.toml`
+- **`fulfill_checkout_session()` 行為**：鎖 Session 列（`FOR UPDATE`）＋會員 advisory lock；已 fulfilled → `already_fulfilled`；金額不符／已有未終止且未結束的 Service Period（含未來開始者）→ `rejected`（保留 TradeNo 供人工退款）；否則同交易建立 `paid` Order（`provider_checkout_ref`=MerchantTradeNo、`provider_ref`=TradeNo、`payment_method`、契約／方案／金額取自 Session；`payment_expires_at` 填付款確認時間，orders schema 不變）＋Service Period；`exclusion_violation` 轉為 `rejected`（不再發生 23P01 無限重試）；業務結果一律回傳 jsonb、不 raise。逾期（>30 分鐘）才付款的 Session，若會員當時無有效方案仍會開通
+- **人工退款清單**：`checkout_sessions where status = 'rejected'`（另有 `payment_events.note = 'paid_but_rejected:<reason>'`）
+- **已驗證（本機）**：frontend `npm run lint`、`npm run build` 通過；`deno check`／`deno lint`（受影響的 7 個 Edge Functions／shared）通過；以 PGlite（本機 Postgres）執行 migration 與 27 項 SQL 測試全數通過（建立／30 分鐘有效期／第二個 open Session 被擋／逾期後可重建／付款後建立 paid Order＋Service Period 欄位正確／重複呼叫冪等／雙分頁第二筆 rejected／金額不符／未來開始期間阻擋／exclusion_violation 回滾／RLS 只讀自己／一般會員無法呼叫 RPC／歷史 pending Order 不影響）；共用確認邏輯 11 項單元測試（stub QueryTradeInfo）通過；Session 付款表單 CheckMacValue 驗證通過
+- **TEST 部署（2026-10-12）**：
+  - `schema_checkout_sessions.sql` 已在 TEST Supabase（`ngznngqmbhxejkjbqomh`）執行成功（表、RLS 兩條 policy、兩個 RPC 僅 service_role 可執行）
+  - 已部署 Edge Functions：`confirm-checkout-session`（新，verify_jwt=true）、`ecpay-webhook`（verify_jwt=false）、`create-order-checkout`、`retry-order-payment`、`create-plan-change-checkout`；`oen-webhook`／`terminate-service-period`／`create-subscription-checkout` 未重新部署
+  - **部署方式**：工作樹中有與本次無關、未 commit 的 `_shared/oen.ts`（Oen subscription）等修改，且上述 Functions 會打包 `oen.ts`，因此改以 `git archive HEAD` 建立乾淨副本、僅放入本次檔案後部署（已比對副本與工作樹差異僅為無關修改），避免把無關 Oen 變更推上 TEST
+  - 前端：Vercel **Preview** `https://joti-u9os97gw1-jotiyoga.vercel.app`（同一乾淨副本；未部署 Production），bundle 已確認含新流程並指向 TEST Supabase
+  - TEST secrets：`ACTIVE_PAYMENT_PROVIDER=ecpay`（原為未設定）；`SITE_URL` 由 `frontend-oen-test.vercel.app` 改為上述 Preview（僅 TEST 專案；Oen 返回網址亦使用 `SITE_URL`，Oen 目前未啟用）
+- **測試前置（經授權）**：`+trial2` 原有上一輪 ECPay TEST 留下的有效 Service Period（至 2026-11-07），於 Preview「提前終止目前方案並退款」→ `terminated_at` 已設定；ECPay stage DoAction 回 `RtnCode=10000002 更新失敗.(error_amount_R)` → Order `refund_failed`（退款金額 289，屬可接受範圍；另見：stage 實際回應業務錯誤而非「不支援」，正式環境仍待驗證）。UI 在退款失敗時只顯示「Edge Function returned a non-2xx status code」，但終止實際已成功——文案待改善
+- **E2E 驗證通過（2026-10-12，`+trial2`，月方案 NT$333）**：
+  - Checkout Session `c692a9df-81a6-464d-92ac-840b769c8a5b`、MerchantTradeNo `J261012121305A52RF9R` → 使用者手動 ECPay TEST 刷卡成功
+  - Session：`fulfilled`，`order_id` 已填、`provider_ref`（TradeNo）`2610121213144946`、`payment_method=card`；建立 04:13:05 → 開通 04:17:36 UTC
+  - Order `ccea829a-87b2-4113-b5d8-d1857df32430`：付款確認時才建立，`status=paid`、333 TWD、`provider=ecpay`、`provider_checkout_ref`=MerchantTradeNo、`provider_ref`=TradeNo、`plan_code=monthly`、契約 `v1.0`（`contract_acceptance_id` 為該帳號最新一筆）、`payment_attempt=1`、`scheduled_service_start` 空
+  - Service Period `87655368-…`：monthly，2026-10-12 04:17:36 → 2026-11-12 04:17:36 UTC；全資料庫無未終止重疊期間
+  - payment_event `2610121213144946:1`：`verified`、RtnCode 1、TradeAmt 333、CustomField1=Session ID、SimulatePaid 0、`order_id` 對應；收到 → 處理完成約 0.7 秒
+  - 無重複：當日 Order 1 筆、Service Period 1 筆、`checkout_sessions` 全表 1 筆、payment_events 1 筆；6 筆舊 `pending_payment` Order 未被觸及
+  - 本次由 webhook 先完成開通；無 `confirm:*` 事件（回傳頁主動確認未自行開通，是否被呼叫無法從 DB 得知）
+- **尚未驗證**：webhook 晚到由 `confirm-checkout-session` 開通；回傳頁實際顯示；雙分頁重複付款 → `rejected`；有效期間內購買 → 409；逾 30 分鐘後付款；併發（兩連線同時建立／開通，僅以鎖設計保證）；全部尚未 commit
+- **已知前端缺口（非本次變更造成）**：`agree_to_contract()` 同意後即清除 pending review，而方案按鈕只在 ContractReviewPage 同意當下顯示——已完成契約同意、目前無有效方案的會員（如終止或到期後）在 UI 上**沒有購買入口**，再進入 `/contract-review` 會重新開始 3 天審閱。本次 E2E 經授權改由已登入的 Preview 分頁直接呼叫 `create-order-checkout`（與頁面相同的呼叫）並送出 ECPay 表單，未修改前端
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -353,6 +393,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 9. Plan Change（Step 10）尚缺一次透過 Oen 真實 hosted checkout 頁面的視覺化端到端刷卡驗證（見上方「Payment Rebuild — Step 10」小節已知限制）——待瀏覽器自動化環境問題排除，或改用其他方式驗證。
 10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
+11. **ECPay Checkout Session Flow（已部署 TEST、正常購買 E2E 通過，見同名小節）**：(a) commit（只含本次檔案）；(b) 補測：webhook 晚到由 confirm 開通、回傳頁顯示、雙分頁重複付款 → rejected、有效期間內購買 → 409；(c) 決定已同意契約會員的購買入口（前端缺口）；(d) 退款失敗時的提前終止 UI 文案。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=Preview，`+trial2` 有有效月方案至 2026-11-12。
 
 ---
 
@@ -371,10 +412,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **退款金流實際執行方式已解決**：Step 9 已實作並實測，呼叫 Oen 退款 API 原路退回（非人工處理），見上方「Payment Rebuild — Step 9」小節。
 - `refund_failed` 之後是否允許重新發起退款——Step 9 刻意維持 `refund_failed` 為 resting terminal state，未實作重試機制，仍待裁示。
 - **ECPay 待綠界確認**（已依官方文件查核更新，見「ECPay 官方文件查核」小節）：(1) 正式環境是否接受 `*.supabase.co`（前有 Cloudflare 代理）作為 ReturnURL；(2) ReturnURL 是否須與登記網站同網域、`payment.joti.yoga` 是否符合；(3)「主機 IP 鎖定」是否僅為選用；(4) 預收制線上課程可否以一般賣家申請、一般賣家可否使用 DoAction、收款額度、年方案是否適用遞延性服務履約保證；(5) 90／360 天起算點、超過 360 天有無其他退款管道、`Action=R` 的 `TotalAmount` 語意、關帳前可否部分退刷、自動關帳時間。
+- **ECPay Checkout Session Flow 仍待決策**（其餘已於 2026-10-12 裁示並實作，見同名小節）：(1) 契約與 `payment-legal-spec.md` 是否提及付款期限／待付款訂單（未逐條核對）；(2) 被 rejected 的付款如何通知會員、人工退款作業流程；(3) 退款後 rejected Session 是否需要記錄退款完成狀態；(4) 已完成契約同意、無有效方案的會員要從哪裡重新購買（目前 UI 無入口）；(5) TEST `ACTIVE_PAYMENT_PROVIDER`／`SITE_URL` 測試完是否還原。
 - **退款期限對既定退款規則的處理方式（經營／法律決策，待裁示）**：年方案超過 90 天的人工退刷流程、超過 360 天（主要為到期後開始）的退款方式、是否限制到期後開始的提前購買時間、契約是否需載明退款方式。
 
 ---
 
 ## Last Updated
 
-2026-10-10（ECPay 付款頁重用／付款重試實測結果更新）
+2026-10-12（ECPay Checkout Session Flow：TEST 部署＋E2E 驗證通過，未 commit）

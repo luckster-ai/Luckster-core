@@ -20,9 +20,16 @@
 // ordinary path (scheduled_service_start stays NULL, ordinary now()
 // start) -- this file does not pass or need any Plan-Change-specific
 // flag to that call.
+//
+// ECPay Checkout Session flow: Plan Change is not offered when ECPay is the
+// active provider -- refused up front, BEFORE step 1, so a member's period
+// is never terminated and refunded on the way to a purchase this path no
+// longer supports.
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/db.ts";
+import { activeProviderName } from "../_shared/paymentProviders.ts";
+import { ECPAY_PROVIDER_NAME } from "../_shared/ecpayAdapter.ts";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -39,6 +46,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   if (req.method !== "POST") {
     return json({ error: "method_not_allowed" }, 405);
+  }
+  if (activeProviderName() === ECPAY_PROVIDER_NAME) {
+    return json({ error: "plan_change_not_supported" }, 409);
   }
 
   const authHeader = req.headers.get("Authorization") ?? "";
