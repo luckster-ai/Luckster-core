@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../state/useAuth'
 import pricing from '../data/pricing'
+import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseEligibility'
 
 // Payment Readiness Implementation Sprint (2026-09).
 //
@@ -18,8 +20,29 @@ import pricing from '../data/pricing'
 // real, already-implemented next step instead of a non-functional "buy"
 // button: a signed-in visitor is sent to /contract-review (Step 4,
 // live), a signed-out visitor is sent to /login to start their Trial.
+//
+// Step 11.1 (Renewal Purchase Entry): a signed-in member who already has a
+// Contract Acceptance is sent to /account (where the plan buttons are)
+// instead -- /contract-review would otherwise be their first step into a
+// fresh 3-day review, which renewal does not require (契約第九條第五項). If
+// the acceptance state cannot be read, /account is used too, never the
+// review.
 function PricingPage() {
-  const { loading, user } = useAuth()
+  const { loading, user, profile } = useAuth()
+  // undefined = not loaded yet, null = could not be read
+  const [contractAccepted, setContractAccepted] = useState(undefined)
+
+  useEffect(() => {
+    if (loading || !user) return undefined
+
+    let cancelled = false
+    getContractAcceptanceState().then((accepted) => {
+      if (!cancelled) setContractAccepted(accepted)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [loading, user])
 
   return (
     <div className="pricing-page">
@@ -63,9 +86,14 @@ function PricingPage() {
       </section>
 
       <div className="pricing-cta">
-        {!loading && user && (
+        {!loading && user && contractAccepted === false && (
           <Link to="/contract-review" className="button">
             準備好了，開始契約審閱
+          </Link>
+        )}
+        {!loading && user && (contractAccepted === true || contractAccepted === null) && (
+          <Link to="/account" className="button">
+            {contractAccepted && canOfferPurchase(profile) ? '已完成契約同意，前往我的帳號購買' : '前往我的帳號'}
           </Link>
         )}
         {!loading && !user && (

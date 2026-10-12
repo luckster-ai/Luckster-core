@@ -10,7 +10,8 @@ import {
   MEMBERSHIP_STATUS
 } from '../utils/membershipStatus'
 import { formatVideoDuration } from '../utils/formatDuration'
-import { getOpenCheckoutSession } from '../utils/checkoutSession'
+import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseEligibility'
+import PlanPurchase from '../components/PlanPurchase'
 import { usePracticeHistory } from '../hooks/usePracticeHistory'
 import PracticeHistory from '../components/PracticeHistory'
 
@@ -64,15 +65,18 @@ function AccountPage() {
   const [planChangeError, setPlanChangeError] = useState(null)
   const [planChangeMessage, setPlanChangeMessage] = useState(null)
 
-  // ECPay Checkout Session flow: a purchase in progress (open, unexpired
-  // checkout session) is shown as "付款進行中". Display only.
-  const [openSession, setOpenSession] = useState(null)
+  // Step 11.1 -- Renewal Purchase Entry: a member who already accepted the
+  // contract and has no current / future-dated Service Period buys again
+  // here, without a new 3-day review (契約第九條第五項). PlanPurchase also
+  // shows "付款進行中" while an ECPay checkout session is open.
+  // undefined = not loaded yet, null = could not be read.
+  const [contractAccepted, setContractAccepted] = useState(undefined)
   useEffect(() => {
     if (loading || !user) return undefined
 
     let cancelled = false
-    getOpenCheckoutSession().then((session) => {
-      if (!cancelled) setOpenSession(session)
+    getContractAcceptanceState().then((accepted) => {
+      if (!cancelled) setContractAccepted(accepted)
     })
     return () => {
       cancelled = true
@@ -133,6 +137,8 @@ function AccountPage() {
       ? getTrialUsageSummary(profile)
       : null
 
+  const offerPurchase = canOfferPurchase(profile)
+
   const showSubscribeCta =
     SUBSCRIBE_ENABLED &&
     (status === MEMBERSHIP_STATUS.TRIAL || status === MEMBERSHIP_STATUS.TRIAL_EXPIRED)
@@ -174,13 +180,16 @@ function AccountPage() {
         </p>
       )}
 
-      {!activePeriod && openSession && (
-        <p>
-          <strong>付款進行中：</strong>
-          {PLAN_LABEL[openSession.plan_code] ?? openSession.plan_code}
-          。請在原付款頁完成付款；若已放棄付款，可於
-          {new Date(openSession.expires_at).toLocaleString('zh-TW')} 後重新購買。
-        </p>
+      {offerPurchase && contractAccepted === true && (
+        <div className="plan-change-section">
+          <h2>購買方案</h2>
+          <p>你已完成契約同意，可直接購買，不需要重新審閱契約。</p>
+          <PlanPurchase />
+        </div>
+      )}
+
+      {offerPurchase && contractAccepted === null && (
+        <p>目前無法確認契約同意狀態，請稍後重新整理頁面。</p>
       )}
 
       {/* Early termination (第十一條). Hidden once a next plan is already

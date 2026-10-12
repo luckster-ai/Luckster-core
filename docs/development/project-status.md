@@ -297,7 +297,33 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 無重複：當日 Order 1 筆、Service Period 1 筆、`checkout_sessions` 全表 1 筆、payment_events 1 筆；6 筆舊 `pending_payment` Order 未被觸及
   - 本次由 webhook 先完成開通；無 `confirm:*` 事件（回傳頁主動確認未自行開通，是否被呼叫無法從 DB 得知）
 - **尚未驗證**：webhook 晚到由 `confirm-checkout-session` 開通；回傳頁實際顯示；雙分頁重複付款 → `rejected`；有效期間內購買 → 409；逾 30 分鐘後付款；併發（兩連線同時建立／開通，僅以鎖設計保證）；全部尚未 commit
-- **已知前端缺口（非本次變更造成）**：`agree_to_contract()` 同意後即清除 pending review，而方案按鈕只在 ContractReviewPage 同意當下顯示——已完成契約同意、目前無有效方案的會員（如終止或到期後）在 UI 上**沒有購買入口**，再進入 `/contract-review` 會重新開始 3 天審閱。本次 E2E 經授權改由已登入的 Preview 分頁直接呼叫 `create-order-checkout`（與頁面相同的呼叫）並送出 ECPay 表單，未修改前端
+- **已知前端缺口（非本次變更造成；已由 Step 11.1 Renewal Purchase Entry 實作，見同名小節）**：`agree_to_contract()` 同意後即清除 pending review，而方案按鈕只在 ContractReviewPage 同意當下顯示——已完成契約同意、目前無有效方案的會員（如終止或到期後）在 UI 上**沒有購買入口**，再進入 `/contract-review` 會重新開始 3 天審閱。本次 E2E 經授權改由已登入的 Preview 分頁直接呼叫 `create-order-checkout`（與頁面相同的呼叫）並送出 ECPay 表單，未修改前端
+
+### Step 11.1 — Renewal Purchase Entry（2026-10-12，Implementation ＋ Preview 部署 ＋ TEST E2E 驗證通過 — 已 commit，未 push）
+- **目的**：補上 Checkout Session 小節所列的前端缺口——已完成契約同意、目前沒有有效或未開始 Service Period 的會員，可直接重新購買，不重新開始 3 天契約審閱（契約第九條第五項）
+- **只改前端**（後端已支援：`create-order-checkout` 只要求有契約同意紀錄，ECPay `create_checkout_session()` 另檢查無有效／未來期間與 open Session；SQL、Edge Functions、Payment Core、Membership 皆未修改）：
+  - 新增 `frontend/src/components/PlanPurchase.jsx`：自 ContractReviewPage 抽出的共用方案按鈕（`create-order-checkout` → `startProviderCheckout`、錯誤訊息、open Session 時顯示「付款進行中」），並加入購買前說明「月方案 NT$333，服務期間自付款確認起算 1 個月，不會自動續約。」與年方案對應說明
+  - 新增 `frontend/src/utils/purchaseEligibility.js`：`getContractAcceptanceState()`（讀自己的 `contract_acceptances`；讀取失敗回 `null`，呼叫端不得視為「未同意」）、`canOfferPurchase(profile)`（無有效／未來期間、非 admin、非 Legacy subscription 的 SUBSCRIBER）
+  - `AccountPage`：符合條件時顯示「購買方案」區塊（`PlanPurchase`）；原本獨立的「付款進行中」提示併入 `PlanPurchase`
+  - `ContractReviewPage`：一般模式下，已有契約同意者**不再呼叫 `start-contract-review`**（避免重新開始 3 天審閱），改顯示「購買方案／你已完成契約同意」並提供 `PlanPurchase`（已有方案或 admin 則導向我的帳號）；首購流程（審閱 → 同意 → 方案按鈕）改用 `PlanPurchase`，行為不變；reacceptance 模式不變
+  - `PricingPage`：已同意契約者按鈕改導向 `/account`（可購買時文字為「已完成契約同意，前往我的帳號購買」，否則「前往我的帳號」）；未同意者維持「準備好了，開始契約審閱」；讀取失敗時導向 `/account`，不導向審閱
+- **已知限制（未決規則，本輪不處理）**：新契約版本 `requires_reacceptance = true` 時的續購、基本契約依第十條終止後重新加入——目前任何既有同意紀錄皆視為有效
+- **驗證**：`npm run lint`、`npm run build` 通過；`canOfferPurchase()` 10 種會員狀態單元測試（Vite SSR 載入實際模組）全數通過；本機 dev server 以 `+trial2`（有有效月方案）實測：AccountPage 不顯示購買區塊、PricingPage 只顯示「前往我的帳號」、`/contract-review` 顯示「購買方案／已完成契約同意」且未開始新審閱（DB 確認 `profiles.review_*` 仍為 null、未新增 Session）
+- **Preview 部署**：`https://joti-3e82xtu9i-jotiyoga.vercel.app`（以 HEAD `b79151e` 乾淨副本＋本輪 5 個前端檔案與本文件部署，排除工作樹 10 個無關變更；未部署 Production）；TEST `SITE_URL` 已改為此 Preview（僅 TEST 專案）
+- **測試前置（經授權）**：`+trial2` 於新 Preview「提前終止目前方案並退款」→ Service Period `87655368-…` `terminated_at` 2026-10-12 05:11:44 UTC；退款金額 333（未滿 1 天，全額）；ECPay stage DoAction 回 `RtnCode=10000002 更新失敗.(error_amount_R)` → Order `ccea829a-…` `refund_failed`（已知、可接受）；契約同意紀錄 4 筆保留、未開始新審閱、無其他資料異動
+- **TEST E2E 第 1 次（未完成付款）**：AccountPage「購買方案」正確出現（會員狀態「免費體驗已結束」、含購買前說明）→ 月方案 → Session `45eb56a9-af16-4565-8455-6440cf281589`／MerchantTradeNo `J2610121316310MVHOB9` → ECPay 付款頁 13:16:32（台灣時間）開啟，付款頁閒置一段時間後送出卡號 → ECPay 回 **10300025「訂單已過期，請回到原廠商頁面重新操作」**。QueryTradeInfo：`TradeStatus=0`、無 PaymentDate；JOTI 端無 payment_event、無 Order／Service Period，Session 維持 `open`（30 分鐘後自然不再阻擋）；返回頁正確顯示「尚未收到付款結果……如果沒有完成付款，這次購買不會成立」。判斷為 ECPay 付款頁伺服器端逾時（官方文件未公開有效時間；過去成功付款皆於開頁後 2.5～4.5 分鐘內完成），非 JOTI 程式問題
+- **TEST E2E 第 2 次（通過）**：
+  - Session `4640a76e-d132-4e8f-9fb8-40a0c4836c42`、MerchantTradeNo `J26101213491142GMCMJ`、TradeNo `2610121349125166`；建立 05:49:11 → 開通 05:50:08 UTC；`fulfilled`、`payment_method=card`、`contract_acceptance_id` 沿用既有 `8494c887-…`（未重新審閱）
+  - Order `945a7ec6-e72f-45a6-9200-006162efe369`：付款確認時建立，`paid`、333 TWD、`ecpay`、`provider_checkout_ref`=MerchantTradeNo、`provider_ref`=TradeNo、monthly、`v1.0`、`payment_attempt=1`、`scheduled_service_start` 空
+  - Service Period `fcc11a1f-…`：monthly，2026-10-12 05:50:08 → 2026-11-12 05:50:08 UTC
+  - payment_event `2610121349125166:1`：`verified`、RtnCode 1、TradeAmt 333、CustomField1=Session ID、SimulatePaid 0、對應 Order；webhook 先開通（無 `confirm:*` 事件）
+  - 返回頁顯示「付款已確認，你的帳號狀態已更新。」
+  - 無重複／異常：新增 Order 1 筆（該交易對應 1 筆）、Service Period 1 筆、payment_event 1 筆；全資料庫無未終止重疊期間；`+trial2` 有效方案 1 筆、契約同意仍 4 筆、`review_presented_at` 仍為 null；6 筆舊 `pending_payment` Order 未觸及
+- **結論**：**Step 11.1 正常續購 E2E 已通過**——功能完成並經 TEST 驗證
+- **尚待處理（不影響 Step 11.1 本身，本次不處理）**：
+  - **ECPay 付款頁有效時間短於 JOTI 30 分鐘 Session**：付款頁過期後，會員回到 JOTI 仍會看到「付款進行中」直到 30 分鐘屆滿，期間無法重新購買——需向綠界確認付款頁有效時間（固定或閒置逾時、起算點），再決定是否調整 30 分鐘或補充文案
+  - Preview（`VITE_ENABLE_SUBSCRIBE=true`）的 AccountPage 同時顯示舊 Oen「訂閱 JOTI」（`/subscribe`）連結，與續購按鈕並列易混淆（既有遺留，非本輪造成）
+  - 未同意帳號的首購畫面未實際登入測試（程式路徑未變）；active plan 409、雙分頁重複付款仍未實測
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -393,7 +419,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 9. Plan Change（Step 10）尚缺一次透過 Oen 真實 hosted checkout 頁面的視覺化端到端刷卡驗證（見上方「Payment Rebuild — Step 10」小節已知限制）——待瀏覽器自動化環境問題排除，或改用其他方式驗證。
 10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
-11. **ECPay Checkout Session Flow（已部署 TEST、正常購買 E2E 通過，見同名小節）**：(a) commit（只含本次檔案）；(b) 補測：webhook 晚到由 confirm 開通、回傳頁顯示、雙分頁重複付款 → rejected、有效期間內購買 → 409；(c) 決定已同意契約會員的購買入口（前端缺口）；(d) 退款失敗時的提前終止 UI 文案。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=Preview，`+trial2` 有有效月方案至 2026-11-12。
+11. **ECPay Checkout Session Flow（已部署 TEST、正常購買 E2E 通過，見同名小節）**：(a) 已 commit／push（`b79151e`）；(b) 補測：webhook 晚到由 confirm 開通、回傳頁顯示、雙分頁重複付款 → rejected、有效期間內購買 → 409；(c) 已同意契約會員的購買入口——Step 11.1 已實作、TEST E2E 通過並 commit（未 push）；(d) 退款失敗時的提前終止 UI 文案。(e) 向綠界確認 AIO 信用卡付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) 移除或隱藏 AccountPage 舊「訂閱 JOTI」連結。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=Step 11.1 Preview（`joti-3e82xtu9i`），`+trial2` 有有效月方案至 2026-11-12 05:50 UTC。
 
 ---
 
@@ -412,11 +438,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **退款金流實際執行方式已解決**：Step 9 已實作並實測，呼叫 Oen 退款 API 原路退回（非人工處理），見上方「Payment Rebuild — Step 9」小節。
 - `refund_failed` 之後是否允許重新發起退款——Step 9 刻意維持 `refund_failed` 為 resting terminal state，未實作重試機制，仍待裁示。
 - **ECPay 待綠界確認**（已依官方文件查核更新，見「ECPay 官方文件查核」小節）：(1) 正式環境是否接受 `*.supabase.co`（前有 Cloudflare 代理）作為 ReturnURL；(2) ReturnURL 是否須與登記網站同網域、`payment.joti.yoga` 是否符合；(3)「主機 IP 鎖定」是否僅為選用；(4) 預收制線上課程可否以一般賣家申請、一般賣家可否使用 DoAction、收款額度、年方案是否適用遞延性服務履約保證；(5) 90／360 天起算點、超過 360 天有無其他退款管道、`Action=R` 的 `TotalAmount` 語意、關帳前可否部分退刷、自動關帳時間。
-- **ECPay Checkout Session Flow 仍待決策**（其餘已於 2026-10-12 裁示並實作，見同名小節）：(1) 契約與 `payment-legal-spec.md` 是否提及付款期限／待付款訂單（未逐條核對）；(2) 被 rejected 的付款如何通知會員、人工退款作業流程；(3) 退款後 rejected Session 是否需要記錄退款完成狀態；(4) 已完成契約同意、無有效方案的會員要從哪裡重新購買（目前 UI 無入口）；(5) TEST `ACTIVE_PAYMENT_PROVIDER`／`SITE_URL` 測試完是否還原。
+- **ECPay Checkout Session Flow 仍待決策**（其餘已於 2026-10-12 裁示並實作，見同名小節）：(1) 契約與 `payment-legal-spec.md` 是否提及付款期限／待付款訂單（未逐條核對）；(2) 被 rejected 的付款如何通知會員、人工退款作業流程；(3) 退款後 rejected Session 是否需要記錄退款完成狀態；(4) 已完成契約同意、無有效方案會員的購買入口——已於 Step 11.1 實作並 TEST E2E 通過（已解決）；(5) TEST `ACTIVE_PAYMENT_PROVIDER`／`SITE_URL` 測試完是否還原；(6) ECPay 付款頁有效時間（10300025「訂單已過期」）確認後，JOTI 30 分鐘 Session 規則與文案是否調整。
 - **退款期限對既定退款規則的處理方式（經營／法律決策，待裁示）**：年方案超過 90 天的人工退刷流程、超過 360 天（主要為到期後開始）的退款方式、是否限制到期後開始的提前購買時間、契約是否需載明退款方式。
 
 ---
 
 ## Last Updated
 
-2026-10-12（ECPay Checkout Session Flow：TEST 部署＋E2E 驗證通過，未 commit）
+2026-10-12（Step 11.1 Renewal Purchase Entry：Preview 部署＋TEST E2E 驗證通過）

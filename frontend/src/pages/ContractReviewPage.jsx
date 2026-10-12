@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAuth } from '../state/useAuth'
 import { supabase } from '../lib/supabaseClient'
 import { getContractContent } from '../utils/contractContent'
-import { startProviderCheckout } from '../utils/startProviderCheckout'
-import { CHECKOUT_ERROR_TEXT, getOpenCheckoutSession } from '../utils/checkoutSession'
+import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseEligibility'
+import PlanPurchase from '../components/PlanPurchase'
 
 // Payment Rebuild -- Step 4: Contract Review & Acceptance Flow.
 //
@@ -51,29 +51,23 @@ import { CHECKOUT_ERROR_TEXT, getOpenCheckoutSession } from '../utils/checkoutSe
 // JOTI, and deciding whether/when they should be prompted to buy again is
 // Step 8 (Membership/Entitlement) territory, not something to attach here.
 //
-// ECPay Checkout Session flow: if the member already has a purchase in
-// progress (an open, unexpired checkout session), the plan buttons are
-// replaced by a "付款進行中" notice -- no second purchase entry while one
-// is in progress. create-order-checkout enforces the same rule server-side.
-const CHECKOUT_PLANS = [
-  { code: 'monthly', label: '月方案 NT$333' },
-  { code: 'annual', label: '年方案 NT$3,333' }
-]
+// Step 11.1 (Renewal Purchase Entry): the plan buttons now live in the
+// shared components/PlanPurchase.jsx (same checkout flow, also used by
+// AccountPage). In 'initial' mode a member who ALREADY has a Contract
+// Acceptance is not put through start-contract-review again (that would
+// pin a fresh 3-day review, contrary to 契約第九條第五項 -- renewal does not
+// restart the review): the page shows 'accepted' and offers the plans
+// directly, unless the member currently has (or is scheduled to have) a
+// plan, or is an admin.
 
 function ContractReviewPage() {
-  const { loading, user } = useAuth()
+  const { loading, user, profile } = useAuth()
   const [searchParams] = useSearchParams()
   const mode = searchParams.get('mode') === 'reacceptance' ? 'reacceptance' : 'initial'
 
-  const [state, setState] = useState('loading') // loading | ready | agreeing | agreed | error
+  const [state, setState] = useState('loading') // loading | accepted | ready | agreeing | agreed | error
   const [review, setReview] = useState(null) // { contractVersion, presentedAt, reviewAvailableAt, contentIdentifier }
   const [message, setMessage] = useState(null)
-  // Separate from `state` above (which governs the Review/Agree flow) --
-  // checkout only ever starts after state === 'agreed', and a checkout
-  // failure should not reset the already-successful agreement state.
-  const [checkoutPlanCode, setCheckoutPlanCode] = useState(null) // which plan button is in flight, or null
-  const [checkoutError, setCheckoutError] = useState(null)
-  const [openSession, setOpenSession] = useState(null) // { id, plan_code, expires_at } or null
   // Derived from review.reviewAvailableAt, but Date.now() may only be
   // read inside an effect (not during render, per React's purity rule) --
   // recomputed on an interval so the button flips to enabled without
@@ -86,6 +80,20 @@ function ContractReviewPage() {
     let cancelled = false
 
     async function loadInitial() {
+      // Renewal (Step 11.1): an already-accepted member skips the review.
+      // An unreadable acceptance state is an error, never "not accepted".
+      const accepted = await getContractAcceptanceState()
+      if (cancelled) return
+      if (accepted === null) {
+        setState('error')
+        setMessage('無法確認契約同意狀態，請稍後重新整理頁面。')
+        return
+      }
+      if (accepted) {
+        setState('accepted')
+        return
+      }
+
       const { data, error } = await supabase.functions.invoke('start-contract-review', {
         body: {}
       })
@@ -158,18 +166,6 @@ function ContractReviewPage() {
     return () => clearInterval(timer)
   }, [mode, review?.reviewAvailableAt])
 
-  useEffect(() => {
-    if (state !== 'agreed' || mode !== 'initial') return undefined
-
-    let cancelled = false
-    getOpenCheckoutSession().then((session) => {
-      if (!cancelled) setOpenSession(session)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [state, mode])
-
   async function handleAgree() {
     setState('agreeing')
     setMessage(null)
@@ -190,31 +186,6 @@ function ContractReviewPage() {
     setState('agreed')
   }
 
-  async function handleCheckout(planCode) {
-    setCheckoutPlanCode(planCode)
-    setCheckoutError(null)
-
-    const { data, error } = await supabase.functions.invoke('create-order-checkout', {
-      body: { planCode }
-    })
-
-    if (error || data?.error || !data?.redirectUrl) {
-      setCheckoutPlanCode(null)
-      setCheckoutError(
-        CHECKOUT_ERROR_TEXT[data?.error] || data?.error || error?.message || '無法建立訂單，請稍後再試。'
-      )
-      if (data?.error === 'checkout_session_in_progress') {
-        getOpenCheckoutSession().then(setOpenSession)
-      }
-      return
-    }
-
-    // Full navigation (not react-router) -- the provider's hosted checkout
-    // page is an external origin, not a route inside this SPA. Redirect
-    // (Oen) or signed form POST (ECPay) -- see startProviderCheckout.
-    startProviderCheckout(data)
-  }
-
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
 
@@ -222,10 +193,35 @@ function ContractReviewPage() {
 
   return (
     <div className="auth-page">
-      <h1>{mode === 'reacceptance' ? '契約條款更新，請重新確認同意' : '契約審閱'}</h1>
+      <h1>
+        {mode === 'reacceptance'
+          ? '契約條款更新，請重新確認同意'
+          : state === 'accepted'
+            ? '購買方案'
+            : '契約審閱'}
+      </h1>
 
       {state === 'loading' && <p>載入中…</p>}
       {state === 'error' && <p>{message}</p>}
+
+      {state === 'accepted' && (
+        <div className="contract-review-checkout">
+          <p>
+            你已完成契約同意，續購不需要重新審閱契約（
+            <Link to="/legal/terms">查看會員服務契約</Link>）。
+          </p>
+          {canOfferPurchase(profile) ? (
+            <>
+              <p>選擇方案即可前往付款：</p>
+              <PlanPurchase />
+            </>
+          ) : (
+            <p>
+              你目前已有有效的方案，或此帳號不提供購買。<Link to="/account">前往我的帳號</Link>
+            </p>
+          )}
+        </div>
+      )}
 
       {review && (
         <>
@@ -256,34 +252,10 @@ function ContractReviewPage() {
             </button>
           )}
 
-          {state === 'agreed' && mode === 'initial' && openSession && (
-            <div className="contract-review-checkout">
-              <p>
-                付款進行中。請在原付款頁完成付款；若已放棄付款，可於
-                {new Date(openSession.expires_at).toLocaleString('zh-TW')} 後重新選擇方案。
-              </p>
-            </div>
-          )}
-
-          {state === 'agreed' && mode === 'initial' && !openSession && (
+          {state === 'agreed' && mode === 'initial' && (
             <div className="contract-review-checkout">
               <p>已完成同意，感謝您的審閱。選擇方案即可前往付款：</p>
-
-              {checkoutError && <p>{checkoutError}</p>}
-
-              <div className="pricing-cta">
-                {CHECKOUT_PLANS.map((plan) => (
-                  <button
-                    key={plan.code}
-                    type="button"
-                    className="button"
-                    onClick={() => handleCheckout(plan.code)}
-                    disabled={checkoutPlanCode !== null}
-                  >
-                    {checkoutPlanCode === plan.code ? '前往付款頁…' : plan.label}
-                  </button>
-                ))}
-              </div>
+              <PlanPurchase />
             </div>
           )}
 
