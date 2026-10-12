@@ -12,6 +12,7 @@ import {
 import { formatVideoDuration } from '../utils/formatDuration'
 import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseEligibility'
 import PlanPurchase from '../components/PlanPurchase'
+import { classifyTerminationResult, readTerminationBody } from '../utils/terminationResult'
 import { usePracticeHistory } from '../hooks/usePracticeHistory'
 import PracticeHistory from '../components/PracticeHistory'
 
@@ -85,6 +86,13 @@ function AccountPage() {
 
   // Generic 第十一條 early termination -- for a member who wants to stop and
   // be refunded. Reuses Step 9's terminate-service-period unchanged.
+  //
+  // Step 11.2 -- Refund Failure UI: the termination itself can succeed even
+  // when the provider refund then fails (502 { status: 'refund_failed' }),
+  // so the result is classified from the response body (read from
+  // error.context on a non-2xx) rather than treating every non-2xx as
+  // "nothing happened". Terminated / unknown outcomes reload the profile so
+  // the page shows the real plan state; definite failures do not.
   async function handleEarlyTermination() {
     if (!activePeriod) return
     setPlanChangeBusy('terminate')
@@ -95,14 +103,16 @@ function AccountPage() {
       body: { servicePeriodId: activePeriod.id }
     })
 
-    setPlanChangeBusy(null)
-    if (error || data?.error) {
-      setPlanChangeError(data?.error || error?.message || '提前終止失敗，請稍後再試。')
-      return
-    }
+    const body = await readTerminationBody(data, error)
+    const result = classifyTerminationResult(body)
 
-    setPlanChangeMessage('已提前終止目前方案，退款將依契約第十一條辦理。')
-    await refreshProfile()
+    setPlanChangeBusy(null)
+    if (result.kind === 'refunded' || result.kind === 'refund_pending') {
+      setPlanChangeMessage(result.message)
+    } else {
+      setPlanChangeError(result.message)
+    }
+    if (result.refresh) await refreshProfile()
   }
 
   // refreshProfile is a fresh function identity every AuthProvider render
@@ -180,6 +190,12 @@ function AccountPage() {
         </p>
       )}
 
+      {/* Outside the "目前方案" block below on purpose: after a successful
+          termination refreshProfile() removes the active period, and with
+          it that block -- the result message must stay visible. */}
+      {planChangeError && <p className="plan-change-error">{planChangeError}</p>}
+      {planChangeMessage && <p>{planChangeMessage}</p>}
+
       {offerPurchase && contractAccepted === true && (
         <div className="plan-change-section">
           <h2>購買方案</h2>
@@ -197,9 +213,6 @@ function AccountPage() {
       {activePeriod && !upcomingPeriod && (
         <div className="plan-change-section">
           <h2>目前方案</h2>
-
-          {planChangeError && <p className="plan-change-error">{planChangeError}</p>}
-          {planChangeMessage && <p>{planChangeMessage}</p>}
 
           <button
             type="button"

@@ -325,6 +325,22 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - Preview（`VITE_ENABLE_SUBSCRIBE=true`）的 AccountPage 同時顯示舊 Oen「訂閱 JOTI」（`/subscribe`）連結，與續購按鈕並列易混淆（既有遺留，非本輪造成）
   - 未同意帳號的首購畫面未實際登入測試（程式路徑未變）；active plan 409、雙分頁重複付款仍未實測
 
+### Step 11.2 — Refund Failure UI（2026-10-12，Implementation ＋ Preview 部署 ＋ TEST 驗證通過 — 已 commit，未 push）
+- **問題**：`terminate-service-period` 分兩階段——(1) 終止＋退款計算於同一交易 commit；(2) 之後才呼叫 ECPay／Oen 退款。退款失敗時回 502 `{ status: 'refund_failed' }`，但方案**已終止**。原 AccountPage 只看 `data?.error || error?.message`（non-2xx 時 supabase-js 的 `data` 為 null），一律顯示「Edge Function returned a non-2xx status code」，且失敗路徑不 `refreshProfile()`，畫面仍顯示有效方案；另外結果訊息位於「目前方案」區塊內，`refreshProfile()` 後區塊消失、訊息也隨之不見（成功路徑亦受影響）
+- **Implementation（僅前端）**：
+  - 新增 `frontend/src/utils/terminationResult.js`：`readTerminationBody()`（成功讀 `data`；non-2xx 從 `error.context` 讀 JSON；網路錯誤／非 JSON 回 `null`）、`classifyTerminationResult()`（分類為 `refunded`／`refund_pending`／`not_terminated`／`unknown`，並決定是否重新載入）
+  - `frontend/src/pages/AccountPage.jsx`：`handleEarlyTermination` 依分類顯示中文訊息；**方案已終止（`refunded`、`refund_processing`／`refund_failed`、`termination_recorded_*`、`refund_*_mark_failed`）與結果不明時呼叫 `refreshProfile()`**，畫面立即反映沒有有效方案；確定未終止（`termination_failed`、`order_not_eligible_for_refund`、400／401／405）不重新載入；409 `service_period_not_eligible`（通常為畫面過時）會重新載入；結果訊息移到「目前方案」區塊外，重新載入後仍可見
+  - 文案不承諾尚未建立的人工退款流程（僅「如有疑問，請與我們聯絡」），不顯示英文錯誤代碼
+- **未修改**：退款 backend、SQL、Edge Function、既有退款流程
+- **驗證**：`npm run lint`、`npm run build` 通過；單元測試 **18/18** 通過（以 supabase-js 實際的 `FunctionsHttpError`／`FunctionsFetchError`／`FunctionsRelayError` 包真實 Response，涵蓋後端全部回應、網路錯誤、閘道錯誤、非 JSON、無法辨識的 200）
+- **Preview 部署**：`https://joti-qqjjaovrr-jotiyoga.vercel.app`（以 HEAD `24755b6` 乾淨副本＋`AccountPage.jsx`、`terminationResult.js`、本文件部署，排除工作樹 10 個無關變更；未部署 Production；bundle 已確認含 11.2 文案）
+- **TEST 驗證通過（2026-10-12，`+trial2`）**：於新 Preview 對有效月方案（Service Period `fcc11a1f-…`／Order `945a7ec6-…`）執行「提前終止目前方案並退款」（一次請求）
+  - 前端：顯示「已提前終止目前方案，退款金額已依契約第十一條計算，但退款尚未完成。如有疑問，請與我們聯絡。」；未出現英文錯誤；會員狀態立即由「付費會員」更新為「免費體驗已結束」，「目前方案」區塊與終止按鈕消失、訊息仍可見，並出現 Step 11.1「購買方案」區塊
+  - 後端回 502 `refund_failed`，前端由 `error.context` 讀出並歸類為「已終止、退款未完成」＋ `refreshProfile()`，符合設計
+  - DB：`terminated_at` 2026-10-12 07:25:38 UTC；Order `refund_failed`、`refund_amount` 333（未滿 1 天，全額）、`refund_processed_at` 為空、`provider_refund_error` = ECPay stage `RtnCode=10000002 更新失敗.(error_amount_R)`（已知、預期）；`+trial2` 有效方案 0、契約同意仍 4 筆；Order／Service Period／Session／payment_events 筆數不變（11／4／3／10）
+- **結論**：**Step 11.2 TEST 驗證通過**，無需修改程式
+- **已知限制（不屬於 11.2）**：Supabase 閘道層自行回的 401（JWT 失效）會歸為「結果不明」（只重新載入）；退款金額／退款狀態顯示、終止前確認步驟依決策另行處理；AccountPage 仍顯示舊「訂閱 JOTI」（`/subscribe`）連結（已列待處理）
+
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -419,7 +435,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 9. Plan Change（Step 10）尚缺一次透過 Oen 真實 hosted checkout 頁面的視覺化端到端刷卡驗證（見上方「Payment Rebuild — Step 10」小節已知限制）——待瀏覽器自動化環境問題排除，或改用其他方式驗證。
 10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
-11. **ECPay Checkout Session Flow（已部署 TEST、正常購買 E2E 通過，見同名小節）**：(a) 已 commit／push（`b79151e`）；(b) 補測：webhook 晚到由 confirm 開通、回傳頁顯示、雙分頁重複付款 → rejected、有效期間內購買 → 409；(c) 已同意契約會員的購買入口——Step 11.1 已實作、TEST E2E 通過並 commit（未 push）；(d) 退款失敗時的提前終止 UI 文案。(e) 向綠界確認 AIO 信用卡付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) 移除或隱藏 AccountPage 舊「訂閱 JOTI」連結。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=Step 11.1 Preview（`joti-3e82xtu9i`），`+trial2` 有有效月方案至 2026-11-12 05:50 UTC。
+11. **ECPay Checkout Session Flow（已部署 TEST、正常購買 E2E 通過，見同名小節）**：(a) 已 commit／push（`b79151e`）；(b) 補測：webhook 晚到由 confirm 開通、回傳頁顯示、雙分頁重複付款 → rejected、有效期間內購買 → 409；(c) 已同意契約會員的購買入口——Step 11.1 已實作、TEST E2E 通過並 commit（未 push）；(d) 退款失敗時的提前終止 UI 文案——Step 11.2 已實作、TEST 驗證通過並 commit（未 push）；(e) 向綠界確認 AIO 信用卡付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) 移除或隱藏 AccountPage 舊「訂閱 JOTI」連結。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=Step 11.1 Preview（`joti-3e82xtu9i`），`+trial2` 目前無有效方案（Step 11.2 TEST 已提前終止，Order `945a7ec6-…` 為 `refund_failed`）。
 
 ---
 
@@ -445,4 +461,4 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Last Updated
 
-2026-10-12（Step 11.1 Renewal Purchase Entry：Preview 部署＋TEST E2E 驗證通過）
+2026-10-12（Step 11.2 Refund Failure UI：Preview 部署＋TEST 驗證通過）
