@@ -2401,6 +2401,10 @@ footer {
   font-weight: bold;
 }
 
+.auth-field label + label {
+  margin-top: 16px;
+}
+
 .auth-field input {
   display: block;
   width: 100%;

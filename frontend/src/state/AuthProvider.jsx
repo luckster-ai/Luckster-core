@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { AuthContext } from './authContext'
+import { AUTH_CALLBACK_PATH, AuthContext, RESET_PASSWORD_PATH } from './authContext'
+
+function redirectUrl(path) {
+  return `${window.location.origin}${path}`
+}
 
 // Membership / Authentication Foundation (Phase 2A).
 //
@@ -24,6 +29,13 @@ export function AuthProvider({ children }) {
   // synchronously for that branch -- only the real async getSession()
   // path (inside a .then callback, not the effect body itself) does.
   const [loading, setLoading] = useState(() => Boolean(supabase))
+  // True from the PASSWORD_RECOVERY event (member arrived via a reset
+  // password email link) until the new password is saved or they sign
+  // out. That link signs the member in, so without this they would just
+  // land on /account with no chance to set a new password.
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const loadProfile = useCallback(async (userId) => {
     if (!supabase || !userId) {
@@ -69,7 +81,9 @@ export function AuthProvider({ children }) {
       setLoading(false)
     })
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, current) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, current) => {
+      if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true)
+      if (event === 'SIGNED_OUT') setIsPasswordRecovery(false)
       setSession(current)
       if (current?.user) {
         loadProfile(current.user.id)
@@ -84,21 +98,70 @@ export function AuthProvider({ children }) {
     }
   }, [loadProfile])
 
+  // The reset email normally redirects straight to RESET_PASSWORD_PATH,
+  // but if that URL isn't in the project's Redirect URLs allow list
+  // Supabase falls back to Site URL -- send the member to the reset page
+  // from wherever the recovery session actually landed.
+  useEffect(() => {
+    if (isPasswordRecovery && location.pathname !== RESET_PASSWORD_PATH) {
+      navigate(RESET_PASSWORD_PATH, { replace: true })
+    }
+  }, [isPasswordRecovery, location.pathname, navigate])
+
   const value = {
     isConfigured: Boolean(supabase),
     user: session?.user || null,
     profile,
     loading,
+    isPasswordRecovery,
 
-    // Passwordless by design (Phase 2A): no password to set, leak, or
-    // reset -- lower onboarding friction and one less thing to secure.
-    async sendMagicLink(email) {
+    // Email + Password (replaces the Phase 2A email magic link). With
+    // "Confirm email" enabled on the Supabase project, signUp returns no
+    // session -- the member must click the verification email, which
+    // lands on AUTH_CALLBACK_PATH like Google OAuth does.
+    async signUpWithPassword(email, password) {
       if (!supabase) return { error: new Error('尚未設定登入服務') }
 
-      return supabase.auth.signInWithOtp({
+      return supabase.auth.signUp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+        password,
+        options: { emailRedirectTo: redirectUrl(AUTH_CALLBACK_PATH) }
       })
+    },
+
+    async signInWithPassword(email, password) {
+      if (!supabase) return { error: new Error('尚未設定登入服務') }
+
+      return supabase.auth.signInWithPassword({ email, password })
+    },
+
+    async resendSignupConfirmation(email) {
+      if (!supabase) return { error: new Error('尚未設定登入服務') }
+
+      return supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: redirectUrl(AUTH_CALLBACK_PATH) }
+      })
+    },
+
+    async sendPasswordResetEmail(email) {
+      if (!supabase) return { error: new Error('尚未設定登入服務') }
+
+      return supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl(RESET_PASSWORD_PATH)
+      })
+    },
+
+    // Requires a session -- the recovery session from the reset email
+    // link, or an already signed-in member.
+    async updatePassword(password) {
+      if (!supabase) return { error: new Error('尚未設定登入服務') }
+
+      const result = await supabase.auth.updateUser({ password })
+      if (!result.error) setIsPasswordRecovery(false)
+
+      return result
     },
 
     async signInWithGoogle() {
@@ -106,7 +169,7 @@ export function AuthProvider({ children }) {
 
       return supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: redirectUrl(AUTH_CALLBACK_PATH) }
       })
     },
 

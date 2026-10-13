@@ -14,6 +14,7 @@ import PracticePlayerPage from '../pages/PracticePlayerPage'
 import LoginPage from '../pages/LoginPage'
 import AccountPage from '../pages/AccountPage'
 import AuthCallbackPage from '../pages/AuthCallbackPage'
+import ResetPasswordPage from '../pages/ResetPasswordPage'
 import SubscribePage from '../pages/SubscribePage'
 import ContractReviewPage from '../pages/ContractReviewPage'
 import CheckoutReturnPage from '../pages/CheckoutReturnPage'
@@ -127,6 +128,11 @@ function AppRouter() {
       <Route
         path="/auth/callback"
         element={<AuthCallbackPage />}
+      />
+
+      <Route
+        path="/auth/reset-password"
+        element={<ResetPasswordPage />}
       />
 
       <Route
