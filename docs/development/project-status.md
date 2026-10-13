@@ -15,7 +15,7 @@
 目前重心：
 
 1. **Payment Readiness / Pre-submission preparation**——金流平台現況：**Oen 已通過相關申請／審核**；**ECPay（綠界）與 PAYUNi 目前正在申請中**，兩者現階段皆為候選平台，用於申請、測試與比較整合便利性、費用、操作方式及實際測試結果，**最終採用哪一個金流平台尚未決定**，不應視 ECPay 或 PAYUNi 為已確定採用之平台。以下為網站審核準備工作：Gap Analysis、Implementation Sprint（Pricing/Legal/Footer/CTA）、Legal/Contract Publication Refinement（Discovery＋Implementation）、Production Publication Readiness Audit＋Polish、Vercel Deployment Architecture 修正、Mobile Legal/Contract RWD 修正、Contract Terminology Consistency（Audit＋2 輪 Implementation）**皆已完成**。**已知阻塞項**：TEST Supabase 專案 Auth 的 `Site URL`／`Redirect URLs` 設定過期，目前連到 TEST 專案的環境點擊登入都會被導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`——根因已診斷確認，**修正需要到 Supabase Dashboard 手動操作**，尚未執行；Production 將使用獨立新專案，另行設定（見 Next Steps、Blockers）。這一整批工作已於 `f22f412` commit 並 push。
-2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作已完成，**Plan Change 自己的協調流程與前端（Step 10）亦已完成並在 TEST Supabase 專案實測成功**（Eligibility Gate、After-Expiry 排程、Immediate Change 協調、Overlap 防護回歸驗證，詳見下方對應小節）。**Step 11（Production Readiness）已開始**：11.1 Renewal Purchase Entry、11.2 Refund Failure UI 已完成並經 TEST 驗證（已 commit，未 push）；Production 基礎設施 Discovery（Supabase Organization／方案／Region、Free 閒置暫停與 health check、Auth 登入方式）已完成並確立決策，**Production 環境建置尚未開始**（見下方「Step 11 — Production Readiness Discovery」小節）。**ECPay TEST 整合已完成並端到端驗證通過**（AIO formPost checkout → `ecpay-webhook` → QueryTradeInfo 回查 → `apply_order_payment()` → Service Period → 會員開通，詳見下方「ECPay Integration」小節）；退款程式已實作但尚未完成正式環境驗證；**最終金流平台仍未決定**。
+2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——ECPay／PAYUNi 仍在申請審核中。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作已完成，**Plan Change 自己的協調流程與前端（Step 10）亦已完成並在 TEST Supabase 專案實測成功**（Eligibility Gate、After-Expiry 排程、Immediate Change 協調、Overlap 防護回歸驗證，詳見下方對應小節）。**Step 11（Production Readiness）已開始**：11.1 Renewal Purchase Entry、11.2 Refund Failure UI 已完成並經 TEST 驗證（已 commit／push）；TEST Auth（Email + Password + Google、移除 Magic Link）已完成並經 TEST 驗證（`2acade2`，已 push）；Production 基礎設施 Discovery（Supabase Organization／方案／Region、Free 閒置暫停與 health check、Auth 登入方式）已完成並確立決策，**Production 環境建置進行中**：Production Supabase Project、Database Schema、4 個官方 Practices 匯入已完成（見下方「Step 11 — Production Readiness Discovery」與「Step 11 — Production Environment Build」小節）。**ECPay TEST 整合已完成並端到端驗證通過**（AIO formPost checkout → `ecpay-webhook` → QueryTradeInfo 回查 → `apply_order_payment()` → Service Period → 會員開通，詳見下方「ECPay Integration」小節）；退款程式已實作但尚未完成正式環境驗證；**最終金流平台仍未決定**。
 3. 內容擴充（新增 Module）
 4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
@@ -94,7 +94,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ### 核心學習系統
 - Foundation Library（30 個 Lesson）、Module Library（22 個 Module）、Practice Hub、Practice Player（含 Resume / Progress，Phase 5E）
 - Practice Builder：Custom（`/practice/build`）與 Admin Official（`/admin/practices`）共用同一套組課元件與驗證邏輯
-- Auth / Membership：Google / Email 登入（目前 Email 為 Magic Link；Production 已決定改為 Email + Password + Google、移除 Magic Link，尚未實作，見「Step 11 — Production Readiness Discovery」）、Trial（30 天或 30 影片小時，先到者結束）、Admin / Subscriber / Trial / Trial Expired 四種狀態、entitlement gating（訪客與過期試用僅 10 秒試看）
+- Auth / Membership：Google / Email + Password 登入（2026-10-13 起取代 Magic Link，TEST 已驗證；Production Auth 設定尚未進行，見「Step 11 — TEST Auth：Email + Password」）、Trial（30 天或 30 影片小時，先到者結束）、Admin / Subscriber / Trial / Trial Expired 四種狀態、entitlement gating（訪客與過期試用僅 10 秒試看）
 
 ### Bunny 影片遷移
 - 全部 22 個 Module 已從 YouTube 遷移到 Bunny，`videoReference`（provider + URL）與 `.md` 的 `Primary Video` 完全同步
@@ -300,7 +300,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **尚未驗證**：webhook 晚到由 `confirm-checkout-session` 開通；回傳頁實際顯示；雙分頁重複付款 → `rejected`；有效期間內購買 → 409；逾 30 分鐘後付款；併發（兩連線同時建立／開通，僅以鎖設計保證）；全部尚未 commit
 - **已知前端缺口（非本次變更造成；已由 Step 11.1 Renewal Purchase Entry 實作，見同名小節）**：`agree_to_contract()` 同意後即清除 pending review，而方案按鈕只在 ContractReviewPage 同意當下顯示——已完成契約同意、目前無有效方案的會員（如終止或到期後）在 UI 上**沒有購買入口**，再進入 `/contract-review` 會重新開始 3 天審閱。本次 E2E 經授權改由已登入的 Preview 分頁直接呼叫 `create-order-checkout`（與頁面相同的呼叫）並送出 ECPay 表單，未修改前端
 
-### Step 11.1 — Renewal Purchase Entry（2026-10-12，Implementation ＋ Preview 部署 ＋ TEST E2E 驗證通過 — 已 commit，未 push）
+### Step 11.1 — Renewal Purchase Entry（2026-10-12，Implementation ＋ Preview 部署 ＋ TEST E2E 驗證通過 — 已 commit／push）
 - **目的**：補上 Checkout Session 小節所列的前端缺口——已完成契約同意、目前沒有有效或未開始 Service Period 的會員，可直接重新購買，不重新開始 3 天契約審閱（契約第九條第五項）
 - **只改前端**（後端已支援：`create-order-checkout` 只要求有契約同意紀錄，ECPay `create_checkout_session()` 另檢查無有效／未來期間與 open Session；SQL、Edge Functions、Payment Core、Membership 皆未修改）：
   - 新增 `frontend/src/components/PlanPurchase.jsx`：自 ContractReviewPage 抽出的共用方案按鈕（`create-order-checkout` → `startProviderCheckout`、錯誤訊息、open Session 時顯示「付款進行中」），並加入購買前說明「月方案 NT$333，服務期間自付款確認起算 1 個月，不會自動續約。」與年方案對應說明
@@ -326,7 +326,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - Preview（`VITE_ENABLE_SUBSCRIBE=true`）的 AccountPage 同時顯示舊 Oen「訂閱 JOTI」（`/subscribe`）連結，與續購按鈕並列易混淆（既有遺留，非本輪造成）
   - 未同意帳號的首購畫面未實際登入測試（程式路徑未變）；active plan 409、雙分頁重複付款仍未實測
 
-### Step 11.2 — Refund Failure UI（2026-10-12，Implementation ＋ Preview 部署 ＋ TEST 驗證通過 — 已 commit，未 push）
+### Step 11.2 — Refund Failure UI（2026-10-12，Implementation ＋ Preview 部署 ＋ TEST 驗證通過 — 已 commit／push）
 - **問題**：`terminate-service-period` 分兩階段——(1) 終止＋退款計算於同一交易 commit；(2) 之後才呼叫 ECPay／Oen 退款。退款失敗時回 502 `{ status: 'refund_failed' }`，但方案**已終止**。原 AccountPage 只看 `data?.error || error?.message`（non-2xx 時 supabase-js 的 `data` 為 null），一律顯示「Edge Function returned a non-2xx status code」，且失敗路徑不 `refreshProfile()`，畫面仍顯示有效方案；另外結果訊息位於「目前方案」區塊內，`refreshProfile()` 後區塊消失、訊息也隨之不見（成功路徑亦受影響）
 - **Implementation（僅前端）**：
   - 新增 `frontend/src/utils/terminationResult.js`：`readTerminationBody()`（成功讀 `data`；non-2xx 從 `error.context` 讀 JSON；網路錯誤／非 JSON 回 `null`）、`classifyTerminationResult()`（分類為 `refunded`／`refund_pending`／`not_terminated`／`unknown`，並決定是否重新載入）
@@ -359,7 +359,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 4 個 Practice **原樣遷移**，不因本次遷移修改 slug（含 P002 `SaTaNaMa-30min-meditation` 的大寫）
   - P002–P004 的空白 `description` 暫不處理，列為後續內容工作
   - Production `contract_versions.effective_at` **採正式上線時間**，不沿用 TEST 的 2026-09-20；**正式上線時間尚未決定（待決）**
-  - **Auth**：Production 採 **Email + Password + Google**；**不保留 Magic Link**。此為已決定方向，**尚未實作**——目前前端 `AuthProvider.jsx` 仍為 `signInWithOtp()`（Magic Link）＋ `signInWithOAuth()`（Google），尚無 Email + Password 登入
+  - **Auth**：Production 採 **Email + Password + Google**；**不保留 Magic Link**。前端已於 `2acade2` 實作並經 TEST 驗證（見「Step 11 — TEST Auth：Email + Password」）；Production Auth 設定尚未進行
   - **SMTP**：Production **需要自訂 SMTP**（供應商尚未選定）
   - **Health check**：Free 方案閒置會被暫停，health check **列入 Production 基礎設施**（具體機制尚未設計）
   - **網域**：正式網域 **`joti.yoga`**，待 Production 準備完成後再綁定（見上方「Final Website Domain」）
@@ -367,7 +367,67 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 目前 ECPay `ReturnURL` 使用 Supabase Edge Function URL（`*.supabase.co`），TEST 已實際收到通知；正式環境是否接受仍待綠界確認（見「ECPay 官方文件查核」Q1／Q2）
   - `payment.joti.yoga` 為既有 fallback（未建立），需要 Supabase **Custom Domain**——此為**付費 add-on，Free 方案無法使用**，且每專案僅能綁一個網域
   - 因此：若綠界確認可用 `*.supabase.co`，與「先 Free、正式付款前升 Pro」不衝突；若綠界要求自有網域，則 Production 需先升級付費方案並加購 Custom Domain 才能採用 fallback，升級時間點可能需要提前——**是否提前、如何處理尚未決定**，待綠界回覆後再裁示
-- **尚未開始**：Production Organization／專案建立、schema 套用、`contract_versions`／official practices 遷移、Auth（Email + Password 實作、移除 Magic Link、Google OAuth 設定）、SMTP 設定、health check、Production Edge Functions／secrets、Vercel Production 指向 Production Supabase、`joti.yoga` 綁定
+- **建置進度**：見下方「Step 11 — Production Environment Build」
+
+### Step 11 — Production Environment Build（2026-10-13，進行中）
+- **Production Supabase Project 已建立**：Organization `JOTI Production`（`hswfrhidxshnmfkceogs`，與 TEST 的 `joti` Organization 分開）；Project `joti-production`，**Project Ref `qhyfpabyqksuwjzshjtu`**，Region `ap-southeast-1`（Singapore），Plan **Free**；Postgres 17.11
+  - 以 CLI 建立；本機 `supabase/.temp` 仍 link 到 TEST（`ngznngqmbhxejkjbqomh`），未執行 `supabase link`——**所有 Production CLI 操作一律明確帶 `--linked --project-ref qhyfpabyqksuwjzshjtu`**，不帶 ref 的指令會打到 TEST
+  - DB password 由使用者自行保管（不在 repo）
+- **Production Database Schema 已建立並驗證**：
+  - 依序執行 repo 14 份 SQL 全部成功：`schema.sql` → `learning_progress` → `module_usage` → `practice_activity` → `practice_notes` → `practices` → `practice_resume` → `subscriptions` → `contract_review` → `payment_core` → `membership_entitlement` → `refund` → `plan_change` → `checkout_sessions`（未執行任何 `*_ROLLBACK.sql`，未修改 SQL）
+  - 結果：14 張表（全部 RLS enabled）、6 個 extension（含 `btree_gist`）、21 個 public 函式、2 個 trigger（`auth.users.on_auth_user_created`、`profiles.protect_profile_system_fields_trigger`）
+  - **與 TEST 結構比對一致**（read-only 盤點 columns／constraints／indexes／RLS policies／table grants／triggers／函式 security definer、`search_path`、執行權限）；6 個早期函式原始碼 hash 不同，經確認僅為 TEST 函式內含 CR 換行（Windows 貼入 SQL Editor），去除 CR 後完全相同，無邏輯差異
+  - **TEST 額外的 `ensure_rls` event trigger（`rls_auto_enable()`）不納入 Production**——不在 repo 內，推測為 TEST 建立時 Dashboard 選項；**採用 A：維持 repo 為 Schema Source of Truth**，新表照既有慣例於 SQL 中明確啟用 RLS
+- **4 個官方 published Practices 已匯入 Production**：自 TEST read-only 取出原始資料，直接產生 `json_populate_recordset` INSERT 匯入（未手抄欄位值）；P001–P004 與 TEST 原始資料**逐列 md5 一致**（含 `created_at`／`updated_at`、slug、空白 description 原樣）；Production `practices` 目前**只有這 4 筆**；以 Production anon key 經 REST 讀取（前台路徑）驗證 anon + RLS 可正確讀到 4 筆 published
+- **目前資料狀態**：Production **沒有 Auth users**、測試交易或其他 TEST 資料（`auth.users` 與其餘 13 張 public 表皆為 0 筆）
+- **`contract_versions` 尚未建立**：v1.0 待正式上線時間確定後再建立（`effective_at` 採正式上線時間，見上方「遷移資料決策」）
+- **Admin 尚未建立**：待 Production Auth 完成、第一個正式帳號建立後再設定 `profiles.role = 'admin'`
+- **Auth Email 決策（2026-10-13）**：Production Auth Email 採 **Resend Free**，寄件網域 **`auth.joti.yoga`**；目前不使用 Brevo；行銷／CRM Email 另行評估。Resend 尚未註冊、DNS 尚未設定
+- **Production Auth 待設定**：見下方「Step 11 — Production Auth Discovery」
+- **尚未開始**：Production Auth 設定（見上一點；前端 Email + Password 已完成，見「Step 11 — TEST Auth：Email + Password」）、Resend／`auth.joti.yoga` DNS、health check、Production Edge Functions／secrets、Vercel Production 指向 Production Supabase、`joti.yoga` 綁定
+
+### Step 11 — TEST Auth：Email + Password（2026-10-13，Implementation ＋ Preview 部署 ＋ TEST 驗證通過 — 已 commit／push）
+- **範圍**：只改前端；DB schema、Edge Functions、`supabase/config.toml` 皆未修改（`handle_new_user` trigger 不受登入方式影響）；Google OAuth 設定未變更
+- **Implementation**：
+  - `state/AuthProvider.jsx`：移除 `sendMagicLink()`（`signInWithOtp`）；新增 `signUpWithPassword`／`signInWithPassword`／`resendSignupConfirmation`／`sendPasswordResetEmail`／`updatePassword`；`PASSWORD_RECOVERY` 時設定 `isPasswordRecovery` 並導向重設密碼頁（即使重設信連結落在其他頁面）
+  - `state/authContext.js`：新增 `AUTH_CALLBACK_PATH`（`/auth/callback`）／`RESET_PASSWORD_PATH`（`/auth/reset-password`）
+  - `pages/LoginPage.jsx`：登入／註冊（`?mode=signup`）／忘記密碼（`?mode=forgot`）三種模式；註冊後提示到信箱驗證；未驗證帳號可重新寄送驗證信；Google 按鈕保留
+  - `pages/ResetPasswordPage.jsx`（新增）＋ route `/auth/reset-password`：以重設信建立的 session 設定新密碼；連結過期／無效時提示重新申請
+  - `pages/AuthCallbackPage.jsx`：驗證連結過期／無效時顯示說明頁，不再無聲導回 `/login`；recovery session 不會被導向 `/account`
+  - `utils/authErrors.js`（新增）：Supabase 錯誤碼 → 會員看得懂的中文訊息（不顯示英文錯誤）、密碼檢查、信件連結回跳錯誤解析；`App.css` 僅新增表單欄位間距
+- **Password policy**：最低 8 字元，不強制大小寫／數字／符號——前端 `MIN_PASSWORD_LENGTH = 8`；TEST Supabase `Minimum password length` 已由使用者於 Dashboard 從 6 改為 8
+- **驗證**：
+  - `npm run lint`／`npm run build` 通過；`authErrors` 單元測試 25/25 通過；Login／Reset／Callback 10 種狀態 render 檢查正常；對 TEST 以不存在帳號呼叫 `signInWithPassword` 正確得到 `invalid_credentials`
+  - **Preview 部署**：`https://joti-hgv403rht-jotiyoga.vercel.app`（以 `git archive 2acade2` 乾淨副本部署，Vercel Preview 環境、指向 TEST Supabase；未部署 Production）
+  - **使用者於 Preview 實際驗證成功**：Email + Password 註冊、Email 驗證、登入、忘記密碼／重設密碼、Google 登入
+  - **Server-side 密碼規則驗證**：遠端設定 `auth.minimum_password_length = 8`；以新測試 Email 直接呼叫 Auth API、7 字元密碼註冊 → `weak_password`（HTTP 422，`reasons: ["length"]`），`auth.users` 前後皆 5 筆、未建立使用者
+- **Git checkpoint**：`2acade2` — "Implement TEST email password authentication"，**已 commit + push 到 `origin/main`**（連同先前未 push 的 `24755b6`／`0324c2d`／`8d9ec00`）
+- **已知限制／後續（本次未處理）**：TEST 仍使用 Supabase 內建寄信（只寄 Organization 成員信箱、每小時 2 封）；TEST `Site URL` 仍為 `localhost:4190`（僅在 redirect 不在允許清單時作為 fallback）；Supabase 信件範本仍為預設英文；首頁「免費體驗」CTA 進入登入模式（是否直接帶 `?mode=signup` 待決定）；開啟 Confirm email 時 Trial 自 `signUp` 起算；`joti-privacy-policy.md` 第 18 行「Email 驗證登入」與新流程不一致（法律文件，待另行處理）；AccountPage 尚無「變更密碼」入口；信件安全掃描器預先點擊連結導致失效的風險待實際觀察
+
+### Step 11 — Production Auth Discovery（2026-10-13，Discovery only — 尚未設定）
+- **範圍**：以 `supabase config pull --dry-run --project-ref qhyfpabyqksuwjzshjtu`（未寫入 `config.toml`）、`auth.users` 計數、Vercel 環境變數名稱／部署別名與線上 bundle 進行 read-only 盤點；未修改任何 Supabase／Vercel／DNS／Resend 設定，未建立 key
+- **已確認決策**：Email + Password + Google；移除 Magic Link；最低密碼長度 8、不強制字元種類；Email verification 開啟；會員 MFA UI 暫不需要
+- **Production Supabase Auth 現況**：
+
+  | 項目 | 現況 | 目標 |
+  |---|---|---|
+  | Email provider／Confirm email | 開啟／開啟 | ✅ 已符合 |
+  | Minimum password length | 6（預設） | 改為 8 |
+  | Password requirements／Secure password change | 無／關閉 | ✅ 維持 |
+  | Site URL | `http://localhost:3000` | `https://joti-jotiyoga.vercel.app`（`joti.yoga` 綁定後再改） |
+  | Redirect URLs | 空 | 精確路徑 `https://joti-jotiyoga.vercel.app/auth/callback`、`https://joti-jotiyoga.vercel.app/auth/reset-password`（不放 Preview 萬用字元、localhost 或舊 `frontend-…` 別名；Preview 續用 TEST） |
+  | SMTP | 未設定（Supabase 內建寄信） | Resend：`smtp.resend.com:465`、帳號 `resend`、密碼為 Resend API key、寄件人 `JOTI <no-reply@auth.joti.yoga>`（待確認） |
+  | 信件範本 | 預設英文 | 中文 Confirm sign up／Reset password，網址一律用 `{{ .ConfirmationURL }}` 等變數 |
+  | Google provider | 未啟用 | 填入 Production OAuth Client ID／Secret |
+  | MFA（TOTP） | 開啟（預設） | 不處理（App 無 MFA UI） |
+  | SMS／Twilio | 標示開啟、無帳號資料（與 TEST 相同） | 不影響，可日後關閉 |
+  | Auth users | 0 | — |
+
+- **Vercel Production 現況**：正式別名 **`https://joti-jotiyoga.vercel.app`**（另有舊別名 `frontend-ebon-seven-40.vercel.app`）；線上為 13 天前的**舊版程式**（仍為 Magic Link）且 bundle 指向 **TEST Supabase**；Production 環境的 `VITE_SUPABASE_URL`／`VITE_SUPABASE_ANON_KEY` 為 39 天前設定，依 bundle 判斷指向 TEST。前端 `2acade2` 已具備 Email + Password + Google，不需再改程式
+- **Google OAuth 準備（使用者於 Google Cloud Console 操作）**：Web application OAuth Client；Authorized JavaScript origins `https://joti-jotiyoga.vercel.app`；Authorized redirect URI `https://qhyfpabyqksuwjzshjtu.supabase.co/auth/v1/callback`（官方建議自 Supabase Dashboard Google provider 頁面複製）；Scopes `openid`／email／profile；Branding（App 名稱、支援信箱、首頁、`/legal/privacy`、`/legal/terms`；上傳 Logo 需品牌驗證，約數個工作天）；Audience 發布狀態須為 **In production**（停在 Testing 時僅測試名單可登入）；同意畫面將顯示 `qhyfpabyqksuwjzshjtu.supabase.co`（自訂網域需 Pro 加購 Custom Domain，初期接受）
+- **Blockers**：(1) Resend 未註冊、`auth.joti.yoga` DNS 未設定——完成前一般會員收不到驗證信／重設密碼信，Email 註冊實際不可用（Google 登入不受影響）；(2) 尚無指向 Production Supabase 的前端（Vercel Production 為舊版且連 TEST）；(3) Google OAuth Production Client 未建立；(4) 非 Auth 但影響上線：health check 未上線、`contract_versions` v1.0 未建立（契約審閱流程在 Production 會失敗）、隱私權政策需加入 Resend 並修正第 18 行
+- **待決定**：(1) Site URL 採 `https://joti-jotiyoga.vercel.app`；(2) Google OAuth 使用既有（TEST Client 所在）GCP 專案或另開 Production 專用 GCP 專案；(3) 切換 Vercel Production 前的 Production Auth 測試方式——方案 1（建議）：以 `vercel deploy --build-env` 部署僅該次 build 指向 Production Supabase 的 Preview，暫時加入 Production Redirect URLs／Google origins，測完移除；方案 2：直接切換 Vercel Production 後於正式網址測試；(4) Resend 寄送區域（建議東京 `ap-northeast-1`，建立後不可直接更改）、寄件地址／名稱、DMARC `rua` 收件信箱；(5) Production Email 註冊是否先維持開啟（前端未上線、anon key 未公開，風險低）
+- **建議順序**：決定上述事項 → 使用者處理 Resend／Cloudflare DNS 與 Google Cloud OAuth（可並行）→ Supabase Production 先設定密碼長度 8、Site URL、Redirect URLs（不需等 SMTP）→ Resend 驗證完成後設定 SMTP 與中文範本、Google Client 建立後填入 provider → 依待決定 (3) 部署前端並以使用者正式帳號完成 Production Auth 測試（註冊、驗證信、登入、忘記／重設密碼、Google、7 字元密碼被拒），之後將該帳號設為 admin
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -453,11 +513,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Next Steps
 
-1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`／`Redirect URLs`**：影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
-2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。目前待處理：`24755b6`（Step 11.1）與 `0324c2d`（Step 11.2）已 commit、**尚未 push**（`main` 領先 `origin/main` 2 個 commit），push 時機待使用者指示。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。
-3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：先產出建置計畫（尚未實作）——獨立 Organization／Singapore 專案（Free）建立、schema 套用、`contract_versions` 與 4 個 official practices 遷移、Auth（Email + Password + Google、移除 Magic Link、`Site URL`／`Redirect URLs`）、自訂 SMTP、health check、Production Edge Functions／secrets；之後再以已確認正確的部署方式（repo root、Root Directory=`frontend`）部署 Vercel Production 並指向 Production Supabase，最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
+1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`**（2026-10-13 更新：Redirect URLs 已含 `https://joti-*-jotiyoga.vercel.app/**`，Preview 上 Email + Password／驗證信／重設密碼／Google 登入已實測成功，不再阻塞 Preview 登入；`Site URL` 仍為 `localhost:4190`，僅作為 fallback；本機開發若要測重設密碼，`http://localhost:5173/auth/reset-password` 尚未加入允許清單）：原記載如下——影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
+2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。
+3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入（見「Step 11 — Production Environment Build」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Production Auth 設定（`Minimum password length` 8、`Site URL`／`Redirect URLs`、Resend SMTP／`auth.joti.yoga`、中文信件範本、Google OAuth）、health check、Production Edge Functions／secrets；之後再以已確認正確的部署方式（repo root、Root Directory=`frontend`）部署 Vercel Production 並指向 Production Supabase，最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
 4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。ECPay TEST 整合已完成（見「ECPay Integration」小節）。
-5. Step 11（Production Readiness）已開始：11.1、11.2 已完成；Production 基礎設施 Discovery 已完成並確立決策；Production 建置見第 3 項（子步驟編號待排定）。
+5. Step 11（Production Readiness）已開始：11.1、11.2 已完成；Production 基礎設施 Discovery 已完成並確立決策；Production 建置進行中，見第 3 項（子步驟編號待排定）。
 6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
 7. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
@@ -469,11 +529,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Blockers
 
-- **TEST Supabase 專案 Auth `Site URL`／`Redirect URLs` 過期**：目前會導致連到 TEST 專案的環境點擊登入都被導向 `localhost:4190` 並失敗。需要使用者本人到 Supabase Dashboard 手動更新，AI 無法代為修改外部服務設定。這是目前唯一會直接阻塞「會員實際完成登入」的問題，詳見上方「登入導向 localhost 問題」小節。**2026-10-01 已有第一手重現證據**（見同小節）：即使 `emailRedirectTo` 明確指定正確網址，TEST 專案實際寄出的 Magic Link，`redirect_to` 仍是 `localhost:4190`，不再只是根因推論。此項僅針對 TEST 專案；Production 改用獨立專案後不沿用此設定。
-- **Production Supabase 尚未建立**：Production 專案（獨立 Organization、Singapore、Free）、Auth（Email + Password + Google）、`Site URL`／`Redirect URLs`、自訂 SMTP、health check 皆尚未建置；建立 Organization／專案、Google OAuth 憑證、SMTP 供應商帳號等需使用者本人操作。在此完成前，Vercel Production 無法改指向 Production Supabase，`joti.yoga` 亦依決策延後綁定。
+- **TEST Supabase 專案 Auth `Site URL` 過期**（2026-10-13 更新：**已不阻塞 Preview 登入**——Redirect URLs 已含 Preview 萬用字元，Email + Password／Google 登入已於 Preview 實測成功；`Site URL` 仍為 `localhost:4190`，只在 redirect 不在允許清單時作為 fallback，仍建議修正）。原記載：目前會導致連到 TEST 專案的環境點擊登入都被導向 `localhost:4190` 並失敗。需要使用者本人到 Supabase Dashboard 手動更新，AI 無法代為修改外部服務設定。這是目前唯一會直接阻塞「會員實際完成登入」的問題，詳見上方「登入導向 localhost 問題」小節。**2026-10-01 已有第一手重現證據**（見同小節）：即使 `emailRedirectTo` 明確指定正確網址，TEST 專案實際寄出的 Magic Link，`redirect_to` 仍是 `localhost:4190`，不再只是根因推論。此項僅針對 TEST 專案；Production 改用獨立專案後不沿用此設定。
+- **Production Supabase 尚未完成建置**：Production 專案（`qhyfpabyqksuwjzshjtu`）、Database Schema 與 4 個官方 Practices 已完成；Production Auth 設定（`Minimum password length` 8、`Site URL`／`Redirect URLs`、Resend SMTP／`auth.joti.yoga`、中文信件範本、Google OAuth）與 health check 尚未建置（前端 Email + Password 已完成）（Free 專案閒置可能被暫停，health check 宜盡早上線）；Google OAuth 憑證、SMTP 供應商帳號等需使用者本人操作。在此完成前，Vercel Production 無法改指向 Production Supabase，`joti.yoga` 亦依決策延後綁定。
 - **固定 IP proxy PoC** 需要建立第三方服務帳號（含免費試用），此步驟需使用者本人操作，AI 無法代為建立帳號或輸入付款資訊。
 - **新 Warm Up Module** 需要先把來源影片上傳到 Bunny 才能繼續（非程式碼工作，需人工操作 Bunny Dashboard）。
-- Production Vercel 部署與目前 `main` 分支程式碼是否同步：**根因已找到**（見上方「Vercel Deployment Architecture」小節，過去 CLI 部署方式不會帶到 `docs/`），但實際 Production 尚未用正確方式重新部署，目前 Production 內容仍是落後版本；依 Production Readiness 決策，正式重新部署排在 Production Supabase 建置之後。
+- Production Vercel 部署與目前 `main` 分支程式碼是否同步：**根因已找到**（見上方「Vercel Deployment Architecture」小節，過去 CLI 部署方式不會帶到 `docs/`），但實際 Production 尚未用正確方式重新部署，目前 Production 內容仍是落後版本；依 Production Readiness 決策，正式重新部署排在 Production Supabase 建置之後。2026-10-13 確認：Production 正式別名為 `https://joti-jotiyoga.vercel.app`，線上仍為舊版（Magic Link）且連到 TEST Supabase。
 
 ## Open Questions（法律／商業模型，待決）
 
@@ -490,4 +550,4 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Last Updated
 
-2026-10-13（記錄 Step 11 Production Readiness Discovery 決策；整理 Step 11 狀態、TEST／Production Auth blocker、正式網域與過時的 Next Steps；TEST DB 遷移資料核對結果與遷移資料決策）
+2026-10-13（記錄 Step 11 Production Readiness Discovery 決策；整理 Step 11 狀態、TEST／Production Auth blocker、正式網域與過時的 Next Steps；TEST DB 遷移資料核對結果與遷移資料決策；Production Project 建立、Database Schema 建立與驗證、4 個官方 Practices 匯入；TEST Auth Email + Password 完成（`2acade2`）、TEST 最低密碼長度 8、Auth Email 採 Resend／`auth.joti.yoga`；Production Auth Discovery）
