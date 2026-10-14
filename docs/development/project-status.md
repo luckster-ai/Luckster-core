@@ -382,7 +382,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **目前資料狀態**：Production **沒有 Auth users**、測試交易或其他 TEST 資料（`auth.users` 與其餘 13 張 public 表皆為 0 筆）
 - **`contract_versions` 尚未建立**：v1.0 待正式上線時間確定後再建立（`effective_at` 採正式上線時間，見上方「遷移資料決策」）
 - **Admin 尚未建立**：待 Production Auth 完成、第一個正式帳號建立後再設定 `profiles.role = 'admin'`
-- **Auth Email 決策（2026-10-13）**：Production Auth Email 採 **Resend Free**，寄件網域 **`auth.joti.yoga`**；目前不使用 Brevo；行銷／CRM Email 另行評估。Resend 尚未註冊、DNS 尚未設定
+- **Auth Email 決策（2026-10-13）**：Production Auth Email 採 **Resend Free**，寄件網域 **`auth.joti.yoga`**；目前不使用 Brevo；行銷／CRM Email 另行評估。**2026-10-14 Resend 網域 `auth.joti.yoga` 已 Verified**（見下方「Step 11 — Production Auth Email（Resend）網域驗證」）；API Key、Production Supabase Auth SMTP 尚未設定
 - **Production Auth 待設定**：見下方「Step 11 — Production Auth Discovery」
 - **Health Check 已上線（2026-10-14）**：GitHub Actions workflow `.github/workflows/supabase-keepalive.yml`（`fb15510`，已 push 到 `origin/main`），workflow 已啟用
   - **用途**：對 Production Supabase `practices` endpoint（`/rest/v1/practices?select=id&limit=1`）發出唯讀 API request（anon + RLS，只讀 published），降低 Free Plan 因閒置而自動 pause 的風險；只能降低、不能保證（官方未公開活動門檻，僅升級 Pro 可完全避免）；不改 schema、不寫入資料
@@ -391,7 +391,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **驗證**：已手動執行一次，結果 Success；失敗時由 GitHub 寄送通知
   - **通知**：Supabase 暫停警告信寄給 Organization Owner——`JOTI Production` 唯一成員 `luckster.ai.workspace@gmail.com`（Owner），已確認可正常收信
   - **注意**：repo 為 public，連續 60 天無 commit 時 GitHub 會自動停用排程
-- **尚未開始**：Production Auth 設定（見上一點；前端 Email + Password 已完成，見「Step 11 — TEST Auth：Email + Password」）、Resend／`auth.joti.yoga` DNS、Production Edge Functions／secrets、Vercel Production 指向 Production Supabase、`joti.yoga` 綁定
+- **尚未開始**：Production Auth 設定（見上一點；前端 Email + Password 已完成，見「Step 11 — TEST Auth：Email + Password」）、Production Edge Functions／secrets、Vercel Production 指向 Production Supabase、`joti.yoga` 綁定
 
 ### Step 11 — TEST Auth：Email + Password（2026-10-13，Implementation ＋ Preview 部署 ＋ TEST 驗證通過 — 已 commit／push）
 - **範圍**：只改前端；DB schema、Edge Functions、`supabase/config.toml` 皆未修改（`handle_new_user` trigger 不受登入方式影響）；Google OAuth 設定未變更
@@ -449,6 +449,14 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **尚缺**：Resend 帳號／網域／API Key；Cloudflare DNS 紀錄；Supabase Production SMTP 與 Rate Limits；中文範本；（與 SMTP 無關）最低密碼長度 8、Site URL、Redirect URLs；上線前隱私權政策加入 Resend 並修正第 18 行
 - **建議順序**：決定待定事項 → Supabase Production 先設定最低密碼長度 8、Site URL、Redirect URLs（不需等 SMTP）→ 使用者註冊 Resend、新增 `auth.joti.yoga`、於 Cloudflare 加紀錄並驗證 → read-only 確認 DNS 生效 → 使用者建立 Production 專用 API Key（最小權限、限定 `auth.joti.yoga`）並填入 Supabase SMTP → 擬定中文範本供審核後貼入 Dashboard → 之後以臨時 Vercel Preview 進行 Production Auth 實測
 - **待決定**：(1) Resend 寄送區域（建議東京 `ap-northeast-1`，建立後不可直接更改）；(2) Sender name；(3) DMARC `rua` 收件信箱；(4) Reply-To 處理方式（建議範本註明請勿回覆＋客服信箱）；(5) 範本 HTML 是否納入 repo 版本管理；(6) TEST 是否也接 Resend（另開子網域，與 Production 共用每日 100 封額度）
+
+### Step 11 — Production Auth Email（Resend）網域驗證（2026-10-14，已完成 — API Key／SMTP 尚未設定）
+- **網域**：Resend Production Auth Email 使用寄件網域 **`auth.joti.yoga`**；Region **Tokyo（`ap-northeast-1`）**
+- **SPF CNAME Host 修正**：初次設定時 SPF CNAME 的 Host 誤設為 `resend.auth`，Resend 判定 `Missing SPF records`（狀態由 Pending 轉為 Partially Failed）；經 **Resend Support 確認正確 Host 為 `rsend.auth`**。已於 Cloudflare 新增 `rsend.auth.joti.yoga` → `rsend-apne1.forge.rmta.net`（CNAME，**DNS only**），並**刪除舊的錯誤 `resend.auth` CNAME**
+- **驗證結果**：DKIM（`resend._domainkey.auth`）、`send.auth`、`rsend.auth` **均已 Verified**；Resend Domain Status 為 **`Verified`**，Resend 頁面確認 domain ready to send emails
+- **DMARC**：`_dmarc.joti.yoga` TXT `v=DMARC1; p=none;`（`rua` 暫不設定）
+- **尚未進行**：**尚未建立 Resend API Key**；**尚未設定 Production Supabase Auth SMTP**（Rate Limits、中文信件範本亦未設定）
+- **下一步（2026-10-15 繼續）**：建立 Resend API Key（Production 專用、最小權限、限定 `auth.joti.yoga`）→ 設定 Production Supabase Auth SMTP
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -536,7 +544,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`**（2026-10-13 更新：Redirect URLs 已含 `https://joti-*-jotiyoga.vercel.app/**`，Preview 上 Email + Password／驗證信／重設密碼／Google 登入已實測成功，不再阻塞 Preview 登入；`Site URL` 仍為 `localhost:4190`，僅作為 fallback；本機開發若要測重設密碼，`http://localhost:5173/auth/reset-password` 尚未加入允許清單）：原記載如下——影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
 2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。
-3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）（見「Step 11 — Production Environment Build」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Production Auth 設定（`Minimum password length` 8、`Site URL`／`Redirect URLs`、Resend SMTP／`auth.joti.yoga`、中文信件範本、Google OAuth）、Production Edge Functions／secrets；之後再以已確認正確的部署方式（repo root、Root Directory=`frontend`）部署 Vercel Production 並指向 Production Supabase，最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
+3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth Email（Resend）網域驗證」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Production Auth 設定（`Minimum password length` 8、`Site URL`／`Redirect URLs`、Resend API Key → Production Supabase Auth SMTP（下一步）、中文信件範本、Google OAuth）、Production Edge Functions／secrets；之後再以已確認正確的部署方式（repo root、Root Directory=`frontend`）部署 Vercel Production 並指向 Production Supabase，最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
 4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。ECPay TEST 整合已完成（見「ECPay Integration」小節）。
 5. Step 11（Production Readiness）已開始：11.1、11.2 已完成；Production 基礎設施 Discovery 已完成並確立決策；Production 建置進行中，見第 3 項（子步驟編號待排定）。
 6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
@@ -551,7 +559,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ## Blockers
 
 - **TEST Supabase 專案 Auth `Site URL` 過期**（2026-10-13 更新：**已不阻塞 Preview 登入**——Redirect URLs 已含 Preview 萬用字元，Email + Password／Google 登入已於 Preview 實測成功；`Site URL` 仍為 `localhost:4190`，只在 redirect 不在允許清單時作為 fallback，仍建議修正）。原記載：目前會導致連到 TEST 專案的環境點擊登入都被導向 `localhost:4190` 並失敗。需要使用者本人到 Supabase Dashboard 手動更新，AI 無法代為修改外部服務設定。這是目前唯一會直接阻塞「會員實際完成登入」的問題，詳見上方「登入導向 localhost 問題」小節。**2026-10-01 已有第一手重現證據**（見同小節）：即使 `emailRedirectTo` 明確指定正確網址，TEST 專案實際寄出的 Magic Link，`redirect_to` 仍是 `localhost:4190`，不再只是根因推論。此項僅針對 TEST 專案；Production 改用獨立專案後不沿用此設定。
-- **Production Supabase 尚未完成建置**：Production 專案（`qhyfpabyqksuwjzshjtu`）、Database Schema、4 個官方 Practices 與 health check（2026-10-14 上線）已完成；Production Auth 設定（`Minimum password length` 8、`Site URL`／`Redirect URLs`、Resend SMTP／`auth.joti.yoga`、中文信件範本、Google OAuth）尚未完成（前端 Email + Password 已完成）；Google OAuth 憑證、SMTP 供應商帳號等需使用者本人操作。在此完成前，Vercel Production 無法改指向 Production Supabase，`joti.yoga` 亦依決策延後綁定。
+- **Production Supabase 尚未完成建置**：Production 專案（`qhyfpabyqksuwjzshjtu`）、Database Schema、4 個官方 Practices 與 health check（2026-10-14 上線）已完成，Resend `auth.joti.yoga` 網域已 Verified（2026-10-14）；Production Auth 設定（`Minimum password length` 8、`Site URL`／`Redirect URLs`、Resend API Key／Production Supabase Auth SMTP、中文信件範本、Google OAuth）尚未完成（前端 Email + Password 已完成）；Google OAuth 憑證、SMTP 供應商帳號等需使用者本人操作。在此完成前，Vercel Production 無法改指向 Production Supabase，`joti.yoga` 亦依決策延後綁定。
 - **固定 IP proxy PoC** 需要建立第三方服務帳號（含免費試用），此步驟需使用者本人操作，AI 無法代為建立帳號或輸入付款資訊。
 - **新 Warm Up Module** 需要先把來源影片上傳到 Bunny 才能繼續（非程式碼工作，需人工操作 Bunny Dashboard）。
 - Production Vercel 部署與目前 `main` 分支程式碼是否同步：**根因已找到**（見上方「Vercel Deployment Architecture」小節，過去 CLI 部署方式不會帶到 `docs/`），但實際 Production 尚未用正確方式重新部署，目前 Production 內容仍是落後版本；依 Production Readiness 決策，正式重新部署排在 Production Supabase 建置之後。2026-10-13 確認：Production 正式別名為 `https://joti-jotiyoga.vercel.app`，線上仍為舊版（Magic Link）且連到 TEST Supabase。
@@ -570,6 +578,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-14（Resend `auth.joti.yoga` 網域 Verified：SPF CNAME Host 由 `resend.auth` 修正為 `rsend.auth`；API Key／SMTP 待 2026-10-15 繼續）
 
 2026-10-14（Production Supabase Health Check 上線：GitHub Actions keep-alive workflow `fb15510`）
 
