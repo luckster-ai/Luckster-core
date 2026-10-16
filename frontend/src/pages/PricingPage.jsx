@@ -27,13 +27,21 @@ import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseE
 // fresh 3-day review, which renewal does not require (契約第九條第五項). If
 // the acceptance state cannot be read, /account is used too, never the
 // review.
+//
+// Step 11 (Production Purchase Entry): the contract review / checkout flow
+// is shown only when VITE_ENABLE_PURCHASE === 'true' (set on Preview for
+// TEST). Unset (Production, until payments launch) a signed-in member gets
+// a "not open yet" note and /account instead of /contract-review, and the
+// acceptance state is not read.
+const PURCHASE_ENABLED = import.meta.env.VITE_ENABLE_PURCHASE === 'true'
+
 function PricingPage() {
   const { loading, user, profile } = useAuth()
   // undefined = not loaded yet, null = could not be read
   const [contractAccepted, setContractAccepted] = useState(undefined)
 
   useEffect(() => {
-    if (loading || !user) return undefined
+    if (!PURCHASE_ENABLED || loading || !user) return undefined
 
     let cancelled = false
     getContractAcceptanceState().then((accepted) => {
@@ -85,15 +93,27 @@ function PricingPage() {
         <Link to="/legal/refund">完整退款計算方式見退款政策 →</Link>
       </section>
 
+      {!PURCHASE_ENABLED && !loading && user && (
+        <section className="pricing-note-section">
+          <h2>付費方案</h2>
+          <p>付費方案即將開放，目前可先使用免費體驗。</p>
+        </section>
+      )}
+
       <div className="pricing-cta">
-        {!loading && user && contractAccepted === false && (
+        {PURCHASE_ENABLED && !loading && user && contractAccepted === false && (
           <Link to="/contract-review" className="button">
             準備好了，開始契約審閱
           </Link>
         )}
-        {!loading && user && (contractAccepted === true || contractAccepted === null) && (
+        {PURCHASE_ENABLED && !loading && user && (contractAccepted === true || contractAccepted === null) && (
           <Link to="/account" className="button">
             {contractAccepted && canOfferPurchase(profile) ? '已完成契約同意，前往我的帳號購買' : '前往我的帳號'}
+          </Link>
+        )}
+        {!PURCHASE_ENABLED && !loading && user && (
+          <Link to="/account" className="button">
+            前往我的帳號
           </Link>
         )}
         {!loading && !user && (

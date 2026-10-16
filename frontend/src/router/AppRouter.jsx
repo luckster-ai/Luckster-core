@@ -32,6 +32,12 @@ import NotFoundPage from '../pages/NotFoundPage'
 // all and the page is unreachable.
 const SUBSCRIBE_ENABLED = import.meta.env.VITE_ENABLE_SUBSCRIBE === 'true'
 
+// Step 11 (Production Purchase Entry): the contract review / checkout flow
+// (/contract-review, /checkout/return) is registered only when
+// VITE_ENABLE_PURCHASE === 'true' (set on Preview for TEST). Unset --
+// Production until payments launch -- both paths fall through to 404.
+const PURCHASE_ENABLED = import.meta.env.VITE_ENABLE_PURCHASE === 'true'
+
 function AppRouter() {
   return (
     <Routes>
@@ -100,15 +106,19 @@ function AppRouter() {
         element={<AccountPage />}
       />
 
-      <Route
-        path="/contract-review"
-        element={<ContractReviewPage />}
-      />
+      {PURCHASE_ENABLED && (
+        <Route
+          path="/contract-review"
+          element={<ContractReviewPage />}
+        />
+      )}
 
-      <Route
-        path="/checkout/return"
-        element={<CheckoutReturnPage />}
-      />
+      {PURCHASE_ENABLED && (
+        <Route
+          path="/checkout/return"
+          element={<CheckoutReturnPage />}
+        />
+      )}
 
       <Route
         path="/pricing"

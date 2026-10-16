@@ -37,6 +37,10 @@ const PLAN_LABEL = {
 // every other environment SUBSCRIBE_ENABLED is false and none of this
 // renders, so AccountPage is unchanged for current users.
 const SUBSCRIBE_ENABLED = import.meta.env.VITE_ENABLE_SUBSCRIBE === 'true'
+// Step 11 (Production Purchase Entry): the renewal 購買方案 block is shown
+// only when VITE_ENABLE_PURCHASE === 'true' (see AppRouter). Early
+// termination below is not gated.
+const PURCHASE_ENABLED = import.meta.env.VITE_ENABLE_PURCHASE === 'true'
 const MAX_ACTIVATION_POLLS = 10
 
 // Membership / Authentication Foundation (Phase 2A). Trial usage/
@@ -196,7 +200,7 @@ function AccountPage() {
       {planChangeError && <p className="plan-change-error">{planChangeError}</p>}
       {planChangeMessage && <p>{planChangeMessage}</p>}
 
-      {offerPurchase && contractAccepted === true && (
+      {PURCHASE_ENABLED && offerPurchase && contractAccepted === true && (
         <div className="plan-change-section">
           <h2>購買方案</h2>
           <p>你已完成契約同意，可直接購買，不需要重新審閱契約。</p>
@@ -204,7 +208,7 @@ function AccountPage() {
         </div>
       )}
 
-      {offerPurchase && contractAccepted === null && (
+      {PURCHASE_ENABLED && offerPurchase && contractAccepted === null && (
         <p>目前無法確認契約同意狀態，請稍後重新整理頁面。</p>
       )}
 
