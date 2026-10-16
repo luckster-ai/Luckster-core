@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { startProviderCheckout } from '../utils/startProviderCheckout'
 import { CHECKOUT_ERROR_TEXT, getOpenCheckoutSession } from '../utils/checkoutSession'
+import { readTerminationBody } from '../utils/terminationResult'
 
 // Step 11.1 -- the plan buttons shared by first purchase (ContractReviewPage,
 // right after Agree) and renewal (AccountPage / ContractReviewPage for an
@@ -47,13 +48,17 @@ function PlanPurchase() {
     const { data, error } = await supabase.functions.invoke('create-order-checkout', {
       body: { planCode }
     })
+    // On a non-2xx (e.g. 409) supabase-js returns data = null and the
+    // response on error.context -- read the error code from there (same
+    // helper as the Step 11.2 termination flow). Unknown codes and network
+    // failures fall back to the generic message, never English error text.
+    const body = await readTerminationBody(data, error)
+    const code = body?.error
 
-    if (error || data?.error || !data?.redirectUrl) {
+    if (error || code || !data?.redirectUrl) {
       setCheckoutPlanCode(null)
-      setCheckoutError(
-        CHECKOUT_ERROR_TEXT[data?.error] || data?.error || error?.message || '無法建立訂單，請稍後再試。'
-      )
-      if (data?.error === 'checkout_session_in_progress') {
+      setCheckoutError(CHECKOUT_ERROR_TEXT[code] || '無法建立訂單，請稍後再試。')
+      if (code === 'checkout_session_in_progress') {
         getOpenCheckoutSession().then(setOpenSession)
       }
       return

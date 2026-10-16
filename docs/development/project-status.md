@@ -498,7 +498,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 建議另開「Contract Review UI／RWD 修正」小階段，於正式開放付款前完成（Production 目前已由 `VITE_ENABLE_PURCHASE` 關閉此頁）；先修排版再修按鈕，於 Preview（TEST）一併驗證
 - **注意**：Vercel 已連結 GitHub（Production Branch `main`），**push 到 `main` 即自動部署 Production**；後續修正應先於 branch Preview 驗證再合併
 
-### Step 11 — Contract Review UI／RWD Refinement（2026-10-16，Implementation ＋ Preview 驗證通過 — 未合併 `main`）
+### Step 11 — Contract Review UI／RWD Refinement（2026-10-16，Implementation ＋ Preview 驗證通過 — 已合併 `main` `8592900`）
 - **範圍**：只改 `frontend/src/pages/ContractReviewPage.jsx`、`frontend/src/App.css`；後端 3 天審閱規則、付款核心、`.auth-page`／`.button` 既有全域規則、`/subscribe`、契約中的 Oen 金流文字皆未修改
 - **Implementation**：
   - 容器由 `.auth-page`（480px、置中）改為專用 `.contract-review-page`（`max-width: 760px`、靠左、`line-height: 1.8`，比照 `.legal-page`）
@@ -509,9 +509,9 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Preview**：branch `preview/contract-review-ui`，commit `dee932c`（基於 `8ac0bcd`，僅含上述 2 個檔案）；`https://joti-iitkubqc5-jotiyoga.vercel.app`（branch alias `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`），TEST Supabase、`VITE_ENABLE_PURCHASE=true`
 - **Preview 驗證通過**（使用者以審閱中的測試會員實測）：桌面版排版正常；手機 RWD 正常；審閱倒數正常；未到期同意按鈕為 disabled 狀態
 - **待驗證**：`reviewAvailableAt` 到期後自動啟用——待 **2026-10-19 12:18（台灣時間）**該測試會員審閱期屆滿時實測，與首購 E2E 一併進行；不因此項重新修改本輪 UI
-- **Git 狀態**：`main` 未變更（仍為 `8ac0bcd`），本輪修改僅在 branch `preview/contract-review-ui` 與本機工作樹，**尚未合併／push `main`**（push `main` 會自動部署 Production；Production `/contract-review` 目前由 `VITE_ENABLE_PURCHASE` 關閉）
+- **Git 狀態**：`dee932c` 已於 2026-10-16 隨 A1 fast-forward 合併並 push 到 `main`（`8592900`），Production 已自動部署；Production `/contract-review` 仍由 `VITE_ENABLE_PURCHASE` 關閉（見「Production Readiness Checkpoint A1–A3」）
 
-### Step 11 — Pricing 契約入口狀態化（2026-10-16，Implementation ＋ Preview 驗證通過 — 未合併 `main`）
+### Step 11 — Pricing 契約入口狀態化（2026-10-16，Implementation ＋ Preview 驗證通過 — 已合併 `main` `8592900`）
 - **目的**：Pricing 頁契約入口依會員狀態只顯示一個按鈕（原本「查看完整會員服務契約」無條件顯示，已登入未同意者會與「準備好了，開始契約審閱」並列）
 - **只改 `frontend/src/pages/PricingPage.jsx`**：新增 `getContractEntry()`，沿用 `useAuth()`、`getContractAcceptanceState()`、`canOfferPurchase(profile)`；未新增資料庫查詢，未修改 AuthProvider／membershipStatus／purchaseEligibility；其他 CTA（「先免費試用 30 天」「前往我的帳號」「已完成契約同意，前往我的帳號購買」）未變更
 - **規則（`VITE_ENABLE_PURCHASE=true`）**：
@@ -529,8 +529,44 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 審閱中的會員 → 只顯示「繼續契約審閱」
 - **未進行瀏覽器實測（不視為失敗）**：「已同意契約、目前沒有方案」與「有有效付費方案」——目前沒有對應的測試帳號；兩種狀態已由上述 `getContractEntry()` 邏輯測試涵蓋
 - **觀察備註**：第一次以原有瀏覽器開啟時看到舊版畫面，改開新的瀏覽器後確認新版 Preview 正常——判定為瀏覽器舊狀態／快取造成的觀察差異，非程式問題
-- **尚未進行**：合併／push `main`（push `main` 會自動部署 Production）
+- **Git 狀態**：`53df3cf`／`8592900` 已於 2026-10-16 隨 A1 合併並 push 到 `main`，Production 已自動部署（購買流程關閉時所有人皆顯示「查看完整會員服務契約」）
+- **補測**：「已同意、目前沒有方案」與「有有效付費方案」兩種狀態已於 A3（`+trial2`）瀏覽器實測通過（見「Production Readiness Checkpoint A1–A3」）
 
+
+### Step 11 — Production Readiness Checkpoint A1–A3（2026-10-16，A1／A2／A3 完成；PlanPurchase 修正已 push `main`，待 Preview 實測）
+- **環境現況（2026-10-16）**：
+
+  | 環境 | 位置 | 程式版本 | Supabase | 用途／設定 |
+  |---|---|---|---|---|
+  | Production | `https://joti-jotiyoga.vercel.app`（另有別名 `frontend-ebon-seven-40`、`joti-git-main-jotiyoga`），部署 `joti-shb2fuby7` | `main` `8592900`（Git integration，push `main` 即自動部署） | Production `qhyfpabyqksuwjzshjtu` | 對外網站；`VITE_ENABLE_PURCHASE` 未設定（購買流程關閉）；Production Edge Functions／secrets 皆 0、`contract_versions` 0、Admin 0、Auth users 1 |
+  | Preview（穩定網址） | `https://joti-git-preview-contract-review-ui-jotiyoga.vercel.app`（branch `preview/contract-review-ui`，目前 `8592900`） | 與 `main` 相同 | TEST `ngznngqmbhxejkjbqomh` | TEST 購買／契約流程驗證；Preview 環境 `VITE_ENABLE_PURCHASE=true`、`VITE_ENABLE_SUBSCRIBE=true`（舊 Oen「訂閱 JOTI」入口仍會顯示） |
+  | TEST Supabase | `ngznngqmbhxejkjbqomh` | — | — | `ACTIVE_PAYMENT_PROVIDER=ecpay`；`SITE_URL`=上述穩定 Preview 網址（A2） |
+
+  - 另有暫時 branch `preview/purchase-flag-test`（`8ac0bcd`，保留中，未刪除）
+- **A1 Preview → `main` 合併（完成）**：`main` 由 `8ac0bcd` fast-forward 至 `8592900`（`dee932c` Contract Review UI／`53df3cf` Pricing 契約入口／`8592900` 文件），內容與已驗證的 Preview branch 完全一致；未納入工作樹其他既有修改。push 後 Vercel 自動部署 Production（`joti-shb2fuby7`，READY）；線上 bundle 確認指向 Production Supabase、購買流程仍關閉（含「付費方案即將開放」、無 `/contract-review`）、保留「查看完整會員服務契約」
+- **A2 TEST `SITE_URL`（完成）**：由 `https://joti-3e82xtu9i-jotiyoga.vercel.app`（Step 11.1 舊 Preview）改為 `https://joti-git-preview-contract-review-ui-jotiyoga.vercel.app`（2026-10-16 06:52 UTC，以 secret digest 比對確認生效）；`ACTIVE_PAYMENT_PROVIDER` 已為 `ecpay`，未重設；Production secrets 未變更（仍為空）
+- **A3 TEST 續購與異常情境（完成，`+trial2`，穩定 Preview）**：
+  - **前置**：`+trial2`（`luckster.ai.workspace+trial2@gmail.com`，`8919af6a-f3cd-4d5e-9adb-408ae884e8ac`）密碼未知，由使用者以正常「忘記密碼」流程重設後登入（僅變更 `auth.users`，契約同意 4 筆與其他狀態未動）
+  - **Scenario 1 已同意、無方案 — PASS**：Pricing 只顯示「已完成契約同意，前往我的帳號購買」；Account 顯示「購買方案」；月方案成功建立 Session 並轉至綠界
+  - **Scenario 2 已有進行中 Session、另一分頁再購買 — 後端 PASS／畫面 FAIL**：`create-order-checkout` 回 **409**（依可能的 409 原因推定為 `checkout_session_in_progress`），未建立第二筆 Session；畫面卻顯示英文「Edge Function returned a non-2xx status code」，未切換為「付款進行中」（見下方 PlanPurchase 409 UI 問題）
+  - **Scenario 3 TEST 月方案付款 — PASS**：Session `f1de6dc9-5a15-4790-b5e7-87639d9ac612`（MerchantTradeNo `J2610161524035F37LMC`）`fulfilled`；Order `af02d029-6964-4d87-9aa7-7c9a5de8422f` `paid`（333、ecpay、monthly、`v1.0`、沿用契約同意 `8494c887-…`、TradeNo `2610161524046047`）；Service Period `f46f6d7d-9d5b-457f-8b86-61c7b21baf73`（2026-10-16 07:28:48 → 2026-11-16 07:28:48 UTC）；payment_event `2610161524046047:1` `verified`（webhook 開通）；全庫僅各新增 1 筆、有效期間重疊 0；JOTI 返回頁未檢視（停在綠界「付款成功」頁）
+  - **Scenario 4 已有有效方案再購買 — PASS**：TEST DB 直接呼叫 `create_checkout_session()` → `active_service_period_exists`，未寫入；Account「付費會員」、到期日 2026/11/16、無「購買方案」、僅「提前終止目前方案並退款」；`/contract-review` 顯示「你目前已有有效的方案」；Pricing 只顯示「前往我的帳號」＋「查看完整會員服務契約」
+  - **Scenario 5 rejected 競態 — 未於 TEST 實測**（使用者同意）：以既有 PGlite SQL 測試結果為驗證依據；同一會員同時僅能有一個 open Session，雙分頁實際結果為 409（Scenario 2）
+  - **測試資料（TEST）**：上述 Session／Order／Service Period／payment_event 各 1 筆；Scenario 2、4 的被拒嘗試未寫入資料
+- **`+trial2` 目前狀態**：TEST **有效月方案付費會員**，Service Period `f46f6d7d-…` 至 **2026-11-16 07:28:48 UTC**；在此之前無法再用於「已同意、無方案」測試（如需，須先提前終止，ECPay stage 退款預期為 `refund_failed`）
+- **PlanPurchase 409 UI 問題（A3 發現）與修正**：
+  - **原因**：`PlanPurchase.jsx` 只讀 `data?.error`；non-2xx 時 supabase-js `data` 為 null、錯誤內容在 `error.context`，因此 `CHECKOUT_ERROR_TEXT` 對不到、「付款進行中」切換從未觸發
+  - **修正（已完成，僅 `frontend/src/components/PlanPurchase.jsx`）**：沿用 Step 11.2 的 `readTerminationBody(data, error)` 取得錯誤碼，沿用既有 `CHECKOUT_ERROR_TEXT` 與「付款進行中」狀態；未知錯誤／網路錯誤一律顯示「無法建立訂單，請稍後再試。」；成功路徑（`startProviderCheckout`）、後端購買規則、付款流程未變更；未重構或更名 `readTerminationBody`
+  - **驗證**：`npm run lint`、`npm run build` 通過；以實際 `readTerminationBody`／`CHECKOUT_ERROR_TEXT` 與 supabase-js `FunctionsHttpError`／`FunctionsFetchError`／`FunctionsRelayError` 測 9 種情境全部符合（200 ECPay formPost 照常進入付款；409 `checkout_session_in_progress` → 中文＋切換「付款進行中」；409 `active_service_period_exists` → 中文；其餘 → 通用中文訊息）
+  - **Git**：2026-10-16 與本文件一併 commit 並 push 到 `main`（commit 訊息 "Show Chinese checkout errors when purchase is blocked"），push 觸發 Vercel 自動部署 Production；Production 購買流程關閉（`VITE_ENABLE_PURCHASE` 未設定），無可見影響
+  - **尚未進行**：Preview 瀏覽器實測（`+trial2` 目前有有效方案，雙分頁情境需待無方案帳號，例如 10/19 首購帳號）
+- **已知問題（未修改）**：`ContractReviewPage.jsx` `handleAgree`（`agree-to-contract`／`reaccept-contract`）同樣只讀 `data?.error`，後端 409 `no_eligible_pending_review` 時無法顯示「尚未滿最低審閱天數…」而會顯示英文錯誤；正常情況前端倒數會先停用按鈕，使用者時鐘不準時才會遇到
+- **工作樹中與本階段無關的既有修改（非本次成果，維持不動）**：已修改 `frontend/package.json`、`frontend/package-lock.json`（`supabase` devDependency）、`frontend/src/content/modules/warmup04-self-authority-3min.md`、`supabase/functions/_shared/oen.ts`、`supabase/functions/create-subscription-checkout/index.ts`（Legacy Oen subscription）；未追蹤 `docs/business/future-product-direction.md`、`docs/development/website-refinement.md`、`warmup05`／`warmup06`／`warmup07` Module `.md`
+- **下一步與依賴**：
+  1. PlanPurchase 修正：已 push `main`；待 Preview 瀏覽器實測雙分頁「付款進行中」畫面（依賴無方案的測試帳號；穩定 Preview branch 需同步到最新 `main` 才會包含此修正）
+  2. **2026-10-19 12:18（台灣時間）後**：以審閱中的測試會員於穩定 Preview 進行 (a) Contract Review 到期後同意按鈕自動啟用、(b) **首購 E2E**（同意 → 購買 → ECPay 測試卡 → 開通）、(c) Pricing 依狀態切換；可於該帳號付款前一併重測雙分頁 409 的「付款進行中」畫面
+  3. 是否修正 `ContractReviewPage` 同類 409 錯誤解析（待決定）
+  4. Production 開放付款前（見「Next Steps」）：最終金流平台與綠界回覆（ReturnURL 網域、一般賣家、履約保證）、正式上線時間 → `contract_versions` v1.0、契約付款方式文字（目前寫 Oen）與網站欄位、Production Edge Functions／secrets、升級 Pro、`joti.yoga` 綁定、Production 開啟 `VITE_ENABLE_PURCHASE` 與真實小額付款／退款驗證、退款例外作業規則（>90／>360 天、`refund_failed`、`rejected`）；另：隱私權政策加入 Resend 並修正第 18 行、Production Admin 設定、Auth 後續（驗證信 `redirect_to` 原因待確認、首頁 `#error` 無提示、Resend Click Tracking 仍為 ON）
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -616,7 +652,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ## Next Steps
 
 1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`**（2026-10-13 更新：Redirect URLs 已含 `https://joti-*-jotiyoga.vercel.app/**`，Preview 上 Email + Password／驗證信／重設密碼／Google 登入已實測成功，不再阻塞 Preview 登入；`Site URL` 仍為 `localhost:4190`，僅作為 fallback；本機開發若要測重設密碼，`http://localhost:5173/auth/reset-password` 尚未加入允許清單）：原記載如下——影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
-2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。
+2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。（2026-10-16 更新：`origin/main` 為 **`8592900`**——`8ac0bcd`（Purchase Entry 開關）與 A1 合併之 `dee932c`／`53df3cf`／`8592900` 皆已 push 並自動部署 Production；2026-10-16 PlanPurchase 409 修正亦已 push `main`）
 3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）、**Production Auth（Email + Password + Google、Resend SMTP、Google OAuth；2026-10-15 E2E 驗證通過）**（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth 完成」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Admin 設定、Production Edge Functions／secrets；Vercel Production 已為新版並指向 Production Supabase（2026-10-16 起由 push `main` 經 Git integration 自動部署），最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
 4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。ECPay TEST 整合已完成（見「ECPay Integration」小節）。
 5. Step 11（Production Readiness）已開始：11.1、11.2 已完成；Production 基礎設施 Discovery 已完成並確立決策；Production 建置進行中，見第 3 項（子步驟編號待排定）。
@@ -625,7 +661,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 9. Plan Change（Step 10）尚缺一次透過 Oen 真實 hosted checkout 頁面的視覺化端到端刷卡驗證（見上方「Payment Rebuild — Step 10」小節已知限制）——待瀏覽器自動化環境問題排除，或改用其他方式驗證。
 10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
-11. **ECPay Checkout Session Flow（已部署 TEST、正常購買 E2E 通過，見同名小節）**：(a) 已 commit／push（`b79151e`）；(b) 補測：webhook 晚到由 confirm 開通、回傳頁顯示、雙分頁重複付款 → rejected、有效期間內購買 → 409；(c) 已同意契約會員的購買入口——Step 11.1 已實作、TEST E2E 通過並 commit（未 push）；(d) 退款失敗時的提前終止 UI 文案——Step 11.2 已實作、TEST 驗證通過並 commit（未 push）；(e) 向綠界確認 AIO 信用卡付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) 移除或隱藏 AccountPage 舊「訂閱 JOTI」連結。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=Step 11.1 Preview（`joti-3e82xtu9i`），`+trial2` 目前無有效方案（Step 11.2 TEST 已提前終止，Order `945a7ec6-…` 為 `refund_failed`）。
+11. **ECPay Checkout Session Flow（2026-10-16 更新）**：(a) `b79151e` 已 commit／push；(b) 補測現況——有效期間內購買 → `active_service_period_exists`（A3 PASS）、同一會員雙分頁 → 409 `checkout_session_in_progress` 且未建立第二筆 Session（A3 後端 PASS；畫面錯誤訊息已修正、待 Preview 實測）、雙方付款成功之 rejected 競態以 PGlite SQL 測試為依據；**仍未實測**：webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示（A3 停在綠界成功頁）；(c)(d) Step 11.1／11.2 已 push；(e) 向綠界確認 AIO 付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) Preview 仍顯示舊「訂閱 JOTI」（`VITE_ENABLE_SUBSCRIBE=true`）待處理。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=穩定 Preview `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`；`+trial2` 目前為有效月方案（至 2026-11-16）
+12. **Production Readiness Checkpoint 後續**：見「Step 11 — Production Readiness Checkpoint A1–A3」的「下一步與依賴」（PlanPurchase 修正 Preview 實測與 commit、2026-10-19 首購 E2E、ContractReviewPage 同類錯誤、Production 開放付款前工作）
 
 ---
 
@@ -651,6 +688,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-16（Production Readiness Checkpoint A1–A3：A1 合併 `main` `8592900` 並自動部署 Production；A2 TEST `SITE_URL` 改為穩定 Preview；A3 TEST 續購／異常情境完成（Scenario 1／3／4 PASS、2 後端 PASS 畫面 FAIL、5 以 SQL 測試為依據）；`+trial2` 為有效月方案至 2026-11-16；PlanPurchase 409 修正已 commit／push `main`（待 Preview 實測）；ContractReviewPage 同類問題列為已知）
 
 2026-10-16（Pricing 契約入口狀態化：Preview 驗證通過（`53df3cf`，branch `preview/contract-review-ui`）；依會員狀態只顯示一個契約入口；`VITE_ENABLE_PURCHASE` 關閉時保留公開契約入口；未合併 `main`）
 
