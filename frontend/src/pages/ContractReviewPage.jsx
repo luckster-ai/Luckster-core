@@ -37,9 +37,19 @@ import PlanPurchase from '../components/PlanPurchase'
 //
 // Mobile RWD fix (2026-09): the rendered markdown is wrapped in
 // .contract-review-content so App.css can target its <pre> blocks the
-// same way it targets .legal-content's (see App.css) -- this page uses
-// .auth-page, a different scope from the public /legal pages, but
+// same way it targets .legal-content's (see App.css) -- this page has its
+// own container, a different scope from the public /legal pages, but
 // renders the same contract text and hits the same overflow bug.
+//
+// Step 11 (Contract Review UI / RWD Refinement): the page uses its own
+// .contract-review-page container (a ~760px reading layout like
+// .legal-page) instead of the 480px, centered .auth-page card used by
+// Login / Account. While the 3-day review is still running, a per-second
+// countdown to reviewAvailableAt is shown and the agree button has an
+// explicit disabled look; it enables itself when the time is reached. The
+// countdown is UX only -- agree_to_contract() still enforces the 3 days
+// server-side (409 no_eligible_pending_review). reacceptance mode has no
+// reviewAvailableAt and is unaffected.
 //
 // Payment Rebuild -- Step 6 (Oen One-time Checkout): once mode === 'initial'
 // reaches 'agreed', this is the earliest point a new Order is actually
@@ -60,6 +70,17 @@ import PlanPurchase from '../components/PlanPurchase'
 // directly, unless the member currently has (or is scheduled to have) a
 // plan, or is an admin.
 
+// "2 天 3 小時 4 分 5 秒" -- days omitted once under a day.
+function formatRemaining(ms) {
+  const totalSeconds = Math.ceil(ms / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  const time = `${hours} 小時 ${minutes} 分 ${seconds} 秒`
+  return days > 0 ? `${days} 天 ${time}` : time
+}
+
 function ContractReviewPage() {
   const { loading, user, profile } = useAuth()
   const [searchParams] = useSearchParams()
@@ -73,6 +94,8 @@ function ContractReviewPage() {
   // recomputed on an interval so the button flips to enabled without
   // requiring a manual refresh once the 3 days pass while the tab is open.
   const [eligible, setEligible] = useState(mode === 'reacceptance')
+  // Milliseconds left until reviewAvailableAt (initial mode only), or null.
+  const [remainingMs, setRemainingMs] = useState(null)
 
   useEffect(() => {
     if (loading || !user) return
@@ -156,14 +179,23 @@ function ContractReviewPage() {
     if (mode === 'reacceptance' || !review?.reviewAvailableAt) return undefined
 
     const availableAtMs = new Date(review.reviewAvailableAt).getTime()
+    let timer = null
 
     function check() {
-      setEligible(Date.now() >= availableAtMs)
+      const remaining = availableAtMs - Date.now()
+      setRemainingMs(Math.max(remaining, 0))
+      setEligible(remaining <= 0)
+      if (remaining <= 0 && timer) {
+        clearInterval(timer)
+        timer = null
+      }
     }
 
     check()
-    const timer = setInterval(check, 30_000)
-    return () => clearInterval(timer)
+    if (Date.now() < availableAtMs) timer = setInterval(check, 1000)
+    return () => {
+      if (timer) clearInterval(timer)
+    }
   }, [mode, review?.reviewAvailableAt])
 
   async function handleAgree() {
@@ -192,7 +224,7 @@ function ContractReviewPage() {
   const content = review ? getContractContent(review.contentIdentifier) : null
 
   return (
-    <div className="auth-page">
+    <div className="contract-review-page">
       <h1>
         {mode === 'reacceptance'
           ? '契約條款更新，請重新確認同意'
@@ -241,10 +273,16 @@ function ContractReviewPage() {
             <p>目前無法載入契約內容（版本：{review.contractVersion}）。</p>
           )}
 
+          {mode === 'initial' && state === 'ready' && !eligible && remainingMs !== null && (
+            <p className="contract-review-countdown">
+              審閱期間尚未結束，距離可同意還有 {formatRemaining(remainingMs)}
+            </p>
+          )}
+
           {state !== 'agreed' && (
             <button
               type="button"
-              className="button"
+              className="button contract-review-agree"
               onClick={handleAgree}
               disabled={!eligible || state === 'agreeing'}
             >

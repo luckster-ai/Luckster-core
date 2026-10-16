@@ -2695,3 +2695,37 @@ footer {
   overflow-wrap: break-word;
   overflow-x: auto;
 }
+
+/* ============================================================
+   Contract Review UI / RWD Refinement (Step 11)
+   /contract-review used .auth-page (480px, centered -- the Login /
+   Account card), which squeezed the full contract into a phone-like
+   column on desktop. Its own container mirrors .legal-page's reading
+   layout instead; .auth-page itself is untouched. The agree button keeps
+   .button's primary look when enabled and gets an explicit disabled look
+   (review period still running, or agreeing) -- scoped to this button
+   only, not a global .button:disabled rule.
+   ============================================================ */
+.contract-review-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 24px;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.contract-review-countdown {
+  margin-top: 32px;
+  font-weight: 600;
+  color: #6b5a2e;
+}
+
+.contract-review-agree {
+  margin: 16px 0 0;
+}
+
+.contract-review-agree:disabled {
+  background: #e4ddd0;
+  color: #8a8170;
+  cursor: not-allowed;
+}
