@@ -391,7 +391,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **驗證**：已手動執行一次，結果 Success；失敗時由 GitHub 寄送通知
   - **通知**：Supabase 暫停警告信寄給 Organization Owner——`JOTI Production` 唯一成員 `luckster.ai.workspace@gmail.com`（Owner），已確認可正常收信
   - **注意**：repo 為 public，連續 60 天無 commit 時 GitHub 會自動停用排程
-- **尚未開始**：Production Edge Functions／secrets、Vercel Production 指向 Production Supabase、`joti.yoga` 綁定
+- **Vercel Production（2026-10-16 確認）**：已為新版程式並指向 **Production Supabase**（見下方「Step 11 — Production Purchase Entry 開關」的 Git／部署）
+- **尚未開始**：Production Edge Functions／secrets、`joti.yoga` 綁定
 
 ### Step 11 — TEST Auth：Email + Password（2026-10-13，Implementation ＋ Preview 部署 ＋ TEST 驗證通過 — 已 commit／push）
 - **範圍**：只改前端；DB schema、Edge Functions、`supabase/config.toml` 皆未修改（`handle_new_user` trigger 不受登入方式影響）；Google OAuth 設定未變更
@@ -470,17 +471,58 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - Google 登入正常
   - JOTI Account 頁面正常
   - Production Supabase Authentication → Users **僅建立正確的單一正式帳號**，Provider 為 **Email + Google**
-- **後續（尚未進行）**：Admin（`profiles.role = 'admin'`）待設定；隱私權政策加入 Resend 並修正第 18 行「Email 驗證登入」；Vercel Production 仍為舊版且指向 TEST Supabase，切換另行進行
+- **後續（尚未進行）**：Admin（`profiles.role = 'admin'`）待設定；隱私權政策加入 Resend 並修正第 18 行「Email 驗證登入」（2026-10-16 更新：Vercel Production 已為新版並指向 Production Supabase，見「Step 11 — Production Purchase Entry 開關」的 Git／部署）
 
-### Step 11 — Production Purchase Entry 開關（2026-10-16，Implementation — 未 commit／未部署）
+### Step 11 — Production Purchase Entry 開關（2026-10-16，Implementation — 已 commit／push `8ac0bcd`，Production 已自動部署）
 - **背景**：Production 尚未部署 Contract／Payment Edge Functions、`contract_versions` 為空；已登入會員可從 Pricing「準備好了，開始契約審閱」進入 `/contract-review`，呼叫不存在的 `start-contract-review` 而出錯
 - **新增前端開關 `VITE_ENABLE_PURCHASE`**：**預設關閉**，只有值為 `'true'` 才啟用新的購買流程（與 `VITE_ENABLE_SUBSCRIBE` 相同模式；`VITE_ENABLE_SUBSCRIBE` 邏輯未變更）
   - `router/AppRouter.jsx`：關閉時不註冊 `/contract-review`、`/checkout/return`（直接輸入網址為 404）
   - `pages/PricingPage.jsx`：關閉時已登入會員不顯示「開始契約審閱」，改顯示「付費方案即將開放，目前可先使用免費體驗。」＋「前往我的帳號」，且不讀取契約同意狀態；未登入訪客仍為「先免費試用 30 天」
   - `pages/AccountPage.jsx`：「購買方案」（`PlanPurchase`）區塊加上同一開關；**提前終止／退款不受開關影響**
-- **環境設定**：Production **不設定**（維持關閉，直到正式開放付款）；Vercel **Preview** 需設定 `VITE_ENABLE_PURCHASE=true` 才能繼續在 TEST 測試契約審閱／付款流程（尚未設定）
+- **環境設定**：Production **不設定**（維持關閉，直到正式開放付款）；Vercel **Preview** 需設定 `VITE_ENABLE_PURCHASE=true` 才能繼續在 TEST 測試契約審閱／付款流程（**已由使用者於 Preview 環境設定**）
 - **驗證**：`npm run lint` 通過；開關關閉／開啟各 build 一次並比對 bundle——關閉時不含 `/contract-review`、`/checkout/return` route 與 `start-contract-review`／`create-order-checkout`／`confirm-checkout-session` 呼叫，含「付費方案即將開放」；開啟時與原行為相同；兩者皆保留提前終止按鈕
-- **尚未進行**：commit／push、Vercel Preview 環境變數、Production 重新部署（部署前需確認 Vercel Production `VITE_SUPABASE_URL`／`VITE_SUPABASE_ANON_KEY` 為 Production 值）
+- **Git／部署**：`8ac0bcd`（"Gate contract review and checkout behind VITE_ENABLE_PURCHASE"）已 push 到 `origin/main`；push 觸發 Vercel Git integration **自動部署 Production**（`joti-cr7nu23h4`，2026-10-16 11:43 台灣時間）。線上 `joti-jotiyoga.vercel.app` bundle 確認：指向 Production Supabase、購買流程關閉（含「付費方案即將開放」、無 `/contract-review`）
+
+### Step 11 — Contract Review Preview 測試（2026-10-16，TEST — Passed）
+- **環境**：Vercel Preview `https://joti-ea6aypr15-jotiyoga.vercel.app`（branch alias `joti-git-preview-purchase-flag-test-jotiyoga.vercel.app`），branch `preview/purchase-flag-test`（暫時 branch，保留中），測試 commit **`8ac0bcd`**；Preview 使用 **TEST Supabase**（`ngznngqmbhxejkjbqomh`），`VITE_ENABLE_PURCHASE=true`
+  - 部署方式：推送 branch 未自動觸發 Preview（branch 無新 commit），改以 Vercel API 指定 branch＋`8ac0bcd` 建立 Git-source Preview Deployment；未修改 Vercel 專案設定
+- **測試結果**（一般會員以 TEST Supabase 登入）：
+  - Pricing →「準備好了，開始契約審閱」→ `/contract-review` 流程正常
+  - `start-contract-review` 正常建立審閱狀態
+  - Contract Review 頁面正確顯示契約版本、契約提供時間（`presentedAt`）、最早可同意時間（`reviewAvailableAt`）
+  - 3 天最低審閱期間由後端限制：`agree_to_contract()` 檢查 `review_presented_at + interval '3 days' <= now()`，未滿則 `no_eligible_pending_review`（`agree-to-contract` 回 409），前端無法繞過
+- **本次功能測試：Passed**
+- **UI／RWD 後續事項（非本次功能測試 failure，目前不處理）**：
+  1. **Desktop 版排版過窄**：`ContractReviewPage.jsx` 外層沿用 `.auth-page`（`App.css`：`max-width: 480px`、置中對齊，為登入／帳號頁小卡片版型），契約全文、表格與方案區塊在桌面被擠成類手機版排列；公開 `/legal` 使用 `.legal-page`（760px、靠左）。修正時不宜直接改 `.auth-page`（Login／Account／Reset 等共用）
+  2. **同意按鈕 UX**：審閱期內按鈕雖為 `disabled`，但 `.button` 無 disabled 視覺樣式（仍為主色、`cursor: pointer`），且無剩餘時間倒數；可同意狀態每 30 秒才重新判斷一次。後續應加倒數與明確 disabled 樣式、到期自動轉為主按鈕；倒數僅為前端 UX，審閱期限制仍以後端為準；`reacceptance` 模式不受倒數影響
+  - 建議另開「Contract Review UI／RWD 修正」小階段，於正式開放付款前完成（Production 目前已由 `VITE_ENABLE_PURCHASE` 關閉此頁）；先修排版再修按鈕，於 Preview（TEST）一併驗證
+- **注意**：Vercel 已連結 GitHub（Production Branch `main`），**push 到 `main` 即自動部署 Production**；後續修正應先於 branch Preview 驗證再合併
+
+### Step 11 — Contract Review UI／RWD Refinement（2026-10-16，Implementation ＋ Preview 驗證通過 — 未合併 `main`）
+- **範圍**：只改 `frontend/src/pages/ContractReviewPage.jsx`、`frontend/src/App.css`；後端 3 天審閱規則、付款核心、`.auth-page`／`.button` 既有全域規則、`/subscribe`、契約中的 Oen 金流文字皆未修改
+- **Implementation**：
+  - 容器由 `.auth-page`（480px、置中）改為專用 `.contract-review-page`（`max-width: 760px`、靠左、`line-height: 1.8`，比照 `.legal-page`）
+  - 審閱期間每秒更新倒數「審閱期間尚未結束，距離可同意還有 X 天 X 小時 X 分 X 秒」（原為每 30 秒判斷一次）；到達 `reviewAvailableAt` 自動啟用同意按鈕並停止計時，不需重新整理
+  - 同意按鈕加 `.contract-review-agree`，審閱期間及 `agreeing` 時有明確 disabled 外觀（灰色、`cursor: not-allowed`）；啟用時維持 `.button` 主色
+  - 倒數僅為前端 UX，審閱期仍以 `agree_to_contract()` server-side 檢查為準（未滿回 409 `no_eligible_pending_review`）；`reacceptance` 模式（無 `reviewAvailableAt`）行為不變
+- **驗證**：`npm run lint`、`npm run build` 通過
+- **Preview**：branch `preview/contract-review-ui`，commit `dee932c`（基於 `8ac0bcd`，僅含上述 2 個檔案）；`https://joti-iitkubqc5-jotiyoga.vercel.app`（branch alias `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`），TEST Supabase、`VITE_ENABLE_PURCHASE=true`
+- **Preview 驗證通過**（使用者以審閱中的測試會員實測）：桌面版排版正常；手機 RWD 正常；審閱倒數正常；未到期同意按鈕為 disabled 狀態
+- **待驗證**：`reviewAvailableAt` 到期後自動啟用——待 **2026-10-19 12:18（台灣時間）**該測試會員審閱期屆滿時實測，與首購 E2E 一併進行；不因此項重新修改本輪 UI
+- **Git 狀態**：`main` 未變更（仍為 `8ac0bcd`），本輪修改僅在 branch `preview/contract-review-ui` 與本機工作樹，**尚未合併／push `main`**（push `main` 會自動部署 Production；Production `/contract-review` 目前由 `VITE_ENABLE_PURCHASE` 關閉）
+
+### Step 11 — Pricing 契約入口狀態化（2026-10-16，Implementation — 未 commit／未部署）
+- **目的**：Pricing 頁契約入口依會員狀態只顯示一個按鈕（原本「查看完整會員服務契約」無條件顯示，已登入未同意者會與「準備好了，開始契約審閱」並列）
+- **只改 `frontend/src/pages/PricingPage.jsx`**：新增 `getContractEntry()`，沿用 `useAuth()`、`getContractAcceptanceState()`、`canOfferPurchase(profile)`；未新增資料庫查詢，未修改 AuthProvider／membershipStatus／purchaseEligibility；其他 CTA（「先免費試用 30 天」「前往我的帳號」「已完成契約同意，前往我的帳號購買」）未變更
+- **規則（`VITE_ENABLE_PURCHASE=true`）**：
+  - 未登入 →「查看完整會員服務契約」（`/legal/terms`）
+  - 已登入、尚未同意契約、具購買資格 →「準備好了，開始契約審閱」（`/contract-review`）；已有 `review_presented_at`（審閱進行中）時顯示「繼續契約審閱」——`start_contract_review()` 只在 `review_contract_version is null` 時寫入，重新進入不會重新計算 3 日審閱期
+  - 已登入、已同意契約、具購買資格 → 不另顯示契約入口，沿用既有「已完成契約同意，前往我的帳號購買」
+  - 已登入、目前有有效 Paid Service Period（不具購買資格）→「查看完整會員服務契約」
+  - 登入狀態／會員資料／契約同意狀態尚在載入 → 暫不顯示契約入口；契約同意狀態讀取失敗 →「查看完整會員服務契約」（不導向審閱）
+- **`VITE_ENABLE_PURCHASE` 未設定（Production）**：所有人一律顯示「查看完整會員服務契約」，保留 Pricing 頁唯一的公開契約入口；其餘行為不變
+- **驗證**：`npm run lint`、`npm run build` 通過；以實際 `canOfferPurchase()`（Vite SSR 載入）對 10 種狀態測試 `getContractEntry()`，開關開啟／關閉兩種結果皆符合規則；開關開啟／關閉各 build 一次比對 bundle（關閉時含「付費方案即將開放」、不含「已完成契約同意，前往我的帳號購買」）
+- **尚未進行**：Preview 瀏覽器驗證、commit／push（push `main` 會自動部署 Production）
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -568,7 +610,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`**（2026-10-13 更新：Redirect URLs 已含 `https://joti-*-jotiyoga.vercel.app/**`，Preview 上 Email + Password／驗證信／重設密碼／Google 登入已實測成功，不再阻塞 Preview 登入；`Site URL` 仍為 `localhost:4190`，僅作為 fallback；本機開發若要測重設密碼，`http://localhost:5173/auth/reset-password` 尚未加入允許清單）：原記載如下——影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
 2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。
-3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）、**Production Auth（Email + Password + Google、Resend SMTP、Google OAuth；2026-10-15 E2E 驗證通過）**（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth 完成」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Admin 設定、Production Edge Functions／secrets；之後再以已確認正確的部署方式（repo root、Root Directory=`frontend`）部署 Vercel Production 並指向 Production Supabase，最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
+3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）、**Production Auth（Email + Password + Google、Resend SMTP、Google OAuth；2026-10-15 E2E 驗證通過）**（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth 完成」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Admin 設定、Production Edge Functions／secrets；Vercel Production 已為新版並指向 Production Supabase（2026-10-16 起由 push `main` 經 Git integration 自動部署），最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
 4. **ECPay（綠界）／PAYUNi 申請進度**：Oen 已通過相關申請／審核。ECPay 與 PAYUNi 目前正在申請中，現階段皆為候選平台，將依整合便利性、費用、操作方式及實際測試結果比較後，決定最終採用之金流平台；**最終平台尚未決定**，不視 ECPay 或 PAYUNi 為已確定採用之平台。ECPay TEST 整合已完成（見「ECPay Integration」小節）。
 5. Step 11（Production Readiness）已開始：11.1、11.2 已完成；Production 基礎設施 Discovery 已完成並確立決策；Production 建置進行中，見第 3 項（子步驟編號待排定）。
 6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
@@ -583,10 +625,10 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ## Blockers
 
 - **TEST Supabase 專案 Auth `Site URL` 過期**（2026-10-13 更新：**已不阻塞 Preview 登入**——Redirect URLs 已含 Preview 萬用字元，Email + Password／Google 登入已於 Preview 實測成功；`Site URL` 仍為 `localhost:4190`，只在 redirect 不在允許清單時作為 fallback，仍建議修正）。原記載：目前會導致連到 TEST 專案的環境點擊登入都被導向 `localhost:4190` 並失敗。需要使用者本人到 Supabase Dashboard 手動更新，AI 無法代為修改外部服務設定。這是目前唯一會直接阻塞「會員實際完成登入」的問題，詳見上方「登入導向 localhost 問題」小節。**2026-10-01 已有第一手重現證據**（見同小節）：即使 `emailRedirectTo` 明確指定正確網址，TEST 專案實際寄出的 Magic Link，`redirect_to` 仍是 `localhost:4190`，不再只是根因推論。此項僅針對 TEST 專案；Production 改用獨立專案後不沿用此設定。
-- **Production Supabase 尚未完成建置**：Production 專案（`qhyfpabyqksuwjzshjtu`）、Database Schema、4 個官方 Practices 與 health check（2026-10-14 上線）已完成，**Production Auth（Email + Password + Google、Resend SMTP）已於 2026-10-15 完成並經 E2E 驗證**；Production Edge Functions／secrets 尚未建置。在此完成前，Vercel Production 無法改指向 Production Supabase，`joti.yoga` 亦依決策延後綁定。
+- **Production Supabase 尚未完成建置**：Production 專案（`qhyfpabyqksuwjzshjtu`）、Database Schema、4 個官方 Practices 與 health check（2026-10-14 上線）已完成，**Production Auth（Email + Password + Google、Resend SMTP）已於 2026-10-15 完成並經 E2E 驗證**；Production Edge Functions／secrets 尚未建置（購買流程目前以 `VITE_ENABLE_PURCHASE` 關閉）；`joti.yoga` 依決策延後綁定。
 - **固定 IP proxy PoC** 需要建立第三方服務帳號（含免費試用），此步驟需使用者本人操作，AI 無法代為建立帳號或輸入付款資訊。
 - **新 Warm Up Module** 需要先把來源影片上傳到 Bunny 才能繼續（非程式碼工作，需人工操作 Bunny Dashboard）。
-- Production Vercel 部署與目前 `main` 分支程式碼是否同步：**根因已找到**（見上方「Vercel Deployment Architecture」小節，過去 CLI 部署方式不會帶到 `docs/`），但實際 Production 尚未用正確方式重新部署，目前 Production 內容仍是落後版本；依 Production Readiness 決策，正式重新部署排在 Production Supabase 建置之後。2026-10-13 確認：Production 正式別名為 `https://joti-jotiyoga.vercel.app`，線上仍為舊版（Magic Link）且連到 TEST Supabase。
+- Production Vercel 部署與目前 `main` 分支程式碼是否同步：**根因已找到**（見上方「Vercel Deployment Architecture」小節，過去 CLI 部署方式不會帶到 `docs/`），但實際 Production 尚未用正確方式重新部署，目前 Production 內容仍是落後版本；依 Production Readiness 決策，正式重新部署排在 Production Supabase 建置之後。2026-10-13 確認：Production 正式別名為 `https://joti-jotiyoga.vercel.app`，線上仍為舊版（Magic Link）且連到 TEST Supabase。**2026-10-16 更新（已解決）**：Vercel 已連結 GitHub（Production Branch `main`），push `8ac0bcd` 自動部署 Production（`joti-cr7nu23h4`）；線上為新版、指向 Production Supabase，Vercel Production 環境變數為 Production 值；其他別名 `frontend-ebon-seven-40.vercel.app`、`joti-git-main-jotiyoga.vercel.app` 亦指向同一部署。
 
 ## Open Questions（法律／商業模型，待決）
 
@@ -602,6 +644,12 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-16（Pricing 契約入口狀態化：依會員狀態只顯示一個契約入口；`VITE_ENABLE_PURCHASE` 關閉時保留公開契約入口；未 commit）
+
+2026-10-16（Contract Review UI／RWD Refinement：Preview 驗證通過（`dee932c`，branch `preview/contract-review-ui`）；到期自動啟用待 2026-10-19 實測）
+
+2026-10-16（Contract Review Preview 測試 Passed（`8ac0bcd`、TEST）；記錄 2 項 Contract Review UI／RWD 後續事項；更新 Vercel Production 現況：Git integration 自動部署、指向 Production Supabase）
 
 2026-10-16（Production Purchase Entry 開關 `VITE_ENABLE_PURCHASE`：預設關閉，Preview 需設為 `true`；未 commit／未部署）
 

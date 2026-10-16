@@ -35,6 +35,30 @@ import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseE
 // acceptance state is not read.
 const PURCHASE_ENABLED = import.meta.env.VITE_ENABLE_PURCHASE === 'true'
 
+// Step 11 (Pricing contract entry): exactly one contract entry button,
+// chosen by member state -- 'terms' (/legal/terms, read only), 'review'
+// (/contract-review) or null (none yet). With the purchase flow off
+// (Production) /legal/terms is always offered: it is the page's only public
+// contract entry. With it on:
+// - signed out -> 'terms'
+// - signed in, still loading (profile / acceptance state) -> null
+// - no purchase eligibility (e.g. a current paid Service Period) -> 'terms'
+// - eligible, not yet accepted -> 'review' (labelled 繼續契約審閱 once a
+//   review is pending; start_contract_review() keeps the existing
+//   review_presented_at, so re-entering never restarts the 3 days)
+// - eligible, accepted -> null: the /account purchase button is the entry
+// - acceptance state unreadable -> 'terms' (never the review)
+function getContractEntry({ loading, user, profile, contractAccepted }) {
+  if (!PURCHASE_ENABLED) return 'terms'
+  if (loading) return null
+  if (!user) return 'terms'
+  if (!profile || contractAccepted === undefined) return null
+  if (!canOfferPurchase(profile)) return 'terms'
+  if (contractAccepted === false) return 'review'
+  if (contractAccepted === null) return 'terms'
+  return null
+}
+
 function PricingPage() {
   const { loading, user, profile } = useAuth()
   // undefined = not loaded yet, null = could not be read
@@ -51,6 +75,8 @@ function PricingPage() {
       cancelled = true
     }
   }, [loading, user])
+
+  const contractEntry = getContractEntry({ loading, user, profile, contractAccepted })
 
   return (
     <div className="pricing-page">
@@ -101,9 +127,9 @@ function PricingPage() {
       )}
 
       <div className="pricing-cta">
-        {PURCHASE_ENABLED && !loading && user && contractAccepted === false && (
+        {contractEntry === 'review' && (
           <Link to="/contract-review" className="button">
-            準備好了，開始契約審閱
+            {profile.review_presented_at ? '繼續契約審閱' : '準備好了，開始契約審閱'}
           </Link>
         )}
         {PURCHASE_ENABLED && !loading && user && (contractAccepted === true || contractAccepted === null) && (
@@ -121,9 +147,11 @@ function PricingPage() {
             先免費試用 30 天
           </Link>
         )}
-        <Link to="/legal/terms" className="button secondary">
-          查看完整會員服務契約
-        </Link>
+        {contractEntry === 'terms' && (
+          <Link to="/legal/terms" className="button secondary">
+            查看完整會員服務契約
+          </Link>
+        )}
       </div>
     </div>
   )
