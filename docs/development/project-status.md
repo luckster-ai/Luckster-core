@@ -511,7 +511,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **待驗證**：`reviewAvailableAt` 到期後自動啟用——待 **2026-10-19 12:18（台灣時間）**該測試會員審閱期屆滿時實測，與首購 E2E 一併進行；不因此項重新修改本輪 UI
 - **Git 狀態**：`main` 未變更（仍為 `8ac0bcd`），本輪修改僅在 branch `preview/contract-review-ui` 與本機工作樹，**尚未合併／push `main`**（push `main` 會自動部署 Production；Production `/contract-review` 目前由 `VITE_ENABLE_PURCHASE` 關閉）
 
-### Step 11 — Pricing 契約入口狀態化（2026-10-16，Implementation — 未 commit／未部署）
+### Step 11 — Pricing 契約入口狀態化（2026-10-16，Implementation ＋ Preview 驗證通過 — 未合併 `main`）
 - **目的**：Pricing 頁契約入口依會員狀態只顯示一個按鈕（原本「查看完整會員服務契約」無條件顯示，已登入未同意者會與「準備好了，開始契約審閱」並列）
 - **只改 `frontend/src/pages/PricingPage.jsx`**：新增 `getContractEntry()`，沿用 `useAuth()`、`getContractAcceptanceState()`、`canOfferPurchase(profile)`；未新增資料庫查詢，未修改 AuthProvider／membershipStatus／purchaseEligibility；其他 CTA（「先免費試用 30 天」「前往我的帳號」「已完成契約同意，前往我的帳號購買」）未變更
 - **規則（`VITE_ENABLE_PURCHASE=true`）**：
@@ -522,7 +522,14 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 登入狀態／會員資料／契約同意狀態尚在載入 → 暫不顯示契約入口；契約同意狀態讀取失敗 →「查看完整會員服務契約」（不導向審閱）
 - **`VITE_ENABLE_PURCHASE` 未設定（Production）**：所有人一律顯示「查看完整會員服務契約」，保留 Pricing 頁唯一的公開契約入口；其餘行為不變
 - **驗證**：`npm run lint`、`npm run build` 通過；以實際 `canOfferPurchase()`（Vite SSR 載入）對 10 種狀態測試 `getContractEntry()`，開關開啟／關閉兩種結果皆符合規則；開關開啟／關閉各 build 一次比對 bundle（關閉時含「付費方案即將開放」、不含「已完成契約同意，前往我的帳號購買」）
-- **尚未進行**：Preview 瀏覽器驗證、commit／push（push `main` 會自動部署 Production）
+- **Git／Preview**：commit **`53df3cf`**（"Show one state-based contract entry on the pricing page"，接在 `dee932c` 之後），push 到 Preview branch **`preview/contract-review-ui`**；Preview `https://joti-4npp6xiru-jotiyoga.vercel.app`（branch alias `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`），TEST Supabase、`VITE_ENABLE_PURCHASE=true`；`main` 未變更（仍為 `8ac0bcd`），未 merge、未影響 Production
+- **Preview 驗證通過**（使用者以瀏覽器實測）：
+  - 訪客 → 只顯示「查看完整會員服務契約」
+  - 已登入、尚未審閱 → 只顯示「準備好了，開始契約審閱」
+  - 審閱中的會員 → 只顯示「繼續契約審閱」
+- **未進行瀏覽器實測（不視為失敗）**：「已同意契約、目前沒有方案」與「有有效付費方案」——目前沒有對應的測試帳號；兩種狀態已由上述 `getContractEntry()` 邏輯測試涵蓋
+- **觀察備註**：第一次以原有瀏覽器開啟時看到舊版畫面，改開新的瀏覽器後確認新版 Preview 正常——判定為瀏覽器舊狀態／快取造成的觀察差異，非程式問題
+- **尚未進行**：合併／push `main`（push `main` 會自動部署 Production）
 
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -645,7 +652,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Last Updated
 
-2026-10-16（Pricing 契約入口狀態化：依會員狀態只顯示一個契約入口；`VITE_ENABLE_PURCHASE` 關閉時保留公開契約入口；未 commit）
+2026-10-16（Pricing 契約入口狀態化：Preview 驗證通過（`53df3cf`，branch `preview/contract-review-ui`）；依會員狀態只顯示一個契約入口；`VITE_ENABLE_PURCHASE` 關閉時保留公開契約入口；未合併 `main`）
 
 2026-10-16（Contract Review UI／RWD Refinement：Preview 驗證通過（`dee932c`，branch `preview/contract-review-ui`）；到期自動啟用待 2026-10-19 實測）
 
