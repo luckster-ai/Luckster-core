@@ -21,7 +21,6 @@ import {
   AIO_CHECKOUT_URL,
   creditDoAction,
   ECPAY_MERCHANT_ID,
-  ECPAY_MODE,
   ECPAY_RETURN_URL,
   ecpayConfigError,
   type EcpayResult,
@@ -74,11 +73,8 @@ async function buildSignedCheckout(input: {
   backUrl: string;
   reference: string;
 }): Promise<{ merchantTradeNo: string; formPost: CheckoutFormPost }> {
-  // Same fail-fast guard as oenAdapter: TEST (stage) only until the
-  // production rules ECPay has yet to confirm are settled.
-  if (ECPAY_MODE !== "test") {
-    throw new Error("ecpay_not_test_mode");
-  }
+  // Fail fast unless ECPAY_MODE and the payment host match (test <->
+  // stage, live <-> production) and the merchant secrets are set.
   const cfgErr = ecpayConfigError();
   if (cfgErr) {
     throw new Error(`ecpay_misconfigured: ${cfgErr}`);
@@ -159,15 +155,12 @@ export async function startEcpaySessionCheckout(input: {
 // 已關帳 stage (the normal state with daily auto-close enabled).
 // NOT VERIFIED: ECPay's stage environment does not support DoAction, so
 // this has only been exercised up to the request/CheckMacValue level --
-// the real refund behaviour must be verified in production.
+// the real refund behaviour must be verified in production (LIVE).
 export function refundEcpayOrder(input: {
   merchantTradeNo: string;
   tradeNo: string;
   amount: number;
 }): Promise<EcpayResult> {
-  if (ECPAY_MODE !== "test") {
-    throw new Error("ecpay_not_test_mode");
-  }
   const cfgErr = ecpayConfigError();
   if (cfgErr) {
     throw new Error(`ecpay_misconfigured: ${cfgErr}`);

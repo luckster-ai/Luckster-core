@@ -13,6 +13,11 @@
 // failure (FunctionsFetchError) has no response at all.
 
 const TERMINATED_REFUNDED = '已提前終止目前方案，退款已送出，款項將依發卡銀行作業時間退回。'
+// Refund calculated as 0 (e.g. terminated at the very end of the period):
+// the backend does not call the provider and answers
+// { status: 'refunded', note: 'no_refund_due' } -- nothing is sent back.
+const TERMINATED_NO_REFUND =
+  '已提前終止目前方案。依契約第十一條計算，本次沒有可退還的金額，因此不會產生退款。'
 const TERMINATED_REFUND_PENDING =
   '已提前終止目前方案，退款金額已依契約第十一條計算，但退款尚未完成。如有疑問，請與我們聯絡。'
 const UNKNOWN = '無法確認處理結果，已重新載入方案狀態。如有疑問，請與我們聯絡。'
@@ -52,7 +57,8 @@ export function classifyTerminationResult(body) {
   const code = body?.error
 
   if (status === 'refunded') {
-    return { kind: 'refunded', message: TERMINATED_REFUNDED, refresh: true }
+    const message = body?.note === 'no_refund_due' ? TERMINATED_NO_REFUND : TERMINATED_REFUNDED
+    return { kind: 'refunded', message, refresh: true }
   }
   if (status === 'refund_processing' || status === 'refund_failed' || isPostTerminationError(code)) {
     return { kind: 'refund_pending', message: TERMINATED_REFUND_PENDING, refresh: true }

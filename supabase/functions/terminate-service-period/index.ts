@@ -71,6 +71,20 @@ async function refundViaEcpay(
     refund_amount: number;
   },
 ): Promise<Response> {
+  // Nothing to refund (e.g. terminated at the very end of the period, see
+  // schema_refund.sql's floor at 0): never call DoAction with 0 -- just
+  // complete the refund bookkeeping.
+  if (order.refund_amount <= 0) {
+    const { error: zeroErr } = await svc.rpc("mark_refund_processed", {
+      p_order_id: order.id,
+      p_provider_refund_ref: "no_refund_due",
+    });
+    if (zeroErr) {
+      console.error("mark_refund_processed failed for zero refund:", zeroErr.message);
+      return json({ error: "refund_succeeded_but_mark_failed" }, 500);
+    }
+    return json({ orderId: order.id, status: "refunded", note: "no_refund_due" });
+  }
   if (order.payment_method && order.payment_method !== "card") {
     // Only credit card is ever offered (ChoosePayment=Credit) and
     // DoAction is card-only -- checked rather than assumed, same as Oen.

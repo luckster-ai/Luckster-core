@@ -48,7 +48,7 @@ async function recordConfirmEvent(
       provider: ECPAY_PROVIDER_NAME,
       event_key: `confirm:${result.tradeNo || session.merchant_trade_no}:${result.kind}`,
       event_type: "confirm.query_trade_info",
-      mode: "test",
+      mode: ECPAY_MODE,
       user_id: session.user_id,
       order_id: result.kind === "fulfilled" ? result.orderId : null,
       transaction_hid: result.tradeNo || null,
@@ -116,7 +116,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
 
   if (session.status !== "open") return snapshot();
-  if (ECPAY_MODE !== "test" || ecpayConfigError()) return snapshot({ note: "confirm_unavailable" });
+  if (ecpayConfigError()) return snapshot({ note: "confirm_unavailable" });
 
   const result = await verifyAndFulfillEcpaySession(svc, session);
   await recordConfirmEvent(svc, session, result);

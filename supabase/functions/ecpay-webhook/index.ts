@@ -29,8 +29,13 @@
 // Response contract (ECPay docs): body "1|OK" acknowledges; anything else
 // makes ECPay resend every 5-15 minutes, up to 4 times that day. "1|OK" is
 // returned for everything handled or deliberately ignored; a non-1|OK
-// response is returned only for a transient internal failure (so ECPay's
-// resend re-runs the idempotent flow) or an invalid CheckMacValue.
+// response is returned only for a transient internal failure or a
+// misconfigured environment (so ECPay's resend re-runs the idempotent flow
+// once fixed) or an invalid CheckMacValue.
+//
+// Runs in both TEST and LIVE: ECPAY_MODE is recorded on every
+// payment_events row, and ecpayConfigError() refuses to process anything
+// when the mode and payment host do not match.
 
 import { serviceClient } from "../_shared/db.ts";
 import {
@@ -58,7 +63,7 @@ async function recordAnomaly(svc: Svc, body: unknown, note: string): Promise<voi
       provider: ECPAY_PROVIDER_NAME,
       event_key: `anomaly:${note}:${crypto.randomUUID()}`,
       event_type: "anomaly",
-      mode: "test",
+      mode: ECPAY_MODE,
       raw_payload: body ?? {},
       verification_status: "verification_failed",
       note,
@@ -83,9 +88,14 @@ async function finish(
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method !== "POST") return ack();
 
-  // Never process anything unless configured for TEST.
-  if (ECPAY_MODE !== "test") return ack();
-  if (ecpayConfigError()) return ack();
+  // Never process anything on a misconfigured environment (mode / host
+  // mismatch, missing secrets) -- and do not acknowledge either, so ECPay
+  // keeps resending and the payment is not lost once the config is fixed.
+  const cfgErr = ecpayConfigError();
+  if (cfgErr) {
+    console.error("ecpay-webhook misconfigured:", cfgErr);
+    return retry("config");
+  }
 
   let body: Record<string, string>;
   try {
@@ -119,7 +129,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     provider: ECPAY_PROVIDER_NAME,
     event_key: eventKey,
     event_type: eventType,
-    mode: "test",
+    mode: ECPAY_MODE,
     transaction_hid: tradeNo || null,
     raw_payload: body,
     verification_status: "skipped",

@@ -4,6 +4,22 @@
 
 本文件是 Luckster / JOTI 專案進度的**單一真實來源（Single Source of Truth）**。內容依實際 repo 檔案、Git 狀態與既有文件整理，不包含尚未開始或推測性的工作。每次重大進度變化後應更新本文件。
 
+**追蹤規則（2026-10-19 起為固定流程）**：
+
+1. 本文件是 JOTI 專案進度、未完成事項與決策狀態的**單一追蹤來源**。
+2. Discovery、Implementation、Testing／Regression 中發現、但當輪未處理完成的事項，不得只留在 Claude 回報或對話中，必須在**當輪結束前**分類寫入本文件。
+3. 固定使用以下分類：
+   - **TODO**：已確定需要修改，但尚未安排／完成
+   - **Future Decision**：需要未來做商業、法律、產品或技術決策；決策完成前不得自行假設（一併列入「Open Questions」）
+   - **External / Pending**：等待外部條件、第三方、正式環境、帳號、核准或其他前置條件
+   - **Pending（驗證）**：實作已完成或已有合理依據，但尚未完成指定的 TEST／Preview／Production 驗證；**不得**寫成 legacy issue 或 bug
+4. 事項已存在時更新原條目，不建立重複項目；本輪新發現事項若已有對應 Open Question／Next Step，更新既有項目，不另建第二份追蹤；不另建其他追蹤系統。
+5. 每輪完成後，將「已完成／PASS」與「待後續」同步到對應小節及 Current Phase、Next Steps、Open Questions 等既有區段，使全文前後一致。
+6. 已 PASS 的事項不再列為未完成；仍有未驗證的特殊路徑時，拆成獨立的 Pending（驗證）項目。
+7. Future Decision 不得由實作人員自行決定或默認，保留至正式決策。
+8. 不因當輪未處理某事項就將其描述為 bug，依實際狀態分類。
+9. 任何後續工作開始前，先以本文件判斷該事項目前是已完成、Pending（驗證）、TODO、Future Decision 或 External／Pending，避免重複工作或遺漏。
+
 ---
 
 ## Current Phase
@@ -15,7 +31,7 @@
 目前重心：
 
 1. **Payment Readiness / Pre-submission preparation**——金流平台現況：**2026-10-19 已確定正式採用綠界科技 ECPay**（購買當下付款、不先綁卡；目前不提供方案變更，見「Step 11 — 付款模式與方案變更規則落實」）；ECPay 正式特店審核與正式金鑰尚待完成；PAYUNi 不採用（申請是否撤回待決定）；Oen 相關程式保留為歷史／相容性實作。以下為網站審核準備工作：Gap Analysis、Implementation Sprint（Pricing/Legal/Footer/CTA）、Legal/Contract Publication Refinement（Discovery＋Implementation）、Production Publication Readiness Audit＋Polish、Vercel Deployment Architecture 修正、Mobile Legal/Contract RWD 修正、Contract Terminology Consistency（Audit＋2 輪 Implementation）**皆已完成**。**已知阻塞項**：TEST Supabase 專案 Auth 的 `Site URL`／`Redirect URLs` 設定過期，目前連到 TEST 專案的環境點擊登入都會被導向 `localhost:4190` 並出現 `ERR_CONNECTION_REFUSED`——根因已診斷確認，**修正需要到 Supabase Dashboard 手動操作**，尚未執行；Production 將使用獨立新專案，另行設定（見 Next Steps、Blockers）。這一整批工作已於 `f22f412` commit 並 push。
-2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——2026-10-19 已確定正式採用 ECPay。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作已完成，**Plan Change 自己的協調流程與前端（Step 10）亦已完成並在 TEST Supabase 專案實測成功**（Eligibility Gate、After-Expiry 排程、Immediate Change 協調、Overlap 防護回歸驗證，詳見下方對應小節）。**Step 11（Production Readiness）已開始**：11.1 Renewal Purchase Entry、11.2 Refund Failure UI 已完成並經 TEST 驗證（已 commit／push）；TEST Auth（Email + Password + Google、移除 Magic Link）已完成並經 TEST 驗證（`2acade2`，已 push）；Production 基礎設施 Discovery（Supabase Organization／方案／Region、Free 閒置暫停與 health check、Auth 登入方式）已完成並確立決策，**Production 環境建置進行中**：Production Supabase Project、Database Schema、4 個官方 Practices 匯入、Health Check（GitHub Actions keep-alive）、**Production Auth（Email + Password + Google，Resend SMTP／`auth.joti.yoga`）已完成並經 E2E 驗證（2026-10-15）**（見下方「Step 11 — Production Readiness Discovery」「Step 11 — Production Environment Build」「Step 11 — Production Auth 完成」小節）。**ECPay TEST 整合已完成並端到端驗證通過**（AIO formPost checkout → `ecpay-webhook` → QueryTradeInfo 回查 → `apply_order_payment()` → Service Period → 會員開通，詳見下方「ECPay Integration」小節）；退款程式已實作但尚未完成正式環境驗證；**2026-10-19 已確定正式採用 ECPay**。
+2. **Payment Rebuild — 第 1–9 階段已完成**：Step 5（Payment Core / Provider Adapter）、Step 6（Oen One-time Checkout）、Step 7（Webhook + Server-side Verification）、Step 8（Membership / Entitlement）、Step 9（Refund / Cancellation / Edge Cases）皆已完成並在 TEST Supabase 專案實測成功（含真實呼叫 Oen TEST 退款 API，詳見下方對應小節）。**Oen one-time 付款＋提前終止退款的完整鏈路（Order 建立 → 付款 → webhook → server-side re-query 驗證 → `apply_order_payment()` → Service Period 建立 → 會員主動提前終止 → `apply_service_period_early_termination()` → Oen 退款 API → `refunded`）已端到端驗證通過，不代表最終選定 Oen**——2026-10-19 已確定正式採用 ECPay。另已完成 ECPay／PAYUNi 與現有 Provider Adapter 架構之 Compatibility Check，**確認兩者皆未發現需要修改 Payment Core 的架構阻塞**（詳見下方「Provider Compatibility Check」小節）。`get_membership_status()` 與前端 `getMembershipStatus()` 現在會讀取 `service_periods`，付費存取狀態不再只依賴 Legacy 的 `subscription_status`；「方案變更（Plan Change）」的完整 Discovery／Design／契約與 `payment-legal-spec.md` 文字實作已完成，**Plan Change 自己的協調流程與前端（Step 10）亦已完成並在 TEST Supabase 專案實測成功**（Eligibility Gate、After-Expiry 排程、Immediate Change 協調、Overlap 防護回歸驗證，詳見下方對應小節）。**Step 11（Production Readiness）已開始**：11.1 Renewal Purchase Entry、11.2 Refund Failure UI 已完成並經 TEST 驗證（已 commit／push）；TEST Auth（Email + Password + Google、移除 Magic Link）已完成並經 TEST 驗證（`2acade2`，已 push）；Production 基礎設施 Discovery（Supabase Organization／方案／Region、Free 閒置暫停與 health check、Auth 登入方式）已完成並確立決策，**Production 環境建置進行中**：Production Supabase Project、Database Schema、4 個官方 Practices 匯入、Health Check（GitHub Actions keep-alive）、**Production Auth（Email + Password + Google，Resend SMTP／`auth.joti.yoga`）已完成並經 E2E 驗證（2026-10-15）**（見下方「Step 11 — Production Readiness Discovery」「Step 11 — Production Environment Build」「Step 11 — Production Auth 完成」小節）。**ECPay TEST 整合已完成並端到端驗證通過**（AIO formPost checkout → `ecpay-webhook` → QueryTradeInfo 回查 → `apply_order_payment()` → Service Period → 會員開通，詳見下方「ECPay Integration」小節）；退款程式已實作但尚未完成正式環境驗證；**2026-10-19 已確定正式採用 ECPay**。**2026-10-19 ECPay LIVE mode 程式支援已完成並部署 TEST，TEST 回歸 PASS**（Production 尚未部署／未切換 LIVE，見「Step 11 — ECPay LIVE mode Implementation」）。
 3. 內容擴充（新增 Module）
 4. 網站體驗細節打磨（Module Library/Detail、Practice Builder）
 
@@ -250,7 +266,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 年方案服務開始第 91～約 300 天：⚠️ **僅能人工退刷**，目前 API 路徑會失敗並停在 `refund_failed`
   - 到期後開始（After-Expiry）：付款早於服務開始，最多約一整年——年→月約付款後 365～395 天、年→年約 365～665 天退款：❌ **大部分超過 360 天，無法退刷至原卡**；月→年約 31～331 天：⚠️ 前段 API、後段人工
   - **退款金額公式不受影響**，但超過 90 天須人工處理、超過 360 天須以其他方式（如匯款）退款——屬經營／法律決策（契約是否載明退款方式、是否限制到期後開始的提前購買時間），待裁示
-  - 目前程式未區分 90 天內外；另退款金額為 0 時仍會呼叫退款 API（Oen 路徑相同），列為後續待檢查項目。**本次未修改任何程式**
+  - 目前程式未區分 90 天內外；另退款金額為 0 時仍會呼叫退款 API（Oen 路徑相同），列為後續待檢查項目。**本次未修改任何程式**（2026-10-19 更新：ECPay 路徑退款金額為 0 時已不呼叫 DoAction，見「Step 11 — ECPay LIVE mode Implementation」；90 天規則仍為 Future Decision，見 Open Questions；Oen 路徑為歷史／相容性程式，未修改）
 
 ### ECPay 付款頁重用／付款重試實測（2026-10-10，Discovery only）
 - **範圍**：以獨立測試付款頁直接對 ECPay TEST（公開測試商店 `3002607`）實測，ReturnURL 為無效網址，**未連接 JOTI Order Flow、未寫入任何 JOTI 資料**；未修改程式、SQL、資料庫或設定
@@ -553,7 +569,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **Scenario 4 已有有效方案再購買 — PASS**：TEST DB 直接呼叫 `create_checkout_session()` → `active_service_period_exists`，未寫入；Account「付費會員」、到期日 2026/11/16、無「購買方案」、僅「提前終止目前方案並退款」；`/contract-review` 顯示「你目前已有有效的方案」；Pricing 只顯示「前往我的帳號」＋「查看完整會員服務契約」
   - **Scenario 5 rejected 競態 — 未於 TEST 實測**（使用者同意）：以既有 PGlite SQL 測試結果為驗證依據；同一會員同時僅能有一個 open Session，雙分頁實際結果為 409（Scenario 2）
   - **測試資料（TEST）**：上述 Session／Order／Service Period／payment_event 各 1 筆；Scenario 2、4 的被拒嘗試未寫入資料
-- **`+trial2` 目前狀態**：TEST **有效月方案付費會員**，Service Period `f46f6d7d-…` 至 **2026-11-16 07:28:48 UTC**；在此之前無法再用於「已同意、無方案」測試（如需，須先提前終止，ECPay stage 退款預期為 `refund_failed`）
+- **`+trial2` 目前狀態**：（2026-10-16 時）TEST 有效月方案至 2026-11-16；**2026-10-19 更新**：該期間已於 TEST 回歸中提前終止，並重新購買新月方案至 2026-11-19 08:02:36 UTC（見「Step 11 — ECPay LIVE mode Implementation」）
 - **PlanPurchase 409 UI 問題（A3 發現）與修正**：
   - **原因**：`PlanPurchase.jsx` 只讀 `data?.error`；non-2xx 時 supabase-js `data` 為 null、錯誤內容在 `error.context`，因此 `CHECKOUT_ERROR_TEXT` 對不到、「付款進行中」切換從未觸發
   - **修正（已完成，僅 `frontend/src/components/PlanPurchase.jsx`）**：沿用 Step 11.2 的 `readTerminationBody(data, error)` 取得錯誤碼，沿用既有 `CHECKOUT_ERROR_TEXT` 與「付款進行中」狀態；未知錯誤／網路錯誤一律顯示「無法建立訂單，請稍後再試。」；成功路徑（`startProviderCheckout`）、後端購買規則、付款流程未變更；未重構或更名 `readTerminationBody`
@@ -595,6 +611,32 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **未修改（歷史／相容性）**：Plan Change 程式與資料庫（`create-plan-change-checkout`、`schema_plan_change.sql`、相關 RPC 與前端註解）、舊 Oen 訂閱／`oenAdapter` 程式、`CHECKOUT_ERROR_TEXT`、`order-schema-proposal.md`、本文件既有歷史紀錄；Production 部署時不部署 `create-plan-change-checkout`
 - **待後續（非本次範圍）**：隱私權政策中的 Oen（第 34、35、77 行）、契約網站欄位 `[待填寫]`；第七條第三項「單次給付之總價」措辭是否與日後可能開放之信用卡分期相容，待決定是否調整
 - **影響**：TEST `contract_versions` v1.0 指向的 `v1.0.md` 文字已更新（TEST 既有 acceptance 為測試資料）；Production 尚無 `contract_versions`／acceptance，上線前修改 v1.0 不違反「不建立 v1.1」決策；合併 `main` 後 `/legal/terms` 與 Pricing 新文字將隨 Production 自動部署公開
+
+### Step 11 — ECPay LIVE mode Implementation（2026-10-19，程式修改＋本機檢查通過＋已部署 TEST＋TEST 回歸 PASS — 程式未 commit；Production 未部署）
+- **範圍**：只改 5 個 Edge Function 檔案；前端、資料庫 schema、`config.toml`、付款架構未修改
+  - `_shared/ecpayAdapter.ts`：移除建立付款（`buildSignedCheckout`）與退款（`refundEcpayOrder`）的 `ECPAY_MODE !== "test"` 硬性限制，改由既有 `ecpayConfigError()` 把關（mode／主機一致：test ↔ `payment-stage.ecpay.com.tw`、live ↔ `payment.ecpay.com.tw`，並檢查 MerchantID／HashKey／HashIV／ReturnURL）
+  - `ecpay-webhook/index.ts`：移除非 test 即略過的限制；**設定錯誤時改回 `0|config`（500）並 `console.error`**（原為 `1|OK`，正式環境設定錯誤時付款通知會被吞掉）；`payment_events.mode` 改為實際 `ECPAY_MODE`（含 anomaly 紀錄）
+  - `confirm-checkout-session/index.ts`：改為只檢查 `ecpayConfigError()`；`payment_events.mode` 改為實際 `ECPAY_MODE`
+  - `terminate-service-period/index.ts`：ECPay 退款金額 ≤ 0 時不呼叫 DoAction，直接 `mark_refund_processed(…, 'no_refund_due')`，回傳 `{ status: 'refunded', note: 'no_refund_due' }`
+  - `_shared/ecpay.ts`：僅更新「TEST only」檔頭註解
+  - 保留：CheckMacValue 驗章、MerchantID 比對、QueryTradeInfo 回查與 TradeNo／金額比對、`SimulatePaid=1` 略過、`payment_events` 冪等、`fulfill_checkout_session()`、`ChoosePayment=Credit`
+- **本機檢查（通過）**：`deno check`／`deno lint`（以 `npx deno@2.5.6`）；scratchpad harness 直接載入實際模組並 stub `Deno.serve`／`fetch`（綠界公開測試商店金鑰）——test＋stage 與 live＋正式主機皆可建立付款；mode／主機不一致與無效 mode 一律擋下且無任何外部呼叫；webhook 付款成功（test／live）分別向對應主機 QueryTradeInfo 回查並呼叫 `fulfill_checkout_session`、`mode` 寫入實際值；`SimulatePaid=1` 不回查、不開通；驗章失敗回 400 並記 anomaly（`mode=live`）；設定不一致回 `0|config` 且不寫資料；退款 live 送往正式 DoAction、不一致時擋下；提前終止退款 0 不呼叫 DoAction
+- **TEST 部署（2026-10-19 07:38 UTC）**：以 `git -c core.autocrlf=false archive HEAD`（`2a1a499`）建立乾淨副本、僅覆蓋本輪 5 個檔案（工作樹中無關的未提交 `oen.ts`／`create-subscription-checkout` 未帶入），`supabase functions deploy … --project-ref ngznngqmbhxejkjbqomh --use-api` 部署至 TEST：`ecpay-webhook` **v8**、`confirm-checkout-session` **v6**、`create-order-checkout` **v12**、`terminate-service-period` **v9**；`verify_jwt` 不變（webhook false、其餘 true）；其他 Functions 未重新部署；Production Functions 仍為 0
+- **TEST 回歸（2026-10-19，`+trial2`，穩定 Preview）— PASS**：
+  - **提前終止**（使用者於 Preview 操作，`terminate-service-period` v9）：Service Period `f46f6d7d-…` `terminated_at` 07:48:58 UTC、無有效／未來 Service Period、無 open Checkout Session、契約同意 4 筆保留、符合重新購買條件；Order `af02d029-…` `refund_failed`、`refund_amount` 300（3 日 × NT$11，公式正確）、`provider_refund_error` 為 ECPay stage `RtnCode=10000002 error_amount_R`（與 10/12 相同，TEST 預期結果）；未產生多餘資料
+  - **月方案重新購買**：MerchantTradeNo `J261019155613HG939Y2`、NT$333、ECPay stage 付款成功 → Checkout Session `b63cf5cd-9e22-4e2c-9889-c0e47b9376ae` `fulfilled`（07:56:14 建立、08:02:36 完成）→ payment_event `2610191556140412:1` `verified`、**`mode=test`**、`SimulatePaid=0`、RtnCode 1、TradeAmt 333（webhook 收到至處理約 1.1 秒）→ Order `59a1fb11-b601-4ffa-ab8a-25cd78b8c742` `paid`（付款確認時才建立、沿用契約同意 `8494c887-…`）→ Service Period `38083c41-0863-4ecb-aef6-8f5ab48bfb07` 2026-10-19 08:02:36 → 2026-11-19 08:02:36 UTC（付款驗證完成時起算 1 個月）；同 TradeNo 僅 1 筆 Order／payment_event、無重複、全庫有效期間重疊 0、近 2 小時無 anomaly／驗證失敗紀錄
+  - **畫面**（使用者確認）：`/checkout/return` 顯示「付款已確認，你的帳號狀態已更新。」；Account 已反映新的有效月方案
+  - **結論**：正常購買 E2E「JOTI → Checkout Session → ECPay TEST → webhook → 驗章／回查 → Order paid → Service Period → checkout return」**TEST PASS**（非 Production 驗證）
+- **`+trial2` 目前狀態**：TEST 有效月方案至 **2026-11-19 08:02:36 UTC**（不再處於「已同意、無方案」）；不為測試刻意變更此帳號
+- **追蹤事項**：
+  - **TODO**：本輪 5 個 Edge Function 檔案（與本文件更新）**尚未 commit／push**——TEST 目前執行的 v6／v8／v9／v12 來自乾淨副本，尚未進入 Git，應先 commit 並經 Preview branch 合併 `main`（push `main` 只觸發前端 Production 部署，Edge Functions 不會自動部署至 Production）；另含前端 `frontend/src/utils/terminationResult.js`（0 元退款提示，2026-10-19 修正）亦尚未 commit
+  - **Pending（驗證）**：`confirm-checkout-session` 的 webhook 晚到／由 checkout return 路徑完成開通——本輪付款由 webhook 先開通，未產生 `confirm:*` 事件，尚未實測（非遺留問題）
+  - **Pending（驗證）**：同一會員雙分頁／同時購買時的 in-progress Checkout Session 保護與 PlanPurchase「付款進行中」畫面——後端 409 已於 A3 驗證、畫面修正已上 `main`，本輪未做 UI 情境實測
+  - **Pending（驗證）**：退款金額 0 元路徑（不呼叫 DoAction、`no_refund_due`）——本機情境測試通過，TEST 尚無自然產生 0 元退款的實際 E2E；不為測試刻意變更現有測試帳號；前端 0 元提示文案已修正，亦待同一次 0 元 E2E 一併確認畫面
+  - ~~**TODO**：退款金額為 0 時的前端文案~~——**2026-10-19 已修正（未 commit）**：`frontend/src/utils/terminationResult.js` 的 `classifyTerminationResult()` 在 `status === 'refunded'` 且 `note === 'no_refund_due'` 時改顯示「已提前終止目前方案。依契約第十一條計算，本次沒有可退還的金額，因此不會產生退款。」；`kind: 'refunded'`、`refresh: true` 不變，其餘情境文案與行為不變（scratchpad 比對修改前後 11 種情境僅此 1 種改變；`npm run lint`／`npm run build` 通過）；AccountPage、後端、Oen 路徑未修改。0 元退款實際 E2E 仍為下方 Pending（驗證）
+  - **Future Decision**：ECPay 付款超過 90 天的退款處理方式——本輪未實作、未自行定規則，正式上線前決定（見 Open Questions「退款期限對既定退款規則的處理方式」）
+  - **External / Pending**：Production LIVE——Production secrets（`ECPAY_MODE=live`、`ECPAY_PAYMENT_BASE=https://payment.ecpay.com.tw`、正式 `ECPAY_MERCHANT_ID`／`HASH_KEY`／`HASH_IV`、`ECPAY_RETURN_URL`、`SITE_URL`、`ACTIVE_PAYMENT_PROVIDER=ecpay`）、Production Edge Functions 部署、綠界正式特店核准與 Q1／Q2 回覆、Production 小額真實付款＋DoAction 退款 E2E 皆未完成（見 Next Steps 第 4 點）；**本輪 PASS 僅限 TEST**
+
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -682,15 +724,15 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`**（2026-10-13 更新：Redirect URLs 已含 `https://joti-*-jotiyoga.vercel.app/**`，Preview 上 Email + Password／驗證信／重設密碼／Google 登入已實測成功，不再阻塞 Preview 登入；`Site URL` 仍為 `localhost:4190`，僅作為 fallback；本機開發若要測重設密碼，`http://localhost:5173/auth/reset-password` 尚未加入允許清單）：原記載如下——影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
 2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。（2026-10-16 更新：`origin/main` 為 **`8592900`**——`8ac0bcd`（Purchase Entry 開關）與 A1 合併之 `dee932c`／`53df3cf`／`8592900` 皆已 push 並自動部署 Production；2026-10-16 PlanPurchase 409 修正亦已 push `main`）
 3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）、**Production Auth（Email + Password + Google、Resend SMTP、Google OAuth；2026-10-15 E2E 驗證通過）**（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth 完成」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Admin 設定、Production Edge Functions／secrets；Vercel Production 已為新版並指向 Production Supabase（2026-10-16 起由 push `main` 經 Git integration 自動部署），最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
-4. **ECPay 正式上線準備（2026-10-19 更新）**：**已確定正式採用綠界科技 ECPay**（取代原「ECPay／PAYUNi 候選、最終平台未決定」記載；PAYUNi 不採用，申請是否撤回待決定；Oen 已通過審核但不採用）。ECPay TEST 整合與 E2E 已完成。待辦：(a) 綠界正式特店審核、正式 MerchantID／HashKey／HashIV；(b) 綠界回覆 Q1／Q2（ReturnURL 可否用 `*.supabase.co`、是否須自有網域）、Q4（一般賣家）與履約保證；(c) **ECPay live mode 程式修改（正式待辦）**——目前 `_shared/ecpayAdapter.ts`（建立付款第 79 行、退款第 168 行）、`ecpay-webhook`（第 87 行，非 test 時只回應不處理）、`confirm-checkout-session`（第 119 行）在 `ECPAY_MODE !== "test"` 時一律拒絕或略過；需允許 `ECPAY_MODE=live`＋正式主機 `payment.ecpay.com.tw`，保留模式／主機一致檢查（`ecpayConfigError()`），並以 TEST 回歸驗證 test 模式行為不變；(d) Production 部署時必須明確設定 `ACTIVE_PAYMENT_PROVIDER=ecpay`（未設定時程式預設 `oen`）
+4. **ECPay 正式上線準備（2026-10-19 更新）**：**已確定正式採用綠界科技 ECPay**（取代原「ECPay／PAYUNi 候選、最終平台未決定」記載；PAYUNi 不採用，申請是否撤回待決定；Oen 已通過審核但不採用）。ECPay TEST 整合與 E2E 已完成。待辦：(a) 綠界正式特店審核、正式 MerchantID／HashKey／HashIV；(b) 綠界回覆 Q1／Q2（ReturnURL 可否用 `*.supabase.co`、是否須自有網域）、Q4（一般賣家）與履約保證；(c) **ECPay live mode 程式修改**（2026-10-19 程式修改、本機檢查、TEST 部署與 TEST 回歸 **PASS**；程式尚未 commit（TODO）；Production 未部署（External／Pending），見「Step 11 — ECPay LIVE mode Implementation」；原記載：）——目前 `_shared/ecpayAdapter.ts`（建立付款第 79 行、退款第 168 行）、`ecpay-webhook`（第 87 行，非 test 時只回應不處理）、`confirm-checkout-session`（第 119 行）在 `ECPAY_MODE !== "test"` 時一律拒絕或略過；需允許 `ECPAY_MODE=live`＋正式主機 `payment.ecpay.com.tw`，保留模式／主機一致檢查（`ecpayConfigError()`），並以 TEST 回歸驗證 test 模式行為不變；(d) Production 部署時必須明確設定 `ACTIVE_PAYMENT_PROVIDER=ecpay`（未設定時程式預設 `oen`）
 5. Step 11（Production Readiness）已開始：11.1、11.2 已完成；Production 基礎設施 Discovery 已完成並確立決策；Production 建置進行中，見第 3 項（子步驟編號待排定）。
 6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
 7. 決定測試用訂閱 `S2026091055MVCVI8` 要不要現在取消，還是留著拿來測 T-3（續扣 / 取消 / 續扣失敗）。
 8. 固定 IP proxy 技術驗證（PoC）：選定供應商（建議 QuotaGuard）、申請試用、驗證 Supabase Edge Function 可透過 `Deno.createHttpClient` 走固定 IP。
 9. ~~Plan Change（Step 10）透過 Oen 真實 hosted checkout 的視覺化 E2E~~——**2026-10-19 結案（不再進行）**：JOTI 目前不提供方案變更、採用 ECPay（見「Step 11 — 付款模式與方案變更規則落實」）
 10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
-11. **ECPay Checkout Session Flow（2026-10-16 更新）**：(a) `b79151e` 已 commit／push；(b) 補測現況——有效期間內購買 → `active_service_period_exists`（A3 PASS）、同一會員雙分頁 → 409 `checkout_session_in_progress` 且未建立第二筆 Session（A3 後端 PASS；畫面錯誤訊息已修正、待 Preview 實測）、雙方付款成功之 rejected 競態以 PGlite SQL 測試為依據；**仍未實測**：webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示（A3 停在綠界成功頁）；(c)(d) Step 11.1／11.2 已 push；(e) 向綠界確認 AIO 付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) Preview 仍顯示舊「訂閱 JOTI」（`VITE_ENABLE_SUBSCRIBE=true`）待處理。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=穩定 Preview `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`；`+trial2` 目前為有效月方案（至 2026-11-16）
-12. **Production Readiness Checkpoint 後續**：見「Step 11 — Production Readiness Checkpoint A1–A3」的「下一步與依賴」（PlanPurchase 修正 Preview 實測與 commit、2026-10-19 首購 E2E、ContractReviewPage 同類錯誤、Production 開放付款前工作）；**2026-10-19 首購 E2E 資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）；剩餘 TEST 項目：PlanPurchase「付款進行中」畫面 Preview 實測（需「已同意、無方案」帳號；目前兩個測試會員皆有有效方案）、webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示
+11. **ECPay Checkout Session Flow（2026-10-19 更新）**：(a) `b79151e` 已 commit／push；(b) 驗證現況——有效期間內購買 → `active_service_period_exists`（A3 PASS）；同一會員雙分頁 → 後端 409 `checkout_session_in_progress`、未建立第二筆 Session（A3 PASS），畫面「付款進行中」修正已上 `main`，**Pending（驗證）**：UI 情境未實測；JOTI 返回頁顯示「付款已確認，你的帳號狀態已更新。」（2026-10-19 TEST 回歸 PASS）；**Pending（驗證）**：webhook 晚到由 `confirm-checkout-session` 開通；雙方付款成功之 rejected 競態以 PGlite SQL 測試為依據；(c)(d) Step 11.1／11.2 已 push；(e) 向綠界確認 AIO 付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) Preview 仍顯示舊「訂閱 JOTI」（`VITE_ENABLE_SUBSCRIBE=true`）待處理。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=穩定 Preview `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`；`+trial2` 目前為有效月方案（至 2026-11-19）
+12. **Production Readiness Checkpoint 後續**：見「Step 11 — Production Readiness Checkpoint A1–A3」的「下一步與依賴」（PlanPurchase 修正 Preview 實測與 commit、2026-10-19 首購 E2E、ContractReviewPage 同類錯誤、Production 開放付款前工作）；**2026-10-19 首購 E2E 資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）；剩餘 TEST 項目：PlanPurchase「付款進行中」畫面 Preview 實測（需「已同意、無方案」帳號；目前兩個測試會員皆有有效方案）、webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示；**2026-10-19 ECPay LIVE mode：TEST 部署與回歸 PASS**，剩餘追蹤見「Step 11 — ECPay LIVE mode Implementation」（TODO：commit 本輪程式（含已修正的 0 元退款前端文案 `terminationResult.js`）；Pending（驗證）：`confirm-checkout-session` 晚到路徑、雙分頁 UI、0 元退款 E2E；Future Decision：>90 天退款；External／Pending：Production LIVE）
 
 ---
 
@@ -711,11 +753,17 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - `refund_failed` 之後是否允許重新發起退款——Step 9 刻意維持 `refund_failed` 為 resting terminal state，未實作重試機制，仍待裁示。
 - **ECPay 待綠界確認**（已依官方文件查核更新，見「ECPay 官方文件查核」小節）：(1) 正式環境是否接受 `*.supabase.co`（前有 Cloudflare 代理）作為 ReturnURL；(2) ReturnURL 是否須與登記網站同網域、`payment.joti.yoga` 是否符合；(3)「主機 IP 鎖定」是否僅為選用；(4) 預收制線上課程可否以一般賣家申請、一般賣家可否使用 DoAction、收款額度、年方案是否適用遞延性服務履約保證；(5) 90／360 天起算點、超過 360 天有無其他退款管道、`Action=R` 的 `TotalAmount` 語意、關帳前可否部分退刷、自動關帳時間。
 - **ECPay Checkout Session Flow 仍待決策**（其餘已於 2026-10-12 裁示並實作，見同名小節）：(1) 契約與 `payment-legal-spec.md` 是否提及付款期限／待付款訂單（未逐條核對）；(2) 被 rejected 的付款如何通知會員、人工退款作業流程；(3) 退款後 rejected Session 是否需要記錄退款完成狀態；(4) 已完成契約同意、無有效方案會員的購買入口——已於 Step 11.1 實作並 TEST E2E 通過（已解決）；(5) TEST `ACTIVE_PAYMENT_PROVIDER`／`SITE_URL` 測試完是否還原；(6) ECPay 付款頁有效時間（10300025「訂單已過期」）確認後，JOTI 30 分鐘 Session 規則與文案是否調整。
-- **退款期限對既定退款規則的處理方式（經營／法律決策，待裁示）**：年方案超過 90 天的人工退刷流程、超過 360 天（主要為到期後開始）的退款方式、是否限制到期後開始的提前購買時間、契約是否需載明退款方式。
+- **退款期限對既定退款規則的處理方式（經營／法律決策，待裁示）**：年方案超過 90 天的人工退刷流程、超過 360 天（主要為到期後開始）的退款方式、是否限制到期後開始的提前購買時間、契約是否需載明退款方式。**Future Decision（2026-10-19 更新）**：正式上線前決定；ECPay LIVE mode Implementation 未實作 90 天規則（程式目前不區分 90 天內外，超過 90 天時 API 退款預期失敗並停在 `refund_failed`）。「到期後開始」已於 2026-10-19 決定不提供，相關情形不再發生，剩年方案服務開始超過 90 天之退款
 
 ---
 
 ## Last Updated
+
+2026-10-19（0 元退款前端提示修正：`terminationResult.js` 依 `note === 'no_refund_due'` 顯示「本次沒有可退還的金額，因此不會產生退款」；原 TODO 標記已修正、未 commit；0 元退款實際 E2E 仍為 Pending（驗證））
+
+2026-10-19（ECPay LIVE mode：TEST 部署（webhook v8／confirm v6／create-order-checkout v12／terminate v9）與 TEST 回歸 PASS（提前終止 `refund_failed` 符合預期；月方案 `J261019155613HG939Y2` 開通、`mode=test`、返回頁「付款已確認」）；追蹤規則整合為 9 點固定流程；+trial2 現為有效月方案至 11-19）
+
+2026-10-19（ECPay LIVE mode Implementation：5 個 Edge Function 修改、本機檢查通過、未 commit；記錄 Pending（TEST 回歸含 `confirm-checkout-session`）、TODO（退款 0 元前端文案）、Future Decision（超過 90 天退款）、External（Production secrets／綠界）；新增「未處理事項記錄原則」為固定流程）
 
 2026-10-19（P0 基線整理：修正 Current Phase／Next Steps／Checkpoint 中「ECPay／PAYUNi 候選、最終平台未決定」的過時記載為已確定採用 ECPay；新增 ECPay live mode 程式修改為正式待辦）
 

@@ -1,8 +1,10 @@
-// ECPay (綠界) 全方位金流 (AIO) client -- TEST (stage) environment only.
+// ECPay (綠界) 全方位金流 (AIO) client -- TEST (stage) and LIVE (production).
 //
-// Same env-driven shape as ./oen.ts, so the eventual production switch is a
-// config change plus removing the test-only guards in ./ecpayAdapter.ts,
-// never a rewrite of this client:
+// Env-driven, so switching an environment between TEST and LIVE is a
+// config change only, never a code change. ecpayConfigError() below is the
+// single gate every caller uses: ECPAY_MODE and ECPAY_PAYMENT_BASE must
+// match (test <-> stage host, live <-> production host), otherwise nothing
+// is signed, sent or processed:
 //   ECPAY_PAYMENT_BASE  https://payment-stage.ecpay.com.tw  ->  https://payment.ecpay.com.tw
 //   ECPAY_MODE          test (default)                      ->  live
 //   ECPAY_MERCHANT_ID / ECPAY_HASH_KEY / ECPAY_HASH_IV       per-merchant secrets
