@@ -39,14 +39,14 @@ Membership Service Basic Agreement（會員服務基本契約）
 | **Contract** | 會員服務基本契約（Basic Agreement）本身的內容與版本 | 每次修訂產生新的 `contract_version` |
 | **Contract Review** | 乙方審閱 Contract 的至少 3 日期間 | 在乙方「準備成為正式會員」時觸發，與 Trial 平行、不互相取代；審閱期屆滿≠已同意契約 |
 | **Purchase Intent** | 乙方選擇方案（Monthly/Annual）、表示想購買的意向 | 發生在 Contract 已同意（基本契約已成立）之後；本身不是付款動作 |
-| **Payment Authorization** | 乙方明確同意的付款方式授權動作（含可能的先綁卡、待條件成就後扣款） | 由 Purchase Intent 觸發，但是獨立的意思表示，不可由 Purchase Intent 自動推定已發生 |
-| **Order** | JOTI 對「一次 Service Period 購買」的紀錄與其生命週期 | 由 Payment Authorization 後建立；一個 Order 對應一個 Service Period |
-| **Payment** | 實際的金流交易與其伺服器端驗證結果 | Order 是否轉為已付款，依 Payment 驗證結果決定 |
+| **Payment（付款）** | 乙方於明確確認購買後，在金流服務商（ECPay）付款頁依其提供之付款方式完成付款的動作；JOTI 不採先綁卡、待日後條件成就始扣款之方式 | 由 Purchase Confirmation 觸發，但是獨立的行為，不可由 Purchase Intent／Purchase Confirmation 自動推定已完成 |
+| **Order** | JOTI 對「一次 Service Period 購買」的紀錄與其生命週期 | 於付款經伺服器端驗證成功後才建立（付款完成前僅有暫時的 Checkout Session）；一個 Order 對應一個 Service Period |
+| **Payment Verification（付款驗證）** | 伺服器端對實際金流交易結果之驗證（webhook＋向金流服務商回查） | 驗證成功才建立已付款 Order 並啟用 Service Period |
 | **Membership** | 乙方在基本契約下的會員身份與其目前是否具備有效 Service Period | 由已驗證的 Payment/Order 推導出目前是否有生效中的 Service Period |
 | **Service Period** | 一段具體、有起訖日期的付費服務期間（Monthly 或 Annual） | 由一個已付款的 Order 產生；屆滿後 Membership 的付費存取權限停止，但基本契約不受影響 |
 | **Renewal** | 乙方在既有基本契約下，主動購買下一個 Service Period 的行為 | 產品用語，法律上是新的 Purchase Intent → Order 流程，不是自動延長 |
 
-**關鍵原則（不得混淆的邊界）**：`trial_start`、`review_completed`、`contract_acceptance` 這三個事件，**都不等於** `purchase_confirmed`，`purchase_confirmed` 也**不等於** `payment_authorized`。這些狀態/事件彼此獨立，不得在系統中被合併成單一狀態或單一時間戳記。
+**關鍵原則（不得混淆的邊界）**：`trial_start`、`review_completed`、`contract_acceptance` 這三個事件，**都不等於** `purchase_confirmed`，`purchase_confirmed` 也**不等於**付款完成（payment verified）。這些狀態/事件彼此獨立，不得在系統中被合併成單一狀態或單一時間戳記。
 
 ---
 
@@ -85,7 +85,7 @@ Membership Service Basic Agreement（會員服務基本契約）
 - **與 Trial 是兩個獨立的計時器，可以重疊，不得合併或互相取代。**
   - Trial 的起訖不受契約審閱期間影響；審閱期間屆滿與否，也不受 Trial 進度影響。
   - 範例：Day 0 註冊開始 Trial；Trial 進行中某天乙方表示要成為正式會員，此刻才 present 契約、起算 3 天；審閱期滿後，乙方仍可以繼續使用其原本 Trial 剩餘的部分，不強迫立刻購買。
-- **`review_completed`（到達 `contract_review_available_at`）＝ 具備同意契約的資格，不等於已經同意契約，更不等於已經決定購買或已授權付款。**
+- **`review_completed`（到達 `contract_review_available_at`）＝ 具備同意契約的資格，不等於已經同意契約，更不等於已經決定購買或已完成付款。**
 - **禁止事項**：
   - 不得以單一 checkbox 或任何快速確認 UX，讓會員實質放棄或縮短審閱期間。
   - 不得讓 `review_completed` 或 `trial_start` 本身觸發任何扣款或自動建立訂單。
@@ -108,7 +108,7 @@ Membership Service Basic Agreement（會員服務基本契約）
 
 ### Service Period（月方案／年方案）
 - 建立前提：基本契約已成立（或於同一流程中同時成立）。
-- 建立流程：Purchase Intent → Purchase Confirmation → Payment Authorization → Order 建立 → Payment 驗證成功 → Service Period 啟用。
+- 建立流程：Purchase Intent → Purchase Confirmation → 於 ECPay 付款頁完成付款 → 伺服器端驗證付款成功 → 建立已付款 Order → Service Period 啟用（自付款驗證完成時起算）。
 - 屆滿：到期即結束，**不自動續約、不自動扣款、不自動建立下一個 Service Period**。
 - 屆滿後：Membership 的付費存取權限停止，但基本契約不受影響；乙方可自行決定是否購買下一個 Service Period（即「續訂」，見第 7 節）。
 - **【已確認】JOTI 不採用「取消訂閱」（cancellation）之產品概念**：因為沒有自動續訂、沒有自動扣款，乙方不需要透過「取消」來阻止下一期扣款。乙方若只是不想繼續使用：不需要執行任何取消操作，**不購買下一個 Service Period 即可**；目前 Service Period 到期後，Paid Access 自然結束，基本契約仍然有效，乙方日後仍可在同一有效基本契約下主動購買新的 Service Period。**「Service Period 屆滿」與「不購買下一期」不得被描述或實作為「取消訂閱」。**
@@ -136,30 +136,25 @@ Membership Service Basic Agreement（會員服務基本契約）
   - 自動扣款
   - 自動延長 Membership 的付費存取權限
   - 服務期間到期自動建立下一個 Service Period 或對應 Order
-  - 使用會員已授權的付款方式，於未經會員針對該次扣款重新明確確認之情況下自動扣款
+  - 使用會員先前購買時所使用的付款方式，於未經會員針對該次購買重新明確確認之情況下自動扣款
 - 「續訂」＝**會員在既有基本契約下，另行主動購買一個新的 Service Period**，法律上不是新的基本契約，也不是對原基本契約的自動延展：
   ```
-  會員主動選擇要續購 → 新的 Purchase Intent / Confirmation / Payment Authorization → 新的 Order → 新的 Payment → 新的 Service Period
+  會員主動選擇要續購 → 新的 Purchase Intent / Confirmation → 新的付款 → 付款驗證成功 → 新的 Order → 新的 Service Period
   ```
 - **【已確認】於同一份仍然有效存續的基本契約下，會員之後主動購買新的 Service Period（續購），不重新啟動完整的 3 日契約審閱期間。** 理由：基本契約並未因 Service Period 屆滿而終止或重新成立（見第 5、6 節），會員就基本契約之審閱與同意早已完成一次，續購僅是在同一份既有基本契約下另行購買一段新的付費服務期間。
 - 前項規則的兩個例外，須另行處理，**不適用**免除審閱期的規則：
   1. **基本契約已依第 6 節終止**：會員日後重新加入，視為重新申請、重新成立新的基本契約，須重新進入完整的契約審閱程序。
   2. **契約條款發生第 8 節所定之重大變更**：此種情形不是單純續購，不得比照本節規則處理；其審閱、通知與同意程序依當時應適用法令及第 8 節之變更程序辦理，本文件對這種情形**不逕行宣稱**審閱期應予免除或應予重新起算，須個案判斷。
-- Oen 或任何 payment provider 即使提供 recurring subscription 能力，**不代表 JOTI 就應該使用它**作為續購的自動化機制——是否使用，由本文件（商業規則）決定，不是由 API 能力決定。
+- ECPay 或任何 payment provider 即使提供定期定額等 recurring 能力，**不代表 JOTI 就應該使用它**作為續購的自動化機制——是否使用，由本文件（商業規則）決定，不是由 API 能力決定。
 
 ---
 
-## 7A. 方案變更（Plan Change）
+## 7A. 方案變更（Plan Change）— 目前不提供
 
-- **定義**：乙方於原付費服務期間仍有效存續中，依第 7 節「續購」之規定另行購買其他方案之服務期間，稱「方案變更」。與一般續購的差異僅在於「原服務期間是否仍有效」，**不構成新的付款類型，也不是獨立於第 7／10／11 節之外的新制度**。
-- **Eligibility**：僅當乙方於購買當下，依 entitlement 規則判定仍存在一筆有效之服務期間時，方屬方案變更；若原服務期間已屆滿或已退款結束，依第 7 節一般續購規則處理，不適用本節。
-- **立即變更（Immediate Change）**：等同乙方同時行使第 11 節之提前終止權利（**退款依第 11 節既有公式計算，不另訂新公式**）＋依第 7／10 節另行購買新方案。新服務期間於付款驗證成功後立即開始；原服務期間同時終止。新方案價格依第 2 節正常價格收取，不因原方案折抵。
-- **到期後開始（Scheduled / After-Expiry Change）**：乙方購買新方案，付款驗證成功即告成立，惟其服務期間之起始時間等於原服務期間之屆滿時間，不提前、不重疊、不產生退款。
-- **月→年**：立即變更、到期後開始皆可選擇。
-- **年→月**：僅提供到期後開始；如乙方需要立即改用月方案，依第 11 節另行提出提前終止申請，終止後再依第 7／10 節正常購買月方案，**不建立專屬的「年→月立即變更」路徑**。
-- **不重疊 invariant**：不同付費服務期間之實際服務期間（起訖時間）不得重疊——這是規則層級的約束，具體如何實作（資料結構、檢查方式）不在本文件範圍。
-- **新 Order 與既有 Order 的關係**：新方案之訂單與原方案之訂單，為各自獨立之交易；新方案之服務權益於其付款驗證成功時即成立，**不以原方案退款程序是否完成為前提**。退款本身之後續處理（含退款遲延或失敗之情形）依第 11 節既有規則範圍處理，**本節不另訂新規則**。
-- **告知義務**：乙方確認購買前，應清楚知悉「立即變更」與「到期後開始」之差異（含是否退款、新服務期間實際開始時間），並為明確之選擇與確認。
+- **【已確認 2026-10-19】JOTI 目前不提供方案變更**，包括「立即變更」與「到期後開始」；契約第九條之一已改為明確說明不提供。
+- 有效 Service Period 存續中，不得另行購買其他 Service Period（系統以 `active_service_period_exists` 拒絕）；不同 Service Period 之實際服務期間不得重疊。
+- 會員如欲改用其他方案：依第 11 節申請提前終止後再購買，或於原 Service Period 屆滿後再購買（第 7 節）。
+- **歷史**：Step 10 曾定義「立即變更／到期後開始」規則並完成相關程式（`create-plan-change-checkout`、`schema_plan_change.sql` 等），現保留為歷史／相容性實作，不屬於目前產品規則；日後如重新提供方案變更，須依第 8 節契約變更程序辦理。
 
 ---
 
@@ -171,16 +166,17 @@ Membership Service Basic Agreement（會員服務基本契約）
 
 ---
 
-## 9. Oen 使用範圍與能力邊界
+## 9. 金流服務商（ECPay）使用範圍與能力邊界
 
-- **T-1（One-time Checkout）**：已驗證可用，正式架構應以此為基礎付款方式。
-- **先綁卡、待條件成就後一次性扣款**：**已確認 Oen 技術上可支援**此種流程（先綁定信用卡、不立即扣款、待特定條件—例如 Trial 屆滿—成就後再執行一次扣款）。這項技術能力**可以**用於支援第 10 節所述之「Trial → 主動購買 → 條件成就後扣款」產品流程，**但**僅限於乙方已完成購買確認與付款授權後，依乙方明確同意之條件執行**一次**扣款；不得利用此技術能力，於乙方未另行同意之情況下，對此後之任何後續 Service Period 反覆或自動執行扣款。
-- **持續性自動扣款／訂閱式續約**：**JOTI 不使用**任何形式的 recurring/自動續約機制作為正式的續購方式（見第 7 節）。「Oen 能做到」與「JOTI 何種情況下允許執行扣款」是兩件事，JOTI 的商業規則優先。
-- 具體採用哪一個 Oen API 端點、如何確保扣款僅執行一次而不會意外變成持續扣款，屬於工程實作決定，見 `payment-integration-rules.md`。
+- **【已確認 2026-10-19】JOTI 採用綠界科技 ECPay**（全方位金流 AIO）：會員於購買時導向 ECPay 付款頁，依該頁所提供之付款方式完成付款；付款結果經 webhook 與向 ECPay 回查（QueryTradeInfo）之伺服器端驗證成功後，才建立已付款 Order 並啟用 Service Period。
+- **購買當下付款**：JOTI 不採用先綁卡、待日後特定條件（例如 Trial 屆滿）成就始扣款之方式。
+- 付款頁提供哪些付款方式，依 ECPay 設定與 JOTI 另行之決定，本文件不預先限制。
+- **持續性自動扣款／定期定額**：**JOTI 不使用**任何形式的 recurring/自動續約機制（見第 7 節）。「金流服務商能做到」與「JOTI 何種情況下允許執行扣款」是兩件事，JOTI 的商業規則優先。
+- **歷史**：先前曾評估 Oen（One-time Checkout、先綁卡後扣款能力）；相關程式保留為歷史／相容性實作，不屬於目前產品流程。
 
 ---
 
-## 10. Trial → 主動購買 → 條件成就後扣款：完整產品流程
+## 10. Trial → 主動購買 → 購買當下付款：完整產品流程
 
 ```
 註冊
@@ -197,27 +193,23 @@ Membership Service Basic Agreement（會員服務基本契約）
 ↓
 乙方明確確認購買（Purchase Confirmation）
 ↓
-乙方完成付款方式之授權／綁定（Payment Authorization，可能是先綁卡不立即扣款）
+乙方於 ECPay 付款頁完成付款
 ↓
-乙方繼續使用其原本的免費試用
+伺服器端驗證付款成功（webhook＋回查）
 ↓
-試用條件達成（30 天或 30 小時，先到者）
+建立已付款 Order
 ↓
-依乙方授權當下已明確揭露之條件與金額，執行一次性扣款
-↓
-建立／完成 Order
-↓
-伺服器端驗證扣款成功
-↓
-Service Period 啟用，Membership 具備付費存取權限
+Service Period 啟用（自付款驗證完成時起算），Membership 具備付費存取權限
 ```
+
+- 免費試用不會自動轉為付費；乙方未完成付款或付款未經驗證成功者，該次購買不成立，不建立 Order、不啟用 Service Period。
 
 **嚴禁**的簡化版本（不得實作）：
 ```
 註冊 → 3 日審閱期結束 → 自動扣款   ✗ 禁止
 ```
 
-`trial_start` 與 `review_completed` 本身**都不構成** payment authorization，系統中必須存在明確、獨立的「購買確認 / 付款授權」事件，不得由前兩者推定已發生。
+`trial_start` 與 `review_completed` 本身**都不構成**購買或付款，系統中必須存在明確、獨立的購買確認與付款驗證紀錄，不得由前兩者推定已發生。
 
 ---
 

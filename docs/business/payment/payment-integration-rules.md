@@ -2,7 +2,7 @@
 
 ## Purpose
 
-本文件是給 Claude Code、Luckster AI Agent 及任何工程人員在實作 JOTI Payment / Membership / Oen 串接時，必須遵守的具體規則。
+本文件是給 Claude Code、Luckster AI Agent 及任何工程人員在實作 JOTI Payment / Membership / 金流服務商（目前為綠界科技 ECPay）串接時，必須遵守的具體規則。
 
 本文件的規則衍生自 [`payment-legal-spec.md`](./payment-legal-spec.md)（商業／法律規格），而該文件又衍生自 [`docs/legal/joti-online-teaching-contract.md`](../../legal/joti-online-teaching-contract.md)（正式契約）。三者若有衝突，以上層文件為準（見下方「文件優先順序」）。
 
@@ -22,7 +22,7 @@ Payment Integration Rules（本文件）
 Code
 ```
 
-**工程程式不得反過來決定商業規則。** 例如：如果 Oen API 提供 recurring subscription，不代表 JOTI 就應該使用 recurring subscription——是否使用，由上層文件決定。
+**工程程式不得反過來決定商業規則。** 例如：如果金流服務商（ECPay 或其他）提供定期定額等 recurring 能力，不代表 JOTI 就應該使用 recurring subscription——是否使用，由上層文件決定。
 
 ---
 
@@ -43,9 +43,9 @@ JOTI 採 **Membership Service Basic Agreement（基本契約）＋ Service Perio
 2. **不可因 `trial_start`（試用開始）自動扣款或自動建立任何付款相關紀錄。**
 3. **不可因 `service_period_expired`（服務期間到期）自動續約、自動建立下一個 Order、自動扣款。**
 4. **不可僅依瀏覽器 `successUrl` 返回或前端顯示的付款成功畫面，逕行授予 Membership／啟用 Service Period。**
-5. **Payment success 必須由 server-side verification（webhook + 向 Oen 回查驗證）確認後，才能將 Order 標記為已付款並啟用對應 Service Period。**
+5. **Payment success 必須由 server-side verification（webhook 驗章 + 向 ECPay 回查驗證）確認後，才能建立已付款 Order 並啟用對應 Service Period。**
 6. **Webhook 必須 idempotent**：同一筆交易的 webhook 重送，不得重複啟用 Service Period 或重複建立紀錄。
-7. **Order 與 Oen transaction 必須可以追蹤**：每個 Order 應保存足以回查對應 Oen 交易（如 transaction 識別碼）的欄位。
+7. **Order 與金流交易必須可以追蹤**：每個 Order 應保存足以回查對應 ECPay 交易的欄位（如 MerchantTradeNo、TradeNo）。
 8. **Contract version 必須可追溯**：每個 Order 應能回溯乙方購買當下所同意/適用的 `contract_version`。
 9. **Purchase confirmation 與 payment authorization 必須可以區分**：系統中不得把「乙方選擇方案／表示要買」跟「乙方明確授權付款方式」合併成同一個事件或同一個時間戳記。
 10. **Trial、Order、Payment、Membership、Service Period 不可混成單一狀態**：這五個是不同的概念（定義見 `payment-legal-spec.md` 第 1 節），各自應有獨立可推導/查詢的狀態，不應該用同一個欄位或同一個狀態機硬塞。
@@ -64,71 +64,72 @@ Purchase Intent（會員選擇方案）
 ↓
 Purchase Confirmation（會員明確確認購買）
 ↓
-Payment Authorization（會員明確授權付款方式，可能是先綁卡、待條件成就後扣款）
+建立 Checkout Session（付款中的暫時識別，鎖定方案、金額與契約同意；不是 Order）
 ↓
-建立 Order
+會員於 ECPay 付款頁完成付款（購買當下付款；不先綁卡、不於日後條件成就時扣款）
 ↓
-Oen 執行扣款（One-time Checkout，或依已授權條件於試用屆滿後執行之一次性扣款）
+ECPay Webhook（server-to-server，ReturnURL）
 ↓
-Oen Webhook（server-to-server）
+Server-side Verification（CheckMacValue 驗章＋QueryTradeInfo 回查確認交易真實、金額相符）
 ↓
-Server-side Verification（回查 Oen API 確認交易真實）
+建立已付款 Order
 ↓
-Order = 已付款
-↓
-對應 Service Period 啟用，Membership 具備付費存取權限
+對應 Service Period 啟用（自付款驗證完成時起算），Membership 具備付費存取權限
 ```
 
 ## Webhook / Server-side Verification / Idempotency
 
-- Webhook 必須完全在 server-side 處理，不得信任 webhook payload 本身的內容作為啟用 Service Period 的唯一依據——必須另外回查 Oen API（如 `GET /transactions/:id`）驗證交易狀態。
-- Webhook 沒有簽章機制（Oen 官方確認），authenticity 完全依賴這一層 server-side 回查驗證，**這一步不得省略**。
-- 冪等性：以交易的唯一識別（如 `transactionHid`）作為冪等鍵，重送不得重複處理。
-- Order 的識別（如 `orderId`）才是解析「這筆付款對應哪個會員／哪個 Order」的唯一可信來源，webhook payload 裡的 `customId`／`userId` 等欄位不得作為身分依據的唯一來源。
+- Webhook 必須完全在 server-side 處理，不得信任 webhook payload 本身的內容作為啟用 Service Period 的唯一依據——ECPay 通知須先通過 CheckMacValue 驗章，並另外以 QueryTradeInfo 回查驗證交易狀態與金額，**這一步不得省略**。
+- 冪等性：以交易的唯一識別（ECPay TradeNo）作為冪等鍵，重送不得重複處理。
+- JOTI 自己的紀錄（Checkout Session 的 `merchant_trade_no`）才是解析「這筆付款對應哪個會員／哪次購買」的唯一可信來源，webhook payload 裡的 `CustomField1` 等欄位僅作交叉比對，不得作為身分依據的唯一來源。
+- 歷史：舊 Oen 流程（無簽章、以回查 Oen API 驗證）之相容性程式仍保留於 repo，不屬於目前產品流程。
 
 ## 安全要求
 
 - 金額（amount）永遠由 server-side（依會員選擇的方案）決定，不得信任前端傳來的金額欄位。
 - 建立 Order／付款相關 API 必須驗證呼叫者的 Supabase JWT。
-- Webhook 端點因 Oen 無法送出 JWT，允許不驗證 JWT，但**必須**透過 server-side 回查驗證彌補這個缺口。
+- Webhook 端點因金流服務商無法送出 JWT，允許不驗證 JWT，但**必須**透過驗章與 server-side 回查驗證彌補這個缺口。
 - 任何寫入 Membership／Order／Service Period 狀態的資料庫操作，應限制為單一受信任的寫入路徑，不得讓一般使用者角色具有直接寫入權限。
 
 ## 不自動續約 / 沒有前端付款權限
 
 - 程式碼中不得存在任何會在沒有會員本次明確主動操作的情況下觸發扣款的邏輯（排程任務、cron job、到期自動建單等一律禁止）。
-- 前端不得自行決定金額、方案、是否啟用 Service Period；所有商業判斷（金額、資格、審閱期是否屆滿、是否已完成 Payment Authorization）必須在 server-side 完成。
+- 前端不得自行決定金額、方案、是否啟用 Service Period；所有商業判斷（金額、資格、審閱期是否屆滿、付款是否經驗證成功）必須在 server-side 完成。
 
-## Oen 技術能力與使用邊界
+## 金流服務商（ECPay）使用邊界
 
-- **已確認**：Oen 支援「先綁定信用卡、不立即扣款、待特定條件成就後執行一次性扣款」的技術流程，可用於支援「Trial → 主動購買 → 試用屆滿後扣款」的產品流程（見 `payment-legal-spec.md` 第 9-10 節）。
-- 具體要用哪一個 Oen API 端點與參數組合來實現「先綁卡、之後只扣款一次、不會意外變成持續扣款」，屬於工程實作決定；**但不論選用哪個端點，最終行為必須符合**：對同一次 Payment Authorization，Oen 只會執行**一次**扣款，不會在未經會員針對下一個 Service Period 重新確認的情況下繼續扣款。實作時應特別驗證這一點（例如透過相關參數明確限制扣款次數），不能只憑端點名稱推定行為正確。
-- 除此之外，任何形式的持續性/週期性自動扣款設定，一律不得用於正式的續購機制。
+- **購買當下付款**：會員於購買時在 ECPay 付款頁完成付款；不實作先綁卡、待日後條件成就（例如 Trial 屆滿）才扣款的流程（見 `payment-legal-spec.md` 第 9-10 節）。
+- 付款頁提供哪些付款方式，依 ECPay 設定與 JOTI 另行之決定，本文件不預先限制。
+- 任何形式的持續性/週期性自動扣款（例如定期定額），一律不得用於正式的續購機制。
+- 歷史：先前曾評估 Oen「先綁卡、之後只扣一次」的端點與參數，該方向已不採用（2026-10-19）。
 
 ## 測試要求（Testing Requirements）
 
-- Oen TEST 環境與正式（Production）環境必須透過明確的 mode 旗標區隔，任何測試流程不得誤觸正式 Oen 環境。
+- 金流服務商 TEST 環境與正式（Production）環境必須透過明確的 mode 旗標區隔（ECPay：`ECPAY_MODE` 與付款主機必須一致），任何測試流程不得誤觸正式環境。
 - 任何會實際觸發扣款的測試，應使用官方提供之測試卡號，並在 TEST 模式下進行。
 - 新增或修改付款相關程式碼後，至少應驗證：
   1. `review_completed` 是否確實不會觸發任何扣款或購買行為；
   2. Membership／Service Period 是否只在 webhook 驗證通過後才被啟用；
   3. 重複 webhook 是否被正確視為重複，不重複啟用；
-  4. 「先綁卡、待條件成就後扣款」的流程，扣款是否確實只執行一次。
+  4. 未完成付款或付款未經驗證成功時，是否確實不建立 Order、不啟用 Service Period。
 
 ## 禁止的實作模式（Forbidden Implementation Patterns）
 
 以下模式**一律禁止**，即使技術上可行：
 
-- 用 `review_completed`、`trial_start` 或任何非「明確付款授權」的事件直接觸發扣款。
+- 用 `review_completed`、`trial_start` 或任何非「會員本次明確確認購買並完成付款」的事件直接觸發扣款。
 - 依瀏覽器返回 `successUrl` 或前端狀態直接啟用 Service Period，不經 webhook + server-side 驗證。
 - 任何形式的到期自動扣款、自動建單、自動延長 Service Period 或基本契約。
 - 用單一 checkbox 或任何 UX 手法讓會員略過或縮短 3 日契約審閱期。
 - 把 Trial 到期判斷、契約審閱期判斷、Service Period 到期判斷合併成同一個 timer 或同一個條件式。
 - 讓前端決定付款金額，或讓一般使用者角色的資料庫權限可以直接寫入 Membership／Order／Service Period 狀態。
-- 把 Purchase Confirmation 與 Payment Authorization 合併成單一事件記錄。
+- 把 Purchase Confirmation 與付款驗證結果合併成單一事件記錄。
 
 ---
 
 ## 已知衝突（Discovery 發現，本文件不負責修正）
+
+> **歷史紀錄**：以下為 Payment Rebuild 之前對舊 Oen 訂閱程式的稽核結果；目前產品流程已由 Payment Rebuild（Checkout Session／ECPay）取代，舊程式保留為相容性實作、不部署為正式流程。內容保留原文供追溯。
 
 以下是比對現行程式碼與本規則後發現的**現存衝突**，記錄於此以供後續處理，**本次文件整理工作不修正這些衝突**：
 

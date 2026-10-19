@@ -35,8 +35,10 @@ const pricing = {
     ],
     usageNote:
       '「有效使用時間」只計入你正在實際觀看 Module 影片，且頁面在前景、瀏覽器分頁未切到背景、視窗未縮到最小、裝置未進入睡眠、螢幕未關閉的時間；暫停、緩衝、播放結束後的時間都不計入。',
+    // Purchase-time payment (契約第八條): no card binding, no later charge
+    // when the Trial ends. Key name kept so PricingPage.jsx is unchanged.
     noImmediateCharge:
-      '試用期間即使先選擇方案並完成付款方式授權，也不會立即扣款；只有在你完成購買確認、付款授權，且試用條件成就（30 天或 30 小時先到者）之後，才會依你當下已明確同意之條件與金額執行一次扣款。'
+      '免費試用不會自動轉為付費，也不需要先綁定信用卡。決定購買時，你會在綠界科技 ECPay 付款頁完成付款，付款成功後，付費服務期間隨即開始。'
   },
 
   renewal: {
