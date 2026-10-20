@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabaseClient'
 import { getContractContent } from '../utils/contractContent'
 import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseEligibility'
 import PlanPurchase from '../components/PlanPurchase'
+import { readTerminationBody } from '../utils/terminationResult'
 
 // Payment Rebuild -- Step 4: Contract Review & Acceptance Flow.
 //
@@ -81,6 +82,20 @@ function formatRemaining(ms) {
   return days > 0 ? `${days} 天 ${time}` : time
 }
 
+// Contract Review error codes (start-contract-review / agree-to-contract /
+// reaccept-contract) as member-facing text. On a non-2xx supabase-js
+// returns data = null and the response on error.context, so the code is
+// read with readTerminationBody() (same as PlanPurchase); anything
+// unrecognised falls back to a generic message, never the raw English
+// error text.
+const CONTRACT_ERROR_TEXT = {
+  no_eligible_pending_review: '尚未滿最低審閱天數，或審閱狀態已變更，請重新整理頁面。',
+  no_reacceptance_required: '目前沒有需要重新同意的契約版本。',
+  already_accepted: '你已同意目前版本的契約，不需要再次同意。',
+  no_current_contract_version: '目前無法提供契約審閱，請稍後再試。',
+  unauthorized: '登入狀態已失效，請重新登入後再試。'
+}
+
 function ContractReviewPage() {
   const { loading, user, profile } = useAuth()
   const [searchParams] = useSearchParams()
@@ -120,11 +135,12 @@ function ContractReviewPage() {
       const { data, error } = await supabase.functions.invoke('start-contract-review', {
         body: {}
       })
+      const body = await readTerminationBody(data, error)
       if (cancelled) return
 
-      if (error || data?.error) {
+      if (error || body?.error) {
         setState('error')
-        setMessage(data?.error || error?.message || '無法載入契約審閱資訊，請稍後再試。')
+        setMessage(CONTRACT_ERROR_TEXT[body?.error] || '無法載入契約審閱資訊，請稍後再試。')
         return
       }
 
@@ -151,7 +167,7 @@ function ContractReviewPage() {
 
       if (error || !data) {
         setState('error')
-        setMessage(error?.message || '目前沒有需要重新同意的契約版本。')
+        setMessage(error ? '無法載入契約資訊，請稍後再試。' : '目前沒有需要重新同意的契約版本。')
         return
       }
 
@@ -204,14 +220,11 @@ function ContractReviewPage() {
 
     const functionName = mode === 'reacceptance' ? 'reaccept-contract' : 'agree-to-contract'
     const { data, error } = await supabase.functions.invoke(functionName, { body: {} })
+    const body = await readTerminationBody(data, error)
 
-    if (error || data?.error) {
+    if (error || body?.error) {
       setState('ready')
-      setMessage(
-        data?.error === 'no_eligible_pending_review'
-          ? '尚未滿最低審閱天數，或審閱狀態已變更，請重新整理頁面。'
-          : data?.error || error?.message || '同意契約失敗，請稍後再試。'
-      )
+      setMessage(CONTRACT_ERROR_TEXT[body?.error] || '同意契約失敗，請稍後再試。')
       return
     }
 
@@ -289,6 +302,11 @@ function ContractReviewPage() {
               {state === 'agreeing' ? '處理中…' : '我已審閱並同意本契約'}
             </button>
           )}
+
+          {/* Agree failure: handleAgree returns to 'ready' with a message --
+              shown here, next to the button (the top-level message only
+              renders in the 'error' state). */}
+          {state === 'ready' && message && <p>{message}</p>}
 
           {state === 'agreed' && mode === 'initial' && (
             <div className="contract-review-checkout">

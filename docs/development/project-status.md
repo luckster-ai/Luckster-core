@@ -487,7 +487,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - Google 登入正常
   - JOTI Account 頁面正常
   - Production Supabase Authentication → Users **僅建立正確的單一正式帳號**，Provider 為 **Email + Google**
-- **後續（尚未進行）**：Admin（`profiles.role = 'admin'`）待設定；隱私權政策加入 Resend 並修正第 18 行「Email 驗證登入」（2026-10-16 更新：Vercel Production 已為新版並指向 Production Supabase，見「Step 11 — Production Purchase Entry 開關」的 Git／部署）
+- **後續（尚未進行）**：Admin（`profiles.role = 'admin'`）待設定；隱私權政策加入 Resend 並修正第 18 行「Email 驗證登入」（2026-10-20 已修正、未 commit，見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）（2026-10-16 更新：Vercel Production 已為新版並指向 Production Supabase，見「Step 11 — Production Purchase Entry 開關」的 Git／部署）
 
 ### Step 11 — Production Purchase Entry 開關（2026-10-16，Implementation — 已 commit／push `8ac0bcd`，Production 已自動部署）
 - **背景**：Production 尚未部署 Contract／Payment Edge Functions、`contract_versions` 為空；已登入會員可從 Pricing「準備好了，開始契約審閱」進入 `/contract-review`，呼叫不存在的 `start-contract-review` 而出錯
@@ -576,13 +576,13 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **驗證**：`npm run lint`、`npm run build` 通過；以實際 `readTerminationBody`／`CHECKOUT_ERROR_TEXT` 與 supabase-js `FunctionsHttpError`／`FunctionsFetchError`／`FunctionsRelayError` 測 9 種情境全部符合（200 ECPay formPost 照常進入付款；409 `checkout_session_in_progress` → 中文＋切換「付款進行中」；409 `active_service_period_exists` → 中文；其餘 → 通用中文訊息）
   - **Git**：2026-10-16 與本文件一併 commit 並 push 到 `main`（commit 訊息 "Show Chinese checkout errors when purchase is blocked"），push 觸發 Vercel 自動部署 Production；Production 購買流程關閉（`VITE_ENABLE_PURCHASE` 未設定），無可見影響
   - **尚未進行**：Preview 瀏覽器實測（`+trial2` 目前有有效方案，雙分頁情境需待無方案帳號，例如 10/19 首購帳號）
-- **已知問題（未修改）**：`ContractReviewPage.jsx` `handleAgree`（`agree-to-contract`／`reaccept-contract`）同樣只讀 `data?.error`，後端 409 `no_eligible_pending_review` 時無法顯示「尚未滿最低審閱天數…」而會顯示英文錯誤；正常情況前端倒數會先停用按鈕，使用者時鐘不準時才會遇到
+- **已知問題（未修改）**：`ContractReviewPage.jsx` `handleAgree`（`agree-to-contract`／`reaccept-contract`）同樣只讀 `data?.error`，後端 409 `no_eligible_pending_review` 時無法顯示「尚未滿最低審閱天數…」而會顯示英文錯誤；正常情況前端倒數會先停用按鈕，使用者時鐘不準時才會遇到（2026-10-20 更新：Discovery 確認實際情況為**同意失敗時畫面完全不顯示訊息**（失敗後回到 `ready`，但 `message` 只在 `error` 狀態顯示），`start-contract-review` 失敗則顯示英文錯誤；已修正、未 commit，見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）
 - **工作樹中與本階段無關的既有修改（非本次成果，維持不動）**：已修改 `frontend/package.json`、`frontend/package-lock.json`（`supabase` devDependency）、`frontend/src/content/modules/warmup04-self-authority-3min.md`、`supabase/functions/_shared/oen.ts`、`supabase/functions/create-subscription-checkout/index.ts`（Legacy Oen subscription）；未追蹤 `docs/business/future-product-direction.md`、`docs/development/website-refinement.md`、`warmup05`／`warmup06`／`warmup07` Module `.md`
 - **下一步與依賴**：
   1. PlanPurchase 修正：已 push `main`；待 Preview 瀏覽器實測雙分頁「付款進行中」畫面（依賴無方案的測試帳號；穩定 Preview branch 需同步到最新 `main` 才會包含此修正）
   2. **2026-10-19 12:18（台灣時間）後**：以審閱中的測試會員於穩定 Preview 進行 (a) Contract Review 到期後同意按鈕自動啟用、(b) **首購 E2E**（同意 → 購買 → ECPay 測試卡 → 開通）、(c) Pricing 依狀態切換；可於該帳號付款前一併重測雙分頁 409 的「付款進行中」畫面——**2026-10-19 已完成首購 E2E，資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）
-  3. 是否修正 `ContractReviewPage` 同類 409 錯誤解析（待決定）
-  4. Production 開放付款前（見「Next Steps」）：綠界正式特店審核與回覆（ReturnURL 網域、一般賣家、履約保證；**ECPay 已於 2026-10-19 確定採用**）、**ECPay live mode 程式修改**（見 Next Steps 第 4 點）、正式上線時間 → `contract_versions` v1.0、契約網站欄位（付款方式文字已於 2026-10-19 改為 ECPay）、Production Edge Functions／secrets、升級 Pro、`joti.yoga` 綁定、Production 開啟 `VITE_ENABLE_PURCHASE` 與真實小額付款／退款驗證、退款例外作業規則（>90／>360 天、`refund_failed`、`rejected`）；另：隱私權政策加入 Resend 並修正第 18 行、Production Admin 設定、Auth 後續（驗證信 `redirect_to` 原因待確認、首頁 `#error` 無提示、Resend Click Tracking 仍為 ON）
+  3. ~~是否修正 `ContractReviewPage` 同類 409 錯誤解析（待決定）~~——2026-10-20 已修正（未 commit）；瀏覽器實際觸發 409 仍為 Pending（驗證），見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」
+  4. Production 開放付款前（見「Next Steps」）：綠界正式特店審核與回覆（ReturnURL 網域、一般賣家、履約保證；**ECPay 已於 2026-10-19 確定採用**）、**ECPay live mode 程式修改**（見 Next Steps 第 4 點）、正式上線時間 → `contract_versions` v1.0、契約網站欄位（付款方式文字已於 2026-10-19 改為 ECPay）、Production Edge Functions／secrets、升級 Pro、`joti.yoga` 綁定、Production 開啟 `VITE_ENABLE_PURCHASE` 與真實小額付款／退款驗證、退款例外作業規則（>90／>360 天、`refund_failed`、`rejected`）；另：~~隱私權政策加入 Resend 並修正第 18 行~~（2026-10-20 已修正、未 commit）、Production Admin 設定、Auth 後續（驗證信 `redirect_to` 原因待確認、首頁 `#error` 無提示、Resend Click Tracking 仍為 ON——見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」之 External / Pending）
 
 ### Step 11 — 首購 E2E（2026-10-19，TEST — 資料驗證 PASS）
 - **環境**：穩定 Preview `https://joti-git-preview-contract-review-ui-jotiyoga.vercel.app`；同日先將 branch `preview/contract-review-ui` 由 `8592900` fast-forward 至 `e0b081f`（與 `main` 相同，含 PlanPurchase 409 修正；未 force、未動 `main`／Production），Vercel 自動部署 Preview `joti-8spisjirn-jotiyoga.vercel.app`（`dpl_EB9LttwZe1nh1yFEtz1u4W7xu87h`，READY），穩定網址已指向此部署；TEST Supabase、`VITE_ENABLE_PURCHASE=true`、TEST `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=穩定 Preview
@@ -609,7 +609,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **Pricing**（`frontend/src/data/pricing.js`）：`trial.noImmediateCharge` 改為「免費試用不會自動轉為付費…於 ECPay 付款頁完成付款，付款成功後付費服務期間隨即開始」（key 名稱不變，`PricingPage.jsx` 未修改）
   - **付款規格**：`docs/business/payment/payment-legal-spec.md`（§1 概念表、§5／§7 流程、§7A 改為「目前不提供」、§9 改為 ECPay 使用範圍、§10 改為購買當下付款流程）；`docs/business/payment/payment-integration-rules.md`（付款流程、Webhook 驗證改為 ECPay CheckMacValue＋QueryTradeInfo、ECPay 使用邊界、測試要求與禁止模式措辭；「已知衝突」標註為歷史紀錄、原文保留）
 - **未修改（歷史／相容性）**：Plan Change 程式與資料庫（`create-plan-change-checkout`、`schema_plan_change.sql`、相關 RPC 與前端註解）、舊 Oen 訂閱／`oenAdapter` 程式、`CHECKOUT_ERROR_TEXT`、`order-schema-proposal.md`、本文件既有歷史紀錄；Production 部署時不部署 `create-plan-change-checkout`
-- **待後續（非本次範圍）**：隱私權政策中的 Oen（第 34、35、77 行）、契約網站欄位 `[待填寫]`；第七條第三項「單次給付之總價」措辭是否與日後可能開放之信用卡分期相容，待決定是否調整
+- **待後續（非本次範圍）**：隱私權政策中的 Oen（第 34、35、77 行；2026-10-20 已改為綠界科技 ECPay、未 commit，見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）、契約網站欄位 `[待填寫]`；第七條第三項「單次給付之總價」措辭是否與日後可能開放之信用卡分期相容，待決定是否調整
 - **影響**：TEST `contract_versions` v1.0 指向的 `v1.0.md` 文字已更新（TEST 既有 acceptance 為測試資料）；Production 尚無 `contract_versions`／acceptance，上線前修改 v1.0 不違反「不建立 v1.1」決策；合併 `main` 後 `/legal/terms` 與 Pricing 新文字將隨 Production 自動部署公開
 
 ### Step 11 — ECPay LIVE mode Implementation（2026-10-19，程式修改＋本機檢查通過＋已部署 TEST＋TEST 回歸 PASS — 程式未 commit；Production 未部署）
@@ -637,6 +637,15 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **Future Decision**：ECPay 付款超過 90 天的退款處理方式——本輪未實作、未自行定規則，正式上線前決定（見 Open Questions「退款期限對既定退款規則的處理方式」）
   - **External / Pending**：Production LIVE——Production secrets（`ECPAY_MODE=live`、`ECPAY_PAYMENT_BASE=https://payment.ecpay.com.tw`、正式 `ECPAY_MERCHANT_ID`／`HASH_KEY`／`HASH_IV`、`ECPAY_RETURN_URL`、`SITE_URL`、`ACTIVE_PAYMENT_PROVIDER=ecpay`）、Production Edge Functions 部署、綠界正式特店核准與 Q1／Q2 回覆、Production 小額真實付款＋DoAction 退款 E2E 皆未完成（見 Next Steps 第 4 點）；**本輪 PASS 僅限 TEST**
 
+
+### Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理（2026-10-20，Discovery＋Implementation — 未 commit／未部署）
+- **Privacy Policy**（`docs/legal/joti-privacy-policy.md`）：Discovery 完成；依目前實際架構完成文字更新——§2.1「以 Email 與密碼註冊時取得」（取代「Email 驗證登入」）；§2.2「會員資格與付費服務期間狀態」（取代「會員／訂閱狀態」）；§2.4「訂單、付款與退款狀態紀錄」（含退款金額、狀態與時間）、交易識別資訊改為綠界科技 ECPay（特店交易編號、綠界交易編號、付款方式類別）、卡號由綠界科技 ECPay 直接處理；§2 新增「7. 契約審閱與同意紀錄」（契約版本、提供審閱時間、最早可同意時間、同意時間）；§3 新增「寄送帳號驗證、密碼重設等服務通知」；§5 Oen 改為「綠界科技 ECPay｜付款與退款處理…」並新增「Resend｜寄送帳號驗證、密碼重設等系統通知信」。全文已無 Oen／訂閱／Email 驗證登入字樣；§1、§4、§6–§9、§2.6 Cookie、契約第十八／十九條引用未修改。`npm run lint`／`npm run build` 通過，打包內容含新文字；**原「隱私權政策加入 Resend、修正第 18 行、Oen 改 ECPay」TODO 已完成（未 commit）**
+- **ContractReviewPage**（`frontend/src/pages/ContractReviewPage.jsx`）：Discovery 完成；`start-contract-review` 與 `handleAgree`（`agree-to-contract`／`reaccept-contract`）改以既有 `readTerminationBody(data, error)` 解析非 2xx 錯誤碼（與 PlanPurchase 相同），新增本頁中文對照 `CONTRACT_ERROR_TEXT`（`no_eligible_pending_review`、`no_reacceptance_required`、`already_accepted`、`no_current_contract_version`、`unauthorized`），未知錯誤顯示通用中文訊息、不再顯示英文原始錯誤；同意失敗（回到 `ready`）時於按鈕下方顯示訊息；重新同意模式讀取失敗改為通用中文訊息。後端、3 日審閱規則、倒數、reacceptance 流程、PlanPurchase 未修改。`npm run lint`／`npm run build` 通過；以實際 `FunctionsHttpError`／`FunctionsFetchError` 模擬 12 種情境（同意 409×3、401、500、網路錯誤、200；載入 503、401、500、非 JSON、200）全部符合
+- **追蹤事項**：
+  - **TODO**：上述兩個檔案尚未 commit／push（合併 `main` 後 `/legal/privacy` 新文字將隨 Production 自動部署公開；`/contract-review` 在 Production 仍由 `VITE_ENABLE_PURCHASE` 關閉）
+  - **Pending（驗證）**：ContractReviewPage 於瀏覽器實際觸發 409／401／503 的畫面驗證——Preview 不易自然觸發，待自然情境出現時確認，不為測試刻意修改資料
+  - **Future Decision**：Privacy Policy 是否需揭露 Supabase、Resend、Vercel、Bunny 等服務之資料儲存國家／地區（見 Open Questions）；決定前不寫入政策
+  - **External / Pending**：Resend Support 確認 `auth.joti.yoga` Click Tracking 是否關閉（Dashboard 顯示 ON 且設定無法保存；先前已確認驗證信連結未被改寫）；確認前 Privacy Policy 不對信件追蹤作額外承諾
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -732,7 +741,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 9. ~~Plan Change（Step 10）透過 Oen 真實 hosted checkout 的視覺化 E2E~~——**2026-10-19 結案（不再進行）**：JOTI 目前不提供方案變更、採用 ECPay（見「Step 11 — 付款模式與方案變更規則落實」）
 10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
 11. **ECPay Checkout Session Flow（2026-10-19 更新）**：(a) `b79151e` 已 commit／push；(b) 驗證現況——有效期間內購買 → `active_service_period_exists`（A3 PASS）；同一會員雙分頁 → 後端 409 `checkout_session_in_progress`、未建立第二筆 Session（A3 PASS），畫面「付款進行中」修正已上 `main`，**Pending（驗證）**：UI 情境未實測；JOTI 返回頁顯示「付款已確認，你的帳號狀態已更新。」（2026-10-19 TEST 回歸 PASS）；**Pending（驗證）**：webhook 晚到由 `confirm-checkout-session` 開通；雙方付款成功之 rejected 競態以 PGlite SQL 測試為依據；(c)(d) Step 11.1／11.2 已 push；(e) 向綠界確認 AIO 付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) Preview 仍顯示舊「訂閱 JOTI」（`VITE_ENABLE_SUBSCRIBE=true`）待處理。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=穩定 Preview `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`；`+trial2` 目前為有效月方案（至 2026-11-19）
-12. **Production Readiness Checkpoint 後續**：見「Step 11 — Production Readiness Checkpoint A1–A3」的「下一步與依賴」（PlanPurchase 修正 Preview 實測與 commit、2026-10-19 首購 E2E、ContractReviewPage 同類錯誤、Production 開放付款前工作）；**2026-10-19 首購 E2E 資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）；剩餘 TEST 項目：PlanPurchase「付款進行中」畫面 Preview 實測（需「已同意、無方案」帳號；目前兩個測試會員皆有有效方案）、webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示；**2026-10-19 ECPay LIVE mode：TEST 部署與回歸 PASS**，剩餘追蹤見「Step 11 — ECPay LIVE mode Implementation」（TODO：commit 本輪程式（含已修正的 0 元退款前端文案 `terminationResult.js`）；Pending（驗證）：`confirm-checkout-session` 晚到路徑、雙分頁 UI、0 元退款 E2E；Future Decision：>90 天退款；External／Pending：Production LIVE）
+12. **Production Readiness Checkpoint 後續**：見「Step 11 — Production Readiness Checkpoint A1–A3」的「下一步與依賴」（PlanPurchase 修正 Preview 實測與 commit、2026-10-19 首購 E2E、ContractReviewPage 同類錯誤、Production 開放付款前工作）；**2026-10-19 首購 E2E 資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）；剩餘 TEST 項目：PlanPurchase「付款進行中」畫面 Preview 實測（需「已同意、無方案」帳號；目前兩個測試會員皆有有效方案）、webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示；**2026-10-19 ECPay LIVE mode：TEST 部署與回歸 PASS**，剩餘追蹤見「Step 11 — ECPay LIVE mode Implementation」（TODO：commit 本輪程式（含已修正的 0 元退款前端文案 `terminationResult.js`）；Pending（驗證）：`confirm-checkout-session` 晚到路徑、雙分頁 UI、0 元退款 E2E；Future Decision：>90 天退款；External／Pending：Production LIVE）；**2026-10-20**：Privacy Policy 文字更新、ContractReviewPage 錯誤處理修正已完成（未 commit），追蹤見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」
 
 ---
 
@@ -746,6 +755,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Open Questions（法律／商業模型，待決）
 
+- **Privacy Policy 資料儲存國家／地區揭露（Future Decision，2026-10-20 新增）**：是否需於隱私權政策揭露 Supabase（Production：Singapore）、Resend（Tokyo）、Vercel、Bunny 等服務之資料儲存國家／地區——屬法律判斷，決定前不寫入政策（見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）
 - 契約條款發生重大變更時，審閱／通知程序具體如何處理（是否需要新的審閱期、期間多長）——待法律顧問或經營者確認。
 - ~~Payment Authorization 具體採用哪一個 Oen API 端點／參數組合實現「先綁卡、僅扣款一次」~~——**2026-10-19 結案**：JOTI 採 ECPay 購買當下付款，不採先綁卡後扣款模式（見「Step 11 — 付款模式與方案變更規則落實」）
 - **會員如何實際觸發提前終止已解決**：Step 10 已在 `AccountPage.jsx` 新增「提前終止目前方案並退款」按鈕作為前端入口，呼叫既有 `terminate-service-period`（Step 9），見上方「Payment Rebuild — Step 10」小節。
@@ -758,6 +768,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-20（Privacy Policy 依實際架構更新（ECPay、Resend、Email＋密碼、契約審閱與同意紀錄、退款紀錄）；ContractReviewPage 非 2xx 錯誤解析與同意失敗訊息顯示修正；皆未 commit；新增 Future Decision（資料儲存國家揭露）、External／Pending（Resend Click Tracking）；ContractReviewPage 瀏覽器 409 驗證為 Pending（驗證））
 
 2026-10-19（0 元退款前端提示修正：`terminationResult.js` 依 `note === 'no_refund_due'` 顯示「本次沒有可退還的金額，因此不會產生退款」；原 TODO 標記已修正、未 commit；0 元退款實際 E2E 仍為 Pending（驗證））
 
