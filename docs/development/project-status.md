@@ -667,7 +667,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
     - **此信無法解決之疑義**：一般 Support 回覆不一定等同正式書面允許（取得前 ADR 0004 維持 External Confirmation Pending）；確認僅對回覆當下條款有效（依 Platform Selection Gate 第 11 項定期複查）；未涵蓋 Pages Functions／Workers／proxy／WAF 等其他用法（改用時須重新確認）；正面回覆後仍需可逆 PoC 與 Production Validation 方可改為 Accepted
   - **Future Decision**：Hosting 最終決策（Cloudflare Pages Free 或 Vercel Pro，見 ADR 0004）
   - **Future Decision**：是否接受 Supabase Free 長期營運風險（不視「正式開放付款前升級 Pro」為既定決策），待 backup／restore 驗證與整體風險評估後決定；連帶決定備份頻率／RPO／保存期限／存放位置（及隱私權政策是否需提及）、升級付費方案觸發條件（2026-10-22：備份頻率、存放位置與加密已於 ADR `docs/development/adr/0005-production-backup-architecture.md` 定案；保存期限、隱私權政策揭露、升級觸發條件仍待決，見「Step 11 — Production Backup Architecture（ADR 0005）」）（契約審閱／同意紀錄之 RPO 缺口見「Step 11 — Supabase Free Backup／Restore Discovery」）
-  - **TODO**（2026-10-22：架構已於 ADR 0005 定案，尚未實作，見「Step 11 — Production Backup Architecture（ADR 0005）」）：Supabase Free 加密 off-site backup（`public`＋`auth`）、每次備份之 restore verification、災難還原手冊與設定清單（Auth 設定、Edge Functions、secrets），上線前至少一次 DR drill（細項與正式開放付款前最低要求見「Step 11 — Supabase Free Backup／Restore Discovery」）
+  - **TODO**（2026-10-22：架構已於 ADR 0005 定案；第一次 Production Backup 已成功，排程／監控／Restore Drill 尚未實作，見「Step 11 — Production Backup Phase 1：第一次 Production Backup」）：Supabase Free 加密 off-site backup（`public`＋`auth`）、每次備份之 restore verification、災難還原手冊與設定清單（Auth 設定、Edge Functions、secrets），上線前至少一次 DR drill（細項與正式開放付款前最低要求見「Step 11 — Supabase Free Backup／Restore Discovery」）
   - ~~**Pending（驗證）**：GitHub Actions 經 Session pooler（IPv4）執行 `pg_dump`（Supabase 官方僅列直連供 `pg_dump`，直連為 IPv6-only）；含 `auth` schema 之 restore 至一般 PostgreSQL 17~~——2026-10-20 更新：官方 backup/restore 指南已明示預設使用 Session pooler；還原目標須為 Supabase 環境而非一般 PostgreSQL，見「Step 11 — Supabase Free Backup／Restore Discovery」
   - **TODO（P1，正式開放付款前）**：Payment reconciliation——每日 QueryTradeInfo 回查找出「已付款未開通」、webhook 異常偵測、Order／Service Period／payment_event 交叉比對（與 Supabase 方案無關，Pro 亦需要）
 
@@ -731,14 +731,27 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **Pending（驗證）**：Production 備份之實際還原驗證（本輪依指示未進行）
   - **Future Decision**：正式 backup 之 storage、加密、retention、排程（沿用「Step 11 — Supabase Free Backup／Restore Discovery」之 Future Decision）（2026-10-22：storage、加密、排程已於 ADR 0005 定案；retention 仍待決，見「Step 11 — Production Backup Architecture（ADR 0005）」）
 
-### Step 11 — Production Backup Architecture（ADR 0005）（2026-10-22，架構定案 — 未實作）
+### Step 11 — Production Backup Architecture（ADR 0005）（2026-10-22，架構定案 — Phase 1 實作中）
 - **文件**：ADR `docs/development/adr/0005-production-backup-architecture.md`（Status：Accepted — 架構定案、尚未實作）；本節只記錄狀態與追蹤事項，內容以 ADR 為準
 - **已定案**：Production backup／DR 使用專用 **Private Ops Repo**（暫定 `luckster-ai/joti-ops`）；Phase 1 設計為維持在目前免費額度／$0 預算內——GitHub Actions＋age 加密＋private GitHub Release；**每 6 小時備份，RPO target ≤ 6h（非保證）**；每份備份含 roles／schema／data、auth trigger、function ACL、fingerprint、`manifest.json`（版本、筆數、SHA-256）；每次備份做完整性驗證；還原沿用已驗證流程（跳過 `log_min_messages` grant 行、對齊服務版本、補 auth trigger、依備份重設 function ACL，ACL 不一致即失敗）；**每週 local restore drill**（只用加密備份）；**Healthchecks.io** 監控未執行或失敗；**不新增 standalone keepalive**（現有 `supabase-keepalive.yml` 不變）；**採用手動 USB 離線副本**；database dump **不含** Supabase Storage 檔案內容；**RTO 待 hosted DR drill 實測**
 - **架構建議（ADR 0005 §2）**：master key 離線＋CI drill key、key versioning（有實際理由才輪替，不設固定每年輪替）、Private Ops Repo 為高敏感度邊界之權限控管、DR 流程大綱、hosted DR drill（暫停 TEST、臨時 project）
 - **追蹤事項**：
   - **Future Decision**：保存期限最終值（ADR 為提案）；USB 複製頻率與存放地點；最小權限備份 role；隱私權政策是否揭露備份存放與保存期限（併入資料儲存地區揭露）；DR runbook 存放位置；Auth 設定是否改為程式碼管理；Phase 2（Backblaze B2＋Object Lock）是否及何時導入；Supabase 升級
   - **Pending（驗證）**：還原至 hosted project（`log_min_messages`、function ACL、是否需重新登入、Google 帳號、原密碼登入）；RTO；每 6 小時 DB 連線是否足以避免 Free 暫停（確認前保留現有 keepalive）；每週 drill 只用保存檔案能否通過；Actions 分鐘數是否在免費額度內；Healthchecks.io 是否通過 Third-Party Platform Selection Gate
-  - **TODO（實作，待指示）**：建立 Private Ops Repo、age 金鑰、Secrets、Healthchecks → 手動觸發之 backup workflow 以 Production 驗證 → 只用加密備份之 drill workflow → 開啟排程與監控 → `SUPABASE_PROD_DB_URL` 自 public repo 移除 → DR runbook 與設定清單 → 正式開放付款前 hosted DR drill
+  - **TODO（實作，待指示）**（2026-10-22：Private Ops Repo、age 金鑰、Secrets 與手動觸發之 backup workflow 已完成並以 Production 驗證成功，見「Step 11 — Production Backup Phase 1：第一次 Production Backup」；Healthchecks 及其後步驟尚未開始）：~~建立 Private Ops Repo、age 金鑰、Secrets~~、Healthchecks → ~~手動觸發之 backup workflow 以 Production 驗證~~ → 只用加密備份之 drill workflow → 開啟排程與監控 → `SUPABASE_PROD_DB_URL` 自 public repo 移除 → DR runbook 與設定清單 → 正式開放付款前 hosted DR drill
+
+### Step 11 — Production Backup Phase 1：第一次 Production Backup（2026-10-22，通過）
+- **環境**：Private Ops Repo `luckster-ai/joti-ops`（private，僅 owner `luckster-ai`；本機 `C:\joti-ops`，remote 以 `luckster-ai` 帳號認證）；workflow `.github/workflows/supabase-backup.yml`，**僅手動觸發**（初始 checkpoint `dd1858a`）；Secrets `SUPABASE_PROD_DB_URL`、`SUPABASE_PROD_ANON_KEY`；`recipients.txt` 含 `master-v1`（私鑰僅由使用者離線保存）與 `drill-v1` 公鑰
+- **結果（run `39740822786`，13 個步驟全部成功，約 3 分 20 秒）**：
+  - Production 經 Session pooler 唯讀 dump 與 completeness validation 成功；dump 前後 43 項 fingerprint 一致，確認 Production 未被修改
+  - `manifest.json` 記錄 source versions（PostgreSQL 17.11、GoTrue v2.197.0、Storage 1.80.2、auth migration `20260831180000`）與 Supabase CLI 2.117.0
+  - age 以 `master-v1`／`drill-v1` 加密成功：`joti-prod-backup-20261022-0732Z.tar.gz.age`（20,697 bytes）
+  - Private Release `backup-20261022-0732Z` 建立；重新下載後 asset SHA-256 與加密當下一致（`89bb1e9e…1c84`）
+  - runner cleanup 成功
+- **前兩次失敗（已解決）**：Supabase CLI checksum 比對檔名錯誤（joti-ops commit `e9e61a3` 修正）；joti-ops 之 `SUPABASE_PROD_DB_URL` 結尾多一個換行（使用者重新設定）。兩次皆在讀取 Production 資料前失敗，未建立 Release
+- **追蹤事項**：
+  - **Pending（驗證）**：encrypted backup 尚未實際解密；以 drill key 解密之 Restore Drill 尚未實作（Storage 版本於 manifest 記為 `1.80.2`，drill 對齊本地 stack 時需轉為 `v1.80.2`）
+  - **TODO（尚未開始）**：每 6 小時排程；Healthchecks.io；retention／rotation（保存期限仍為 Future Decision，決定前 workflow 不刪除任何 Release）；USB 離線副本；`SUPABASE_PROD_DB_URL` 自 public repo 移除；DR runbook
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -864,6 +877,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-22（ADR 0005 Phase 1 checkpoint：Private Ops Repo `luckster-ai/joti-ops` 之第一次 Production Backup 成功（run `39740822786`，13 步驟全部通過，約 3 分 20 秒）：唯讀 dump、completeness、前後 43 項 fingerprint 一致、manifest 記錄版本、age 雙金鑰加密、Private Release `backup-20261022-0732Z` 與 SHA-256 驗證、cleanup；尚未完成：解密／Restore Drill、6 小時排程、Healthchecks、retention／rotation）
 
 2026-10-22（同步 ADR 0005 Production Backup Architecture 定案：Private Ops Repo、GitHub Actions＋age＋private Release、每 6 小時備份（RPO target ≤ 6h）、每週 local restore drill、Healthchecks.io、手動 USB 離線副本；相關 Future Decision 標記為已定案；保存期限、USB 頻率／地點、最小權限 role 等仍待決；尚未實作）
 
