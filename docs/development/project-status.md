@@ -666,8 +666,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
     - **TODO（使用者）**：補上帳號 Email、署名與聯絡信箱；確認 `joti.yoga` apex／`www` 是否開啟 Cloudflare proxy 並於信中註明；送出管道建議以 Dashboard Support case（帳號／帳務類別）為主、Sales 聯絡表單為備用（實際受理管道未確認）；送出後保留 case 編號、回覆全文、回覆人身分與日期，寫入 ADR 0004
     - **此信無法解決之疑義**：一般 Support 回覆不一定等同正式書面允許（取得前 ADR 0004 維持 External Confirmation Pending）；確認僅對回覆當下條款有效（依 Platform Selection Gate 第 11 項定期複查）；未涵蓋 Pages Functions／Workers／proxy／WAF 等其他用法（改用時須重新確認）；正面回覆後仍需可逆 PoC 與 Production Validation 方可改為 Accepted
   - **Future Decision**：Hosting 最終決策（Cloudflare Pages Free 或 Vercel Pro，見 ADR 0004）
-  - **Future Decision**：是否接受 Supabase Free 長期營運風險（不視「正式開放付款前升級 Pro」為既定決策），待 backup／restore 驗證與整體風險評估後決定；連帶決定備份頻率／RPO／保存期限／存放位置（及隱私權政策是否需提及）、升級付費方案觸發條件（契約審閱／同意紀錄之 RPO 缺口見「Step 11 — Supabase Free Backup／Restore Discovery」）
-  - **TODO**：Supabase Free 加密 off-site backup（`public`＋`auth`）、每次備份之 restore verification、災難還原手冊與設定清單（Auth 設定、Edge Functions、secrets），上線前至少一次 DR drill（細項與正式開放付款前最低要求見「Step 11 — Supabase Free Backup／Restore Discovery」）
+  - **Future Decision**：是否接受 Supabase Free 長期營運風險（不視「正式開放付款前升級 Pro」為既定決策），待 backup／restore 驗證與整體風險評估後決定；連帶決定備份頻率／RPO／保存期限／存放位置（及隱私權政策是否需提及）、升級付費方案觸發條件（2026-10-22：備份頻率、存放位置與加密已於 ADR `docs/development/adr/0005-production-backup-architecture.md` 定案；保存期限、隱私權政策揭露、升級觸發條件仍待決，見「Step 11 — Production Backup Architecture（ADR 0005）」）（契約審閱／同意紀錄之 RPO 缺口見「Step 11 — Supabase Free Backup／Restore Discovery」）
+  - **TODO**（2026-10-22：架構已於 ADR 0005 定案，尚未實作，見「Step 11 — Production Backup Architecture（ADR 0005）」）：Supabase Free 加密 off-site backup（`public`＋`auth`）、每次備份之 restore verification、災難還原手冊與設定清單（Auth 設定、Edge Functions、secrets），上線前至少一次 DR drill（細項與正式開放付款前最低要求見「Step 11 — Supabase Free Backup／Restore Discovery」）
   - ~~**Pending（驗證）**：GitHub Actions 經 Session pooler（IPv4）執行 `pg_dump`（Supabase 官方僅列直連供 `pg_dump`，直連為 IPv6-only）；含 `auth` schema 之 restore 至一般 PostgreSQL 17~~——2026-10-20 更新：官方 backup/restore 指南已明示預設使用 Session pooler；還原目標須為 Supabase 環境而非一般 PostgreSQL，見「Step 11 — Supabase Free Backup／Restore Discovery」
   - **TODO（P1，正式開放付款前）**：Payment reconciliation——每日 QueryTradeInfo 回查找出「已付款未開通」、webhook 異常偵測、Order／Service Period／payment_event 交叉比對（與 Supabase 方案無關，Pro 亦需要）
 
@@ -689,9 +689,9 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **Pending（驗證）**（2026-10-21：除「使用者是否需重新登入」與「實際 RTO」外已由 TEST Drill 驗證，見「Step 11 — Supabase Free Backup／Restore TEST Drill」）：經 Session pooler 實際 dump 是否成功；還原至 Supabase stack 時 auth 欄位相容性（data dump 為附欄位名 INSERT，目標較新多欄位通常可行、較舊缺欄位會失敗）；補 trigger／extension 後 `public` 完整性；還原後實際登入與新註冊建立 profile；使用者是否需重新登入（新 JWT key）；實際 RTO
   - **TODO（正式開放付款前，最低要求）**：(1) 一次 Production dump＋還原至隔離 Supabase stack 之完整驗證（筆數、FK／constraint 含 `btree_gist` exclusion、RLS 與 31 條 policy、function 與 trigger 數量（function 比對須排除 extension 成員：盤點所得 209 個 public function 含 `btree_gist` 之 function，「Step 11 — Production Environment Build」建置時記錄之自建 function 為 21 個，是否仍準確待實測時重新計算；trigger 應為 2 個：`auth.users.on_auth_user_created`、`profiles.protect_profile_system_fields_trigger`）、`auth.users` 筆數與密碼雜湊、GoTrue password grant 登入、新註冊建立 profile）；(2) 加密異地自動備份並於 Production 實際執行一次；(3) 災難還原手冊、Auth 設定清單、secrets 存放於密碼管理器；(4) 至少一次依手冊之 DR drill 並記錄實際 RTO；(5) Payment reconciliation（已列 P1）
   - **TODO（文件修正）**：備份範圍與還原流程須明列 auth trigger、~~`btree_gist`~~、secrets 另行保存、還原後 URL 變更（2026-10-21：另須明列 function ACL 重設，見「Step 11 — Supabase Free Backup／Restore TEST Drill」）
-  - **Future Decision**：契約審閱／同意紀錄之 RPO 是否可接受，以及備份頻率（併入「Supabase Free 長期營運」決策）
-  - **Future Decision**：備份存放位置與加密方式（決定前不建立正式 backup workflow）
-  - **Future Decision**：是否建立最小權限之備份專用 role（目前只能以權限偏大之 `postgres` 角色 dump；專用 role 需能讀取 `auth` schema，作法待評估）
+  - ~~**Future Decision**：契約審閱／同意紀錄之 RPO 是否可接受，以及備份頻率（併入「Supabase Free 長期營運」決策）~~——2026-10-22 ADR 0005 定案：每 6 小時備份，RPO target ≤ 6h（非保證；最後一次成功備份後之契約紀錄仍可能遺失），見「Step 11 — Production Backup Architecture（ADR 0005）」
+  - ~~**Future Decision**：備份存放位置與加密方式（決定前不建立正式 backup workflow）~~——2026-10-22 ADR 0005 定案：Private Ops Repo 之 private GitHub Release＋age 加密（master key 離線、CI drill key），另加手動 USB 離線副本，見「Step 11 — Production Backup Architecture（ADR 0005）」
+  - **Future Decision**：是否建立最小權限之備份專用 role（目前只能以權限偏大之 `postgres` 角色 dump；專用 role 需能讀取 `auth` schema，作法待評估）（2026-10-22：ADR 0005 仍列為延後決定）
   - **TODO（使用者，正式自動備份前）**（2026-10-21：已由使用者設定 GitHub Secret `SUPABASE_PROD_DB_URL`，Production 唯讀驗證已使用並確認有效，見「Step 11 — Supabase Production Read-only Backup Validation」）：自動備份需將 Production DB 密碼（或日後之備份專用 role 憑證）設為 GitHub Secret——目前 Production DB 密碼僅由使用者自行保管（見「Step 11 — Production Environment Build」）；TEST 演練另需 TEST DB 密碼（見下方建議下一步）
   - **建議下一步（待核准）**（2026-10-21：(a) 已完成且通過；登入驗證改為僅在隔離環境內重設已還原使用者之密碼，未於 TEST 建立帳號，見「Step 11 — Supabase Free Backup／Restore TEST Drill」）：最小隔離驗證分兩階段——(a) TEST 演練：獨立 drill branch 上之手動觸發 GitHub Actions job（不進 `main`），經 Session pooler dump TEST → runner 上 `supabase start` → 還原並跑完整性檢查，log 只輸出筆數與檢查結果、dump 檔不上傳、runner 跑完即銷毀（需使用者將 TEST DB 密碼設為 GitHub Secret；登入驗證需於 TEST 建立一次性測試帳號，另經同意）；(b) TEST 通過後對 Production 唯讀 dump，同流程僅驗證筆數與結構、不驗證真實帳號密碼
 
@@ -729,7 +729,16 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **結論**：Production 可以已驗證之流程完整備份；roles.sql 同樣含 `GRANT SET ON PARAMETER "log_min_messages" TO "supabase_realtime_admin"`，TEST 驗證之還原修正（跳過該行、補 auth trigger、依備份時保存之 function ACL 重設）同樣適用於 Production
 - **追蹤事項**：
   - **Pending（驗證）**：Production 備份之實際還原驗證（本輪依指示未進行）
-  - **Future Decision**：正式 backup 之 storage、加密、retention、排程（沿用「Step 11 — Supabase Free Backup／Restore Discovery」之 Future Decision）
+  - **Future Decision**：正式 backup 之 storage、加密、retention、排程（沿用「Step 11 — Supabase Free Backup／Restore Discovery」之 Future Decision）（2026-10-22：storage、加密、排程已於 ADR 0005 定案；retention 仍待決，見「Step 11 — Production Backup Architecture（ADR 0005）」）
+
+### Step 11 — Production Backup Architecture（ADR 0005）（2026-10-22，架構定案 — 未實作）
+- **文件**：ADR `docs/development/adr/0005-production-backup-architecture.md`（Status：Accepted — 架構定案、尚未實作）；本節只記錄狀態與追蹤事項，內容以 ADR 為準
+- **已定案**：Production backup／DR 使用專用 **Private Ops Repo**（暫定 `luckster-ai/joti-ops`）；Phase 1 設計為維持在目前免費額度／$0 預算內——GitHub Actions＋age 加密＋private GitHub Release；**每 6 小時備份，RPO target ≤ 6h（非保證）**；每份備份含 roles／schema／data、auth trigger、function ACL、fingerprint、`manifest.json`（版本、筆數、SHA-256）；每次備份做完整性驗證；還原沿用已驗證流程（跳過 `log_min_messages` grant 行、對齊服務版本、補 auth trigger、依備份重設 function ACL，ACL 不一致即失敗）；**每週 local restore drill**（只用加密備份）；**Healthchecks.io** 監控未執行或失敗；**不新增 standalone keepalive**（現有 `supabase-keepalive.yml` 不變）；**採用手動 USB 離線副本**；database dump **不含** Supabase Storage 檔案內容；**RTO 待 hosted DR drill 實測**
+- **架構建議（ADR 0005 §2）**：master key 離線＋CI drill key、key versioning（有實際理由才輪替，不設固定每年輪替）、Private Ops Repo 為高敏感度邊界之權限控管、DR 流程大綱、hosted DR drill（暫停 TEST、臨時 project）
+- **追蹤事項**：
+  - **Future Decision**：保存期限最終值（ADR 為提案）；USB 複製頻率與存放地點；最小權限備份 role；隱私權政策是否揭露備份存放與保存期限（併入資料儲存地區揭露）；DR runbook 存放位置；Auth 設定是否改為程式碼管理；Phase 2（Backblaze B2＋Object Lock）是否及何時導入；Supabase 升級
+  - **Pending（驗證）**：還原至 hosted project（`log_min_messages`、function ACL、是否需重新登入、Google 帳號、原密碼登入）；RTO；每 6 小時 DB 連線是否足以避免 Free 暫停（確認前保留現有 keepalive）；每週 drill 只用保存檔案能否通過；Actions 分鐘數是否在免費額度內；Healthchecks.io 是否通過 Third-Party Platform Selection Gate
+  - **TODO（實作，待指示）**：建立 Private Ops Repo、age 金鑰、Secrets、Healthchecks → 手動觸發之 backup workflow 以 Production 驗證 → 只用加密備份之 drill workflow → 開啟排程與監控 → `SUPABASE_PROD_DB_URL` 自 public repo 移除 → DR runbook 與設定清單 → 正式開放付款前 hosted DR drill
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -840,7 +849,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ## Open Questions（法律／商業模型，待決）
 
 - **Production Hosting 最終決策（Future Decision，2026-10-20 新增）**：Cloudflare Pages Free（Candidate，待 Cloudflare 書面確認）或 Vercel Pro（fallback）——見 ADR `docs/development/adr/0004-production-hosting-platform.md`
-- **Supabase Free 長期營運（Future Decision，2026-10-20 新增）**：是否接受 Free 方案（無平台 backup／PITR、無 SLA、2 個 Free 專案上限）之營運風險，或升級 Pro；待自建 backup／restore 驗證與整體風險評估後決定（取代原「正式開放付款前升級 Pro」之既定記載），見「Step 11 — Production Hosting／$0 平台費用評估」；2026-10-20 Backup／Restore Discovery 另確認 Free 無法補足之風險（無 PITR、備份後之契約審閱／同意紀錄無法補回、還原後 Supabase URL 必然改變、2 個 project 上限使緊急重建須先刪除 project），見「Step 11 — Supabase Free Backup／Restore Discovery」
+- **Supabase Free 長期營運（Future Decision，2026-10-20 新增）**：是否接受 Free 方案（無平台 backup／PITR、無 SLA、2 個 Free 專案上限）之營運風險，或升級 Pro；待自建 backup／restore 驗證與整體風險評估後決定（取代原「正式開放付款前升級 Pro」之既定記載），見「Step 11 — Production Hosting／$0 平台費用評估」；2026-10-20 Backup／Restore Discovery 另確認 Free 無法補足之風險（無 PITR、備份後之契約審閱／同意紀錄無法補回、還原後 Supabase URL 必然改變、2 個 project 上限使緊急重建須先刪除 project），見「Step 11 — Supabase Free Backup／Restore Discovery」；2026-10-22 Production backup 架構已定案（ADR 0005，不以付費服務為前提），是否升級仍待 hosted DR drill 之 RPO／RTO 結果
 - **Production 契約類 Functions 部署時機（Future Decision，2026-10-20 新增）**：契約類 Functions 部署且 `contract_versions` 為 current 後，已登入帳號可繞過前端 `VITE_ENABLE_PURCHASE` 直接呼叫 `start-contract-review`／`agree-to-contract`，於正式上線前即產生 Production 正式契約同意紀錄；風險有限（需登入、仍受 3 日審閱限制），但部署時機需配合上線與 Production E2E 計畫決定
 - **Privacy Policy 資料儲存國家／地區揭露（Future Decision，2026-10-20 新增）**：是否需於隱私權政策揭露 Supabase（Production：Singapore）、Resend（Tokyo）、Vercel、Bunny 等服務之資料儲存國家／地區——屬法律判斷，決定前不寫入政策（見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）
 - 契約條款發生重大變更時，審閱／通知程序具體如何處理（是否需要新的審閱期、期間多長）——待法律顧問或經營者確認。
@@ -855,6 +864,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-22（同步 ADR 0005 Production Backup Architecture 定案：Private Ops Repo、GitHub Actions＋age＋private Release、每 6 小時備份（RPO target ≤ 6h）、每週 local restore drill、Healthchecks.io、手動 USB 離線副本；相關 Future Decision 標記為已定案；保存期限、USB 頻率／地點、最小權限 role 等仍待決；尚未實作）
 
 2026-10-21（Supabase Production Read-only Backup Validation 通過（run `39586533510`）：經 Session pooler 唯讀 dump，筆數與即時資料一致、auth trigger／function ACL／fingerprint 可取得、前後 fingerprint 相同證實 Production 未修改；`SUPABASE_PROD_DB_URL` 保留）
 
