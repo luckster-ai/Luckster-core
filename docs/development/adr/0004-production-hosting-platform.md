@@ -1,20 +1,20 @@
 # ADR 0004: Production Hosting Platform
 
-**Status:** Proposed — no final decision. Cloudflare Pages is a candidate pending external confirmation; Vercel Pro is the Production fallback.
+**Status:** Accepted — Cloudflare Pages Free selected as the Production hosting platform (2026-10-22); not yet implemented. A reversible PoC and Production validation must pass before migration. Vercel Pro remains the fallback.
 
-**Last reviewed:** 2026-10-20
+**Last reviewed:** 2026-10-22
 
 ---
 
 ## Context
 
-The JOTI frontend is a static React / Vite SPA (`frontend/`), built with `npm run build` into `dist/`, with one rewrite rule (`frontend/vercel.json`, all paths to `index.html`). It has no serverless functions and no `@vercel/*` dependency. All backend logic lives in Supabase (Database, Auth, Edge Functions); payments go through ECPay.
+The JOTI frontend is a static React / Vite SPA (`frontend/`), built with `npm run build` into `dist/`, with one rewrite rule (`frontend/vercel.json`, all paths to `index.html`). It has no serverless functions and no `@vercel/*` dependency. All backend logic lives in Supabase (Database, Auth, Edge Functions); payments go through ECPay; course video is delivered by Bunny.net. The `joti.yoga` domain is registered with Cloudflare and its DNS zone is on Cloudflare Free.
 
 It is currently deployed on Vercel. Once JOTI accepts payments it is commercial usage:
 
 - Vercel Fair Use Guidelines (last updated 2026-09-14): Hobby is "restricted to non-commercial personal use only"; commercial usage, including "any method of requesting or processing payment from visitors of the site", requires Pro or Enterprise. Vercel Hobby is therefore not an option for Production once payments open.
 
-The project goal is to keep fixed platform cost at $0 where this does not lower Production reliability, security or legal compliance. Cloudflare Pages Free was evaluated as the $0 option.
+The project goal is to keep fixed platform cost at $0 where this does not lower Production reliability, security or legal compliance.
 
 ### JOTI payment architecture (relevant to the terms)
 
@@ -35,25 +35,77 @@ Read literally, JOTI does not process or collect card information on its own web
 2. "process" is not defined — whether initiating a redirect to a third-party hosted payment page counts.
 3. "credit card information" is not defined — whether payment-method type and transaction identifiers count.
 
-## Decision (current state)
+### Cloudflare Pages Free limits (checked 2026-10-22)
+
+500 builds per month, 1 concurrent build, 20-minute build timeout, 20,000 files per site, 25 MiB per file, 100 custom domains per project. Requests to static assets are "free and unlimited" (Workers static assets billing); JOTI uses no Pages Functions, so there is no request quota that could take the site offline.
+
+### Other candidates evaluated (2026-10-22)
+
+| Candidate | Result |
+|---|---|
+| **Vercel Hobby** | Excluded — non-commercial only (above). |
+| **GitHub Pages** | Excluded — "not intended for or allowed to be used as a free web-hosting service to run your online business, e-commerce site, or any other website that is primarily directed at either facilitating commercial transactions". |
+| **Netlify Free** | Excluded. Commercial projects are allowed according to Netlify's Free plan announcement, but the Self-Serve Subscription Agreement (October 2025) limits use to internal business purposes and lets Netlify change the Free Usage Tier or disable / remove a project on it without notice. Decisive: the Free plan is a hard cap of 300 credits per month (a Production deploy costs 15, bandwidth 20 per GB, 2 per 10k requests); when it is reached **all projects on the account are paused** — no web requests, no deploys — until the next billing cycle, and Free plans cannot buy more credits. JOTI deploys Production on every push to `main` (six pushes on 2026-10-22 alone, 90 credits), so the site would go offline within days; a paid membership site cannot accept that. |
+
+No other $0 option previously considered fits free commercial Production use. Cloudflare's Workers static assets (same vendor and terms, same "free and unlimited" static requests) is an implementation alternative to Pages, chosen during the PoC.
+
+## Decision
 
 | Option | Status |
 |---|---|
-| **Cloudflare Pages Free** | **Candidate — External Confirmation Pending.** Not approved. |
-| **Vercel Pro** | **Production fallback.** Production-ready, not selected. Must not be removed before the Cloudflare question is closed. |
+| **Cloudflare Pages Free** | **Selected** for Production hosting (2026-10-22). Not implemented; subject to the PoC and Production validation below. |
+| **Vercel Pro** | **Fallback.** Production-ready; used if a fallback condition below occurs. Keep the Vercel project until Cloudflare Pages has passed Production validation. |
+| Vercel Hobby, GitHub Pages, Netlify Free | Excluded (see "Other candidates evaluated"). |
 
-- The required External Confirmation is a **written answer from Cloudflare** on whether JOTI's architecture (above) on Pages Free and DNS Free is permitted under §2.2.1(h).
-- No Production hosting migration happens before the final hosting decision. A reversible Pages PoC (no Production data or configuration, e.g. checking that the build can read `../docs/legal` and that SPA routing works) is allowed under the Platform Selection Gate.
-- Vercel Pro is used instead if any of the following happens:
-  - Cloudflare declines, or its answer is not clear enough to accept;
-  - the PoC or Production validation fails;
-  - Free-plan quota or reliability does not meet JOTI's Production requirements.
+### Platform Selection Gate — §2.2.1(h) accepted as a low-risk exception
+
+The Gate requires an ambiguous clause to be confirmed in writing by the vendor. For §2.2.1(h) this is replaced by a documented risk acceptance (2026-10-22), on these grounds:
+
+- JOTI does not process or collect card data on any Cloudflare-served property: card data is entered on ECPay's hosted page and processed by ECPay; the payment notification goes from ECPay to Supabase without passing through Cloudflare and contains no card data.
+- The interpretation risk already exists today: `joti.yoga` DNS is on Cloudflare Free, so choosing Vercel Pro would not remove it unless DNS were also moved. Hosting on Pages adds little new exposure.
+- Exit is cheap: a git-deployed static SPA that can move to Vercel Pro (or another host) by rebuilding and changing DNS, with no code changes.
+
+The written inquiry to Cloudflare (drafted 2026-10-20) should still be sent; it is **not** a blocker. Revisit this exception if Cloudflare's answer is negative or unclear, if JOTI starts handling any card data in the frontend, or if JOTI adds Pages Functions / Workers to the payment flow.
+
+### Conditions before Production
+
+1. **Reversible PoC** on `*.pages.dev` with no Production data or configuration: the build can read `../docs/legal`; SPA routing via `_redirects`; Production and Preview environment variables (including `VITE_ENABLE_PURCHASE`); Preview URLs work with the TEST Supabase Redirect URLs. Pages or Workers static assets is chosen here.
+2. **Production validation:** bind `joti.yoga`; update Supabase Site URL / Redirect URLs, `SITE_URL`, Google OAuth branding URLs and the privacy policy hosting entry; run the Production E2E on Cloudflare.
+
+### Fallback to Vercel Pro if
+
+- Cloudflare declines §2.2.1(h) for JOTI, or its answer is not clear enough to keep the exception;
+- the PoC or Production validation fails;
+- Free-plan limits or reliability do not meet JOTI's Production requirements;
+- Cloudflare suspends or restricts the Free Services used by JOTI.
+
+### Upgrade policy (decided 2026-10-22)
+
+Lowest cost now, so Cloudflare first; at every upgrade, compare again:
+
+- If Cloudflare Free stops fitting (limits, reliability, terms), first evaluate upgrading **within Cloudflare** — same platform, best continuity with the registrar / DNS setup.
+- If Cloudflare's paid option is clearly more expensive than Vercel Pro and switching is cheap, choose the more cost-effective option.
+- The goal is neither "always Cloudflare" nor "always keep Vercel": prices and fit are re-checked at each upgrade decision, using current official pricing.
+
+### Portability guardrails
+
+Keep the hosting replaceable without running two Productions:
+
+- **Production is only ever addressed as `joti.yoga`**, never `*.pages.dev`: Supabase Site URL / Redirect URLs, `SITE_URL`, ECPay return pages, Google OAuth and the privacy policy all point at the domain, so a host change does not touch them.
+- No Pages Functions, Workers, `wrangler` configuration or Cloudflare-only runtime features (e.g. Access, Image Resizing); the site stays a plain static build.
+- The frontend reads only JOTI's own `VITE_*` variables, never host-provided ones.
+- Prefer Pages (git integration, no config file in the repo) over Workers static assets unless the PoC shows a problem.
+- Keep `frontend/vercel.json` next to `frontend/public/_redirects`; each host ignores the other's file.
+- Pin the Node version in a form both hosts read (e.g. `.nvmrc`); Vercel currently builds with Node 24.x.
+- After Cloudflare passes Production validation, **disconnect the Vercel project's Git integration** (keep the project): otherwise every push keeps publishing a second public copy on `*.vercel.app`, which would also be commercial use on Hobby.
 
 ## Consequences
 
-- **Migration scope (if Cloudflare is accepted):** a hosting-layer migration only. React / Vite code, Supabase (Database, Auth, Edge Functions), ECPay integration and the database schema do not change. Required changes: replace `frontend/vercel.json` with a `_redirects` file; configure build root `frontend`, command `npm run build`, output `dist`, and Production / Preview environment variables; bind `joti.yoga`; update Supabase Site URL / Redirect URLs (TEST wildcard moves from `*.vercel.app` to `*.pages.dev`), Production and TEST `SITE_URL`, Google OAuth branding URLs; update the privacy policy hosting entry and the deployment / Preview workflow documentation. The Production E2E must then run on the new hosting.
-- **Fallback cost:** switching to Vercel Pro only requires upgrading the existing Vercel project; no code or configuration change. Cost is the Pro seat fee.
-- **DNS:** the §2.2.1(h) ambiguity also concerns the existing Cloudflare Free DNS, so the written confirmation is needed even if Vercel Pro is chosen, unless DNS is moved or upgraded.
+- **Migration scope:** a hosting-layer migration only. React / Vite code, Supabase (Database, Auth, Edge Functions), ECPay integration, Bunny.net and the database schema do not change. Required changes: replace `frontend/vercel.json` with a `_redirects` file; configure build root `frontend`, command `npm run build`, output `dist`, and Production / Preview environment variables; bind `joti.yoga`; update Supabase Site URL / Redirect URLs (TEST wildcard moves from `*.vercel.app` to `*.pages.dev`), Production and TEST `SITE_URL`, Google OAuth branding URLs; update the privacy policy hosting entry and the deployment / Preview workflow documentation. The Production E2E must then run on the new hosting.
+- **Cost:** $0 fixed hosting cost. Free Services have no SLA and no liability (§2.6).
+- **Cloudflare Free → paid:** an account / plan change; site, DNS, domain and JOTI architecture stay the same.
+- **Fallback cost:** switching to Vercel Pro only requires reconnecting and upgrading the existing Vercel project, setting the same `VITE_*` variables, adding `joti.yoga` and changing its DNS record (DNS only); Production Supabase / `SITE_URL` / ECPay / OAuth settings do not change because the domain does not; only the TEST Preview wildcard (`*.pages.dev` → `*.vercel.app`) and the privacy policy hosting entry change, followed by a Production E2E. No code change. Cost is the Pro seat fee. Netlify's paid Personal plan ($9 / month, 1,000 credits) is a possible cheaper paid option but has not been evaluated.
+- **DNS:** registrar, DNS and hosting are on one Cloudflare account, which keeps domain binding simple but concentrates dependency on that account (protect it with strong 2FA).
 
 ## Related Documents
 
@@ -62,4 +114,11 @@ Read literally, JOTI does not process or collect card information on its own web
 - Cloudflare Self-Serve Subscription Agreement: https://www.cloudflare.com/terms/
 - Cloudflare Service-Specific Terms — Developer Platform: https://www.cloudflare.com/service-specific-terms-developer-platform/
 - Cloudflare Pages limits: https://developers.cloudflare.com/pages/platform/limits/
+- Cloudflare Workers static assets billing: https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/
 - Vercel Fair Use Guidelines: https://vercel.com/docs/limits/fair-use-guidelines
+- GitHub Pages limits: https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
+- Netlify pricing: https://www.netlify.com/pricing/
+- Netlify — how credits work: https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/how-credits-work/
+- Netlify — billing FAQ for credit-based plans: https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/billing-faq-for-credit-based-plans/
+- Netlify Self-Serve Subscription Agreement: https://www.netlify.com/pdf/self-serve-subscription-agreement.pdf
+- Netlify Free plan announcement: https://www.netlify.com/blog/introducing-netlify-free-plan/

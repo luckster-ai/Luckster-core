@@ -653,23 +653,34 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **Future Decision**：Privacy Policy 是否需揭露 Supabase、Resend、Vercel、Bunny 等服務之資料儲存國家／地區（見 Open Questions）；決定前不寫入政策
   - **External / Pending**：Resend Support 確認 `auth.joti.yoga` Click Tracking 是否關閉（Dashboard 顯示 ON 且設定無法保存；先前已確認驗證信連結未被改寫）；確認前 Privacy Policy 不對信件追蹤作額外承諾
 
-### Step 11 — Production Hosting／$0 平台費用評估（2026-10-20，Discovery — 決策未定）
+### Step 11 — Production Hosting／$0 平台費用評估（2026-10-20，Discovery；2026-10-22 已定案，見「Step 11 — Production Hosting 最終選型（ADR 0004）」）
 - **目標**：在不降低 Production reliability／security／legal compliance 的前提下，評估維持 $0 固定平台月費的可行性；完整決策狀態見 ADR `docs/development/adr/0004-production-hosting-platform.md`
 - **Hosting**：Vercel Hobby 依 Vercel Fair Use Guidelines 不得用於商業（含向訪客收款）用途，正式開放付款後不可作為 Production
-  - **Cloudflare Pages Free**：Candidate／External Confirmation Pending（未採用）——Cloudflare Self-Serve Subscription Agreement §2.2.1(h)（禁止於接受 Free Services 之 web property 處理或收集信用卡資料）對 JOTI 架構（卡片資料由 ECPay hosted payment page 處理，JOTI 前端不接收或儲存卡片資料，webhook 直達 Supabase）存在解釋疑義（「web property」「process」「credit card information」未定義）；`joti.yoga` DNS 已使用 Cloudflare Free，此疑義亦涉及現有 DNS
-  - **Vercel Pro**：Production fallback（Production-ready，未選定）；Cloudflare 確認前不得移除
+  - **Cloudflare Pages Free**：~~Candidate／External Confirmation Pending（未採用）~~（2026-10-22 選定，見「Step 11 — Production Hosting 最終選型（ADR 0004）」）——Cloudflare Self-Serve Subscription Agreement §2.2.1(h)（禁止於接受 Free Services 之 web property 處理或收集信用卡資料）對 JOTI 架構（卡片資料由 ECPay hosted payment page 處理，JOTI 前端不接收或儲存卡片資料，webhook 直達 Supabase）存在解釋疑義（「web property」「process」「credit card information」未定義）；`joti.yoga` DNS 已使用 Cloudflare Free，此疑義亦涉及現有 DNS
+  - **Vercel Pro**：Production fallback（Production-ready，未選定）；~~Cloudflare 確認前不得移除~~（2026-10-22：Cloudflare Pages 通過 Production validation 前保留 Vercel 專案）
   - 若採 Cloudflare 屬 hosting layer migration（前端／Supabase／ECPay／Edge Functions／DB 原則上不需重做）；最終決策前不進行正式 Production migration，僅允許可逆 PoC
 - **Supabase Free**：keep-alive（`.github/workflows/supabase-keepalive.yml`，約每 6 小時）已存在並正常運作（2026-10-14 起排程執行全部成功）；Free 方案無平台 backup／PITR（Supabase 官方文件確認），需自建加密 off-site backup
 - **追蹤事項**：
-  - **External / Pending**：Cloudflare 對 §2.2.1(h) 之書面確認（涵蓋 Pages Free 與 DNS Free 上的 JOTI 付款架構）
+  - **External / Pending**（2026-10-22：**不再為上線條件**——§2.2.1(h) 已依 Platform Selection Gate 以低風險例外接受；詢問信仍建議送出，見「Step 11 — Production Hosting 最終選型（ADR 0004）」）：Cloudflare 對 §2.2.1(h) 之書面確認（涵蓋 Pages Free 與 DNS Free 上的 JOTI 付款架構）
     - **2026-10-20**：英文詢問信**已擬定、尚未送出**（全文未存入 repo）。內容：說明 JOTI 架構（靜態 SPA、ECPay hosted payment page、ReturnURL 直達 Supabase 不經 Cloudflare、payload 無卡片資料）、引用 §2.2.1 lead-in／§2.2.1(h)（2025-09-12）與 Developer Platform Service-Specific Terms（2026-09-28），提出 6 題：(1) Free 方案（DNS＋Pages）可否用於商業付費會員網站；(2) 導向第三方 hosted payment page 是否屬「process or collect credit card information」；(3)「web property」是否指整個 zone、僅使用 DNS Free 是否即適用；(4) 付款狀態／交易編號／付款方式類別是否屬「credit card information」；(5) 若不允許需何種方案；(6) 回覆可否視為 §2.2.1 之「expressly permitted in writing」
     - **TODO（使用者）**：補上帳號 Email、署名與聯絡信箱；確認 `joti.yoga` apex／`www` 是否開啟 Cloudflare proxy 並於信中註明；送出管道建議以 Dashboard Support case（帳號／帳務類別）為主、Sales 聯絡表單為備用（實際受理管道未確認）；送出後保留 case 編號、回覆全文、回覆人身分與日期，寫入 ADR 0004
     - **此信無法解決之疑義**：一般 Support 回覆不一定等同正式書面允許（取得前 ADR 0004 維持 External Confirmation Pending）；確認僅對回覆當下條款有效（依 Platform Selection Gate 第 11 項定期複查）；未涵蓋 Pages Functions／Workers／proxy／WAF 等其他用法（改用時須重新確認）；正面回覆後仍需可逆 PoC 與 Production Validation 方可改為 Accepted
-  - **Future Decision**：Hosting 最終決策（Cloudflare Pages Free 或 Vercel Pro，見 ADR 0004）
+  - ~~**Future Decision**：Hosting 最終決策（Cloudflare Pages Free 或 Vercel Pro，見 ADR 0004）~~——2026-10-22 定案：Cloudflare Pages Free，見「Step 11 — Production Hosting 最終選型（ADR 0004）」
   - **Future Decision**：是否接受 Supabase Free 長期營運風險（不視「正式開放付款前升級 Pro」為既定決策），待 backup／restore 驗證與整體風險評估後決定；連帶決定備份頻率／RPO／保存期限／存放位置（及隱私權政策是否需提及）、升級付費方案觸發條件（2026-10-22：備份頻率、存放位置與加密已於 ADR `docs/development/adr/0005-production-backup-architecture.md` 定案；保存期限、隱私權政策揭露、升級觸發條件仍待決，見「Step 11 — Production Backup Architecture（ADR 0005）」）（契約審閱／同意紀錄之 RPO 缺口見「Step 11 — Supabase Free Backup／Restore Discovery」）
   - **TODO**（2026-10-22：架構已於 ADR 0005 定案；第一次 Production Backup 與 Restore Drill 已成功；2026-10-22 起每 6 小時備份、每週 drill、Healthchecks 監控與保存期限輪替已上線，見「Step 11 — Production Backup Phase 1：排程、監控與輪替」；DR runbook 與 hosted DR drill 尚未進行）：Supabase Free 加密 off-site backup（`public`＋`auth`）、每次備份之 restore verification、災難還原手冊與設定清單（Auth 設定、Edge Functions、secrets），上線前至少一次 DR drill（細項與正式開放付款前最低要求見「Step 11 — Supabase Free Backup／Restore Discovery」）
   - ~~**Pending（驗證）**：GitHub Actions 經 Session pooler（IPv4）執行 `pg_dump`（Supabase 官方僅列直連供 `pg_dump`，直連為 IPv6-only）；含 `auth` schema 之 restore 至一般 PostgreSQL 17~~——2026-10-20 更新：官方 backup/restore 指南已明示預設使用 Session pooler；還原目標須為 Supabase 環境而非一般 PostgreSQL，見「Step 11 — Supabase Free Backup／Restore Discovery」
   - **TODO（P1，正式開放付款前）**：Payment reconciliation——每日 QueryTradeInfo 回查找出「已付款未開通」、webhook 異常偵測、Order／Service Period／payment_event 交叉比對（與 Supabase 方案無關，Pro 亦需要）
+
+
+### Step 11 — Production Hosting 最終選型（ADR 0004）（2026-10-22，已定案 — 未實作）
+- **決策**：**Cloudflare Pages Free** 為 Production Hosting；Vercel Pro 為 fallback（Cloudflare Pages 通過 Production validation 前保留 Vercel 專案）；完整內容以 ADR `docs/development/adr/0004-production-hosting-platform.md`（Status：Accepted）為準
+- **排除**：Vercel Hobby（僅限非商業）、GitHub Pages（明文禁止 online business／e-commerce）、**Netlify Free**（每月 300 credits 硬上限，用完時帳號內所有專案暫停至下個計費週期且不可加購；JOTI 每次 push `main` 皆 deploy Production，2026-10-22 單日即 90 credits）
+- **Platform Selection Gate**：Cloudflare §2.2.1(h) 以**低風險例外**接受——JOTI 不在 Cloudflare 服務之網站處理或收集卡片資料；`joti.yoga` DNS 原本即在 Cloudflare Free，風險既存；切換成本低。Cloudflare 書面詢問仍建議送出，但不阻擋上線
+- **升級原則**：目前成本最低 → 優先 Cloudflare；需升級時先評估留在 Cloudflare，若 Cloudflare 付費方案明顯比 Vercel Pro 貴且切換成本低則選較具成本效益者；每次升級重新比較成本與適配性
+- **可移植性**（ADR 0004「Portability guardrails」）：現有 Git＋React/Vite＋Supabase＋ECPay＋Bunny 架構已足以支援 Cloudflare Free → Paid（僅方案變更）與 Cloudflare → Vercel Pro（重接 Vercel、同樣 `VITE_*`、改 DNS，Production 設定因網域不變而不需修改）；**不建立兩套 Production、現在不需額外準備**。守則：Production 只使用 `joti.yoga`（不用 `*.pages.dev`）、不使用 Pages Functions／Workers／`wrangler`、`vercel.json` 與 `_redirects` 並存、Node 版本以兩平台皆讀取之方式固定、Cloudflare 上線後斷開 Vercel Git 自動 deploy
+- **追蹤事項**：
+  - **TODO（待指示）**：可逆 PoC（`*.pages.dev`、不含 Production 資料／設定：build 讀取 `../docs/legal`、`_redirects`、Production／Preview 環境變數含 `VITE_ENABLE_PURCHASE`、TEST Supabase Preview Redirect URL；決定 Pages 或 Workers static assets）→ Production validation（綁定 `joti.yoga`、Supabase Site URL／Redirect URLs、`SITE_URL`、Google OAuth、隱私權政策「網站託管」、Production E2E）→ 斷開 Vercel Git 自動 deploy
+  - **External（非阻塞）**：Cloudflare §2.2.1(h) 書面詢問（2026-10-20 已擬定，尚未送出）
 
 ### Step 11 — Supabase Free Backup／Restore Discovery（2026-10-20，Discovery — 未實作、未實際 dump）
 - **範圍**：Production 唯讀 catalog 盤點（僅 SELECT）、Supabase 官方文件（Backup and Restore using the CLI、Database Backups）、`supabase db dump --dry-run` 檢視實際 `pg_dump` 參數；**未連 Production 執行 `pg_dump`**（需 DB 密碼，屬使用者憑證），未修改任何設定、Production 或專案架構
@@ -892,7 +903,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Open Questions（法律／商業模型，待決）
 
-- **Production Hosting 最終決策（Future Decision，2026-10-20 新增）**：Cloudflare Pages Free（Candidate，待 Cloudflare 書面確認）或 Vercel Pro（fallback）——見 ADR `docs/development/adr/0004-production-hosting-platform.md`
+- ~~**Production Hosting 最終決策（Future Decision，2026-10-20 新增）**：Cloudflare Pages Free（Candidate，待 Cloudflare 書面確認）或 Vercel Pro（fallback）~~——2026-10-22 定案：Cloudflare Pages Free（Vercel Pro 為 fallback），見 ADR `docs/development/adr/0004-production-hosting-platform.md`與「Step 11 — Production Hosting 最終選型（ADR 0004）」
 - **Supabase Free 長期營運（Future Decision，2026-10-20 新增）**：是否接受 Free 方案（無平台 backup／PITR、無 SLA、2 個 Free 專案上限）之營運風險，或升級 Pro；待自建 backup／restore 驗證與整體風險評估後決定（取代原「正式開放付款前升級 Pro」之既定記載），見「Step 11 — Production Hosting／$0 平台費用評估」；2026-10-20 Backup／Restore Discovery 另確認 Free 無法補足之風險（無 PITR、備份後之契約審閱／同意紀錄無法補回、還原後 Supabase URL 必然改變、2 個 project 上限使緊急重建須先刪除 project），見「Step 11 — Supabase Free Backup／Restore Discovery」；2026-10-22 Production backup 架構已定案（ADR 0005，不以付費服務為前提），是否升級仍待 hosted DR drill 之 RPO／RTO 結果
 - **Production 契約類 Functions 部署時機（Future Decision，2026-10-20 新增）**：契約類 Functions 部署且 `contract_versions` 為 current 後，已登入帳號可繞過前端 `VITE_ENABLE_PURCHASE` 直接呼叫 `start-contract-review`／`agree-to-contract`，於正式上線前即產生 Production 正式契約同意紀錄；風險有限（需登入、仍受 3 日審閱限制），但部署時機需配合上線與 Production E2E 計畫決定
 - **Privacy Policy 資料儲存國家／地區揭露（Future Decision，2026-10-20 新增）**：是否需於隱私權政策揭露 Supabase（Production：Singapore）、Resend（Tokyo）、Vercel、Bunny 等服務之資料儲存國家／地區——屬法律判斷，決定前不寫入政策（見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）
@@ -908,6 +919,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-22（Production Hosting 最終選型：Cloudflare Pages Free（ADR 0004 Accepted），Vercel Pro 為 fallback；排除 Vercel Hobby／GitHub Pages／Netlify Free；§2.2.1(h) 以 Platform Selection Gate 低風險例外接受；記錄升級原則與可移植性守則；尚未進行 PoC／migration）
 
 2026-10-22（ADR 0005 Phase 1：Production backup 每 6 小時排程、每週 Restore Drill、backup freshness（≤ 8 小時）、Healthchecks.io 監控（Gate 低風險例外）與保存期限輪替（7 天／35 天每日／12 個月每月）上線；手動驗證 backup run `39748542541`、drill run `39749042224` 皆通過）
 
