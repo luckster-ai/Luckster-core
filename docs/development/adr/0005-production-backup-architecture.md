@@ -52,6 +52,8 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 - **Restore procedure:** the official CLI restore plus only the fixes in "Restore findings" (skip the `log_min_messages` grant line, pin local service versions, re-create auth triggers, re-apply function ACLs), followed by the fingerprint comparison. Function-ACL or per-role EXECUTE differences are failures.
 - **Weekly local restore drill:** an automated workflow restores the **latest encrypted backup only** (no Production access) into an ephemeral local Supabase stack, pinned to the versions in `manifest.json`, and requires all fingerprint keys to match plus login, new-signup profile creation and RLS checks. It also fails if the newest backup is older than the expected interval.
 - **Monitoring:** **Healthchecks.io** — one check for the 6-hourly backup, one for the weekly drill. Each successful run pings its check, so a missed, skipped, disabled or failing run raises an alert. GitHub's own failure notifications remain as a second signal.
+  - *Platform Selection Gate — accepted as a low-risk exception (2026-10-22).* Healthchecks.io's Terms (last updated 2018-05-09) neither restrict nor explicitly allow commercial use on the free Hobbyist plan (20 checks, 100 log entries per check); there is no SLA, and accounts may be terminated without notice. Accepted without written confirmation because only start / success / fail pings are sent — no JOTI or member data — and losing the service removes one alerting layer, not a backup: GitHub failure notifications and the drill's freshness check remain. Revisit if JOTI starts sending any data to it or relies on it as the only alert.
+- **Retention (decided 2026-10-22):** every backup from the last 7 days, the newest backup of each UTC day for 35 days, the newest backup of each UTC month for 12 months; older Releases are deleted by the backup workflow after each successful publish. Safety rules: only `backup-YYYYMMDD-HHMMZ` Releases with one uploaded asset are considered, the newest complete backup is always kept, and nothing is deleted if fewer than 4 complete backups would remain. Shorter retention limits how long deleted members' data persists in backups. How this applies to USB copies is still deferred.
 - **No new standalone keepalive.** The backup connects to Production every 6 hours; no additional keepalive is added unless real observation shows it is needed (see "Pending verification"). The existing `supabase-keepalive.yml` in `Luckster-core` is not changed by this ADR.
 - **USB offline copy:** the encrypted backup sets (with their manifests) are copied **manually and periodically** to a USB drive kept offline, as an extra line of defence. Adopting the USB offline copy is decided; how often it is made and where the drive is kept are deferred (see "Deferred / future phases").
 - **Supabase Storage objects are out of scope of the database dump.** The dump contains Storage metadata rows (`storage.buckets`, `storage.objects`) but **not file contents**. Production currently has 0 buckets and 0 objects (course video is on Bunny.net). Any future use of Supabase Storage needs its own backup design before Production use.
@@ -76,7 +78,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 - **Key versioning:** keys carry a version label (for example `master-v1`, `drill-v1`); the public recipients file in the Ops Repo lists the active versions, and `manifest.json` records which versions encrypted each backup. A retired private key must be kept for as long as any backup encrypted to it is retained — including USB copies. Rotation happens when there is a reason (suspected exposure, loss of a copy, a change of custody), not on a fixed yearly schedule.
 - age provides authenticated encryption; the SHA-256 values in `manifest.json` additionally verify each file after decryption and after copying to USB.
 
-**Retention (proposal, to be confirmed):** 6-hourly sets for 7 days, one daily set for 35 days, one monthly set for 12 months; expired Releases deleted by the workflow. Shorter retention limits how long deleted members' data persists in backups. Whether and how this applies to USB copies is part of the same decision.
+**Retention:** decided — see "Decided / verified".
 
 **Private Ops Repo as a high-sensitivity boundary**
 
@@ -101,7 +103,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 
 - **Phase 2: Backblaze B2 + Object Lock** as a second, deletion-resistant off-site copy — optional, not added now (Object Lock pricing still to be confirmed).
 - **Upgrading Supabase** (Pro / PITR) or other paid services — possible later; the architecture does not assume them. Even with Pro, an off-site copy outside Supabase remains required.
-- **Retention periods** — final values (see proposal above), including legal / privacy review.
+- **Retention for USB copies** — whether and how the decided retention applies to the USB offline copies.
 - **Least-privilege backup role** instead of `postgres` — the CLI dump switches to the `postgres` role; whether a read-only role (for example via `pg_read_all_data`) can produce a complete dump needs evaluation.
 - **Privacy policy disclosure** of backup storage location and retention — part of the existing data-residency Future Decision.
 - **Supabase Storage file backup** — only if Supabase Storage is used in Production.
@@ -114,8 +116,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 - **RTO** — measured only by the first hosted DR drill.
 - **Pause prevention:** whether a database connection every 6 hours counts as activity for Supabase's Free-plan pause; until confirmed, the existing keepalive stays as it is.
 - **Weekly drill from an encrypted backup only** (the TEST drill re-captured metadata from a live source; the new drill must work from the saved files alone).
-- **GitHub Actions budget** — private-repo minutes for 4 backups per day plus the weekly drill (estimated well under the 2,000-minute free allowance).
-- **Healthchecks.io** — passes the Third-Party Platform Selection Gate (free plan terms for this use, alerting channel).
+- **GitHub Actions budget** — estimated from the first runs (backup 202 s → 4 billed minutes, drill 155 s → 3 minutes): about 495 of the 2,000 free minutes per month; confirm against actual usage once the schedules run.
 
 ## Rationale
 
