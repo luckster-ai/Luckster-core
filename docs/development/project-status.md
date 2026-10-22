@@ -738,7 +738,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **追蹤事項**：
   - **Future Decision**：保存期限最終值（ADR 為提案）；USB 複製頻率與存放地點；最小權限備份 role；隱私權政策是否揭露備份存放與保存期限（併入資料儲存地區揭露）；DR runbook 存放位置；Auth 設定是否改為程式碼管理；Phase 2（Backblaze B2＋Object Lock）是否及何時導入；Supabase 升級
   - **Pending（驗證）**：還原至 hosted project（`log_min_messages`、function ACL、是否需重新登入、Google 帳號、原密碼登入）；RTO；每 6 小時 DB 連線是否足以避免 Free 暫停（確認前保留現有 keepalive）；每週 drill 只用保存檔案能否通過；Actions 分鐘數是否在免費額度內；Healthchecks.io 是否通過 Third-Party Platform Selection Gate
-  - **TODO（實作，待指示）**（2026-10-22：Private Ops Repo、age 金鑰、Secrets 與手動觸發之 backup workflow 已完成並以 Production 驗證成功，見「Step 11 — Production Backup Phase 1：第一次 Production Backup」；Healthchecks 及其後步驟尚未開始）：~~建立 Private Ops Repo、age 金鑰、Secrets~~、Healthchecks → ~~手動觸發之 backup workflow 以 Production 驗證~~ → 只用加密備份之 drill workflow → 開啟排程與監控 → `SUPABASE_PROD_DB_URL` 自 public repo 移除 → DR runbook 與設定清單 → 正式開放付款前 hosted DR drill
+  - **TODO（實作，待指示）**（2026-10-22：Private Ops Repo、age 金鑰、Secrets 與手動觸發之 backup workflow 已完成並以 Production 驗證成功，見「Step 11 — Production Backup Phase 1：第一次 Production Backup」；2026-10-22 只用加密備份之 Restore Drill 亦已通過，見「Step 11 — Production Backup Phase 1：第一次 Restore Drill」；Healthchecks、排程及其後步驟尚未開始）：~~建立 Private Ops Repo、age 金鑰、Secrets~~、Healthchecks → ~~手動觸發之 backup workflow 以 Production 驗證~~ → ~~只用加密備份之 drill workflow~~ → 開啟排程與監控 → `SUPABASE_PROD_DB_URL` 自 public repo 移除 → DR runbook 與設定清單 → 正式開放付款前 hosted DR drill
 
 ### Step 11 — Production Backup Phase 1：第一次 Production Backup（2026-10-22，通過）
 - **環境**：Private Ops Repo `luckster-ai/joti-ops`（private，僅 owner `luckster-ai`；本機 `C:\joti-ops`，remote 以 `luckster-ai` 帳號認證）；workflow `.github/workflows/supabase-backup.yml`，**僅手動觸發**（初始 checkpoint `dd1858a`）；Secrets `SUPABASE_PROD_DB_URL`、`SUPABASE_PROD_ANON_KEY`；`recipients.txt` 含 `master-v1`（私鑰僅由使用者離線保存）與 `drill-v1` 公鑰
@@ -750,8 +750,23 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - runner cleanup 成功
 - **前兩次失敗（已解決）**：Supabase CLI checksum 比對檔名錯誤（joti-ops commit `e9e61a3` 修正）；joti-ops 之 `SUPABASE_PROD_DB_URL` 結尾多一個換行（使用者重新設定）。兩次皆在讀取 Production 資料前失敗，未建立 Release
 - **追蹤事項**：
-  - **Pending（驗證）**：encrypted backup 尚未實際解密；以 drill key 解密之 Restore Drill 尚未實作（Storage 版本於 manifest 記為 `1.80.2`，drill 對齊本地 stack 時需轉為 `v1.80.2`）
+  - ~~**Pending（驗證）**：encrypted backup 尚未實際解密；以 drill key 解密之 Restore Drill 尚未實作（Storage 版本於 manifest 記為 `1.80.2`，drill 對齊本地 stack 時需轉為 `v1.80.2`）~~——2026-10-22 已以 drill key 解密並還原通過（Storage 版本自動轉為 `v1.80.2`），見「Step 11 — Production Backup Phase 1：第一次 Restore Drill」
   - **TODO（尚未開始）**：每 6 小時排程；Healthchecks.io；retention／rotation（保存期限仍為 Future Decision，決定前 workflow 不刪除任何 Release）；USB 離線副本；`SUPABASE_PROD_DB_URL` 自 public repo 移除；DR runbook
+
+### Step 11 — Production Backup Phase 1：第一次 Restore Drill（2026-10-22，通過）
+- **環境**：`luckster-ai/joti-ops` workflow `.github/workflows/supabase-restore-drill.yml`（commit `2a24321`，**僅手動觸發**；權限僅 `contents: read`）與共用 scripts `scripts/check-backup.py`、`scripts/restore-backup.sh`（還原流程亦可供正式 DR 使用）；Secret `BACKUP_DRILL_AGE_KEY`（`drill-v1` 私鑰）。**隔離**：job 不含任何 Production 憑證，Production 主機名稱於 `/etc/hosts` 封鎖並確認生效；還原目標為 runner 上之一次性本地 Supabase stack
+- **結果（run `39743418421`，13 個步驟全部成功，約 2 分 35 秒）**：
+  - 使用 backup `backup-20261022-0732Z`（`joti-prod-backup-20261022-0732Z.tar.gz.age`）；下載後 SHA-256 與 Release 說明及 GitHub asset digest 一致
+  - **以 `drill-v1` 解密成功**；每個檔案與 `manifest.json` 之 SHA-256 一致
+  - 本地 stack 依 manifest 固定 GoTrue v2.197.0、Storage v1.80.2；本地 auth migration 與來源相同（`20260831180000`）；本地 Postgres 17.6、來源 17.11，未影響比對
+  - 還原沿用已驗證流程（僅跳過 `log_min_messages` grant 行、補 auth trigger、套用 function ACL）
+  - **43 項 fingerprint 全部與備份一致**；`anon`／`authenticated`／`service_role` 可執行函式 7／7／21 與備份相同
+  - 已還原使用者經 GoTrue 登入並僅見自己的 profile；新註冊自動建立 profile（role member）；RLS：新使用者 2 筆中僅見 1 筆、anon 見 0 筆
+  - 清理後無殘留 container／volume／工作目錄；drill key 用後即刪除
+- **結論**：加密之 Production 備份本身即足以還原，不需連回 Production；第一次備份已實際驗證可解密、可還原
+- **追蹤事項**：
+  - **Pending（驗證，待 hosted DR drill）**：還原至新 hosted project 時 `log_min_messages` 與 function ACL 之行為；使用者是否需重新登入；Google 帳號；原密碼登入；以 **master key** 解密（目前僅 drill key 實際解密過）；Auth 設定、Edge Functions、secrets 之重建；實際 RTO
+  - **TODO（尚未開始）**：每週 drill 排程與 backup freshness 檢查（ADR 0005；排程啟用前不加入）
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -877,6 +892,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-22（ADR 0005 Phase 1：第一次 Restore Drill 通過（run `39743418421`，13 步驟、約 2 分 35 秒）：只用加密備份 `backup-20261022-0732Z` 與 `drill-v1`、不連 Production，43 項 fingerprint 一致，function ACL 7／7／21 相同，登入／新註冊／RLS 正常，清理完整；hosted DR 行為、master key 解密與 RTO 仍待 hosted DR drill）
 
 2026-10-22（ADR 0005 Phase 1 checkpoint：Private Ops Repo `luckster-ai/joti-ops` 之第一次 Production Backup 成功（run `39740822786`，13 步驟全部通過，約 3 分 20 秒）：唯讀 dump、completeness、前後 43 項 fingerprint 一致、manifest 記錄版本、age 雙金鑰加密、Private Release `backup-20261022-0732Z` 與 SHA-256 驗證、cleanup；尚未完成：解密／Restore Drill、6 小時排程、Healthchecks、retention／rotation）
 
