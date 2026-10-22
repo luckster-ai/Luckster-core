@@ -1,6 +1,6 @@
 # Engineering Guide
 
-Version: 1.0  
+Version: 1.1  
 Status: Active
 
 ## Contents
@@ -769,6 +769,45 @@ New features should extend the existing architecture rather than replace it.
 
 ---
 
+## Third-Party Platform Selection Gate
+
+Any third-party platform that Production depends on (hosting, database, auth, email, payments, video, monitoring, backup storage) must pass this gate before it is used for Production. The goal is to find commercial-terms or free-plan problems during Discovery, not after the implementation is finished.
+
+### Checklist
+
+Evaluate the specific plan that will actually be used (for example "Free", not just the vendor):
+
+1. **Technical compatibility** — supports JOTI's real requirements (SPA routing, auth redirects, payment callbacks, region, language).
+2. **Commercial eligibility** — the plan explicitly allows commercial / paid-service use.
+3. **Terms / AUP** — no clause conflicts with JOTI's use (payments, personal data, content type). Record the exact clause, page and "last updated" date.
+4. **Pricing / Free-tier limits** — fixed cost, free quota, and what happens on overage (hard pause vs. billed overage).
+5. **Privacy / Data** — what personal data the platform handles, where it is stored, whether the privacy policy must name it.
+6. **Security** — least-privilege keys and roles, encryption, account protection.
+7. **Reliability / SLA** — SLA or none, impact of an outage, mitigation.
+8. **Quota / Scaling** — when JOTI's expected growth would exceed the quota; define the upgrade trigger.
+9. **Exit / Migration** — cost of replacing the platform, data export.
+10. **Vendor lock-in** — proprietary APIs used, available alternatives.
+11. **Future pricing / terms changes** — terms date, change history, how often to re-check.
+12. **External confirmation** — any ambiguous clause must be confirmed in writing by the vendor. Text that only "appears compliant" is not confirmed.
+
+### Stages
+
+| Stage | What is confirmed | Result |
+|---|---|---|
+| **Discovery** | Items 1, 4, 8, 9, 10; first reading of 2, 3, 5, 11 from official sources (with dates); list every ambiguity | `Candidate` |
+| **External Confirmation** | Item 12: written answers for the listed ambiguities (skip only when the terms are unambiguous, and record why) | `Confirmed` / `Rejected` |
+| **Architecture Decision** | Final judgement on all 12 items, recorded as an ADR in `docs/development/adr/`, including a named fallback | `Accepted` |
+| **Implementation** | Only for an `Accepted` platform; configuration, documentation and legal text (e.g. privacy policy) updated together | Implemented |
+| **Production Validation** | E2E on the real Production architecture, monitoring, backup / restore where relevant, quota observation; fallback still available | `Production` |
+
+### Rule
+
+A platform that has not completed the required External Confirmation and Architecture Decision may be used for a **reversible PoC** (no Production data, no Production configuration changes), but must not enter Production Implementation.
+
+Track open confirmations and decisions in `docs/development/project-status.md` (External / Pending, Future Decision), and keep the decision itself in the ADR.
+
+---
+
 ## Repository Evolution
 
 The repository should evolve gradually.
@@ -795,6 +834,10 @@ The goal is to build software that remains easy to develop, maintain, and expand
 ---
 
 ## Version History
+
+### Version 1.1
+
+Adds the Third-Party Platform Selection Gate (Part 5).
 
 ### Version 1.0
 

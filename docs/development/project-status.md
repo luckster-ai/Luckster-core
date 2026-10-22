@@ -363,7 +363,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Step 11 子步驟現況**：11.1 Renewal Purchase Entry、11.2 Refund Failure UI 已完成（見上方兩節）；本 Discovery 為 Production 基礎設施部分，其後的 Production 建置子步驟編號尚未排定
 - **已確認決策**：
   - **Organization**：Production 使用**獨立的 Supabase Organization**，與現有 TEST 專案（`ngznngqmbhxejkjbqomh`）分開
-  - **方案**：Production Supabase **先使用 Free**，**正式開放付款前再升級 Pro**
+  - **方案**：Production Supabase **先使用 Free**，**正式開放付款前再升級 Pro**（2026-10-20 更新：是否升級 Pro **改列 Future Decision**——是否長期維持 Free，待自建 backup／restore 驗證與整體風險評估後決定，見「Step 11 — Production Hosting／$0 平台費用評估」與 Open Questions）
   - **Region**：**Singapore（`ap-southeast-1`）**
   - **資料**：Production 建立**乾淨 DB**；**不遷移 TEST 帳號**，亦不遷移 TEST 的交易資料（orders、service_periods、checkout_sessions、payment_events、contract_acceptances 等皆為測試資料）。**僅遷移必要資料**：`contract_versions` 與 **4 個 official practices**
 - **TEST DB 遷移資料核對（2026-10-13，Read-only）**：以 `supabase db query --linked` 對 TEST 專案僅執行 SELECT，**未寫入資料庫**，未執行任何 Production 建置或資料遷移
@@ -397,6 +397,12 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **4 個官方 published Practices 已匯入 Production**：自 TEST read-only 取出原始資料，直接產生 `json_populate_recordset` INSERT 匯入（未手抄欄位值）；P001–P004 與 TEST 原始資料**逐列 md5 一致**（含 `created_at`／`updated_at`、slug、空白 description 原樣）；Production `practices` 目前**只有這 4 筆**；以 Production anon key 經 REST 讀取（前台路徑）驗證 anon + RLS 可正確讀到 4 筆 published
 - **目前資料狀態**：Production **沒有 Auth users**、測試交易或其他 TEST 資料（`auth.users` 與其餘 13 張 public 表皆為 0 筆）
 - **`contract_versions` 尚未建立**：v1.0 待正式上線時間確定後再建立（`effective_at` 採正式上線時間，見上方「遷移資料決策」）
+  - **前置條件（2026-10-20 確認，尚未全部具備，目前不可建立）**：
+    1. **Future Decision**：正式上線時間（`effective_at` 為 `not null`，依決策採正式上線時間）
+    2. **v1.0 契約文字定稿後才建立**：`content_identifier = 'v1.0'` 直接對應 `docs/legal/versions/v1.0.md`，Production 首位會員同意後即不得再改 v1.0（只能建立 v1.1）；目前尚待——契約第 25 行網站欄位 `[待填寫]`（External／Pending：依 `joti.yoga` 綁定）、第七條第三項「單次給付之總價」與年方案分期之關係（Future Decision）
+    3. **順序**：v1.0 定稿 → 建立 `contract_versions` v1.0 → 部署契約類 Functions（`start-contract-review`／`agree-to-contract`／`reaccept-contract`）→ Production 真實帳號開始審閱 → 付款類 Functions＋secrets → 滿 3 日後 Production E2E
+  - **注意**：程式只依 `is_current` 判斷目前版本（schema 以部分唯一索引保證同時僅一筆 `is_current`），**不檢查 `effective_at`**——`is_current = true` 且 Functions 已部署時，契約審閱即可開始，不會等到 `effective_at`；`effective_at` 僅為紀錄欄位
+  - **排程**：Production 真實 E2E 帳號須於預定測試日至少 3 日前開始審閱（前提為 contract version 與契約類 Functions 已就緒）
 - **Admin 尚未建立**：待 Production Auth 完成、第一個正式帳號建立後再設定 `profiles.role = 'admin'`（2026-10-15：Production Auth 已完成、第一個正式帳號已建立；`profiles.role = 'admin'` 待設定）
 - **Auth Email 決策（2026-10-13）**：Production Auth Email 採 **Resend Free**，寄件網域 **`auth.joti.yoga`**；目前不使用 Brevo；行銷／CRM Email 另行評估。**2026-10-14 Resend 網域 `auth.joti.yoga` 已 Verified**（見下方「Step 11 — Production Auth Email（Resend）網域驗證」）；**2026-10-15 Production Supabase Auth SMTP 已設定，並成功寄送驗證信**（見下方「Step 11 — Production Auth 完成」）
 - **Production Auth 已完成（2026-10-15）**：Email + Password + Google，見下方「Step 11 — Production Auth 完成」（設定前的盤點見「Step 11 — Production Auth Discovery」）
@@ -582,7 +588,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   1. PlanPurchase 修正：已 push `main`；待 Preview 瀏覽器實測雙分頁「付款進行中」畫面（依賴無方案的測試帳號；穩定 Preview branch 需同步到最新 `main` 才會包含此修正）
   2. **2026-10-19 12:18（台灣時間）後**：以審閱中的測試會員於穩定 Preview 進行 (a) Contract Review 到期後同意按鈕自動啟用、(b) **首購 E2E**（同意 → 購買 → ECPay 測試卡 → 開通）、(c) Pricing 依狀態切換；可於該帳號付款前一併重測雙分頁 409 的「付款進行中」畫面——**2026-10-19 已完成首購 E2E，資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）
   3. ~~是否修正 `ContractReviewPage` 同類 409 錯誤解析（待決定）~~——2026-10-20 已修正（未 commit）；瀏覽器實際觸發 409 仍為 Pending（驗證），見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」
-  4. Production 開放付款前（見「Next Steps」）：綠界正式特店審核與回覆（ReturnURL 網域、一般賣家、履約保證；**ECPay 已於 2026-10-19 確定採用**）、**ECPay live mode 程式修改**（見 Next Steps 第 4 點）、正式上線時間 → `contract_versions` v1.0、契約網站欄位（付款方式文字已於 2026-10-19 改為 ECPay）、Production Edge Functions／secrets、升級 Pro、`joti.yoga` 綁定、Production 開啟 `VITE_ENABLE_PURCHASE` 與真實小額付款／退款驗證、退款例外作業規則（>90／>360 天、`refund_failed`、`rejected`）；另：~~隱私權政策加入 Resend 並修正第 18 行~~（2026-10-20 已修正、未 commit）、Production Admin 設定、Auth 後續（驗證信 `redirect_to` 原因待確認、首頁 `#error` 無提示、Resend Click Tracking 仍為 ON——見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」之 External / Pending）
+  4. Production 開放付款前（見「Next Steps」）：綠界正式特店審核與回覆（ReturnURL 網域、一般賣家、履約保證；**ECPay 已於 2026-10-19 確定採用**）、**ECPay live mode 程式修改**（見 Next Steps 第 4 點）、正式上線時間 → `contract_versions` v1.0、契約網站欄位（付款方式文字已於 2026-10-19 改為 ECPay）、Production Edge Functions／secrets、升級 Pro（2026-10-20：是否升級改列 Future Decision）、`joti.yoga` 綁定、Production 開啟 `VITE_ENABLE_PURCHASE` 與真實小額付款／退款驗證、退款例外作業規則（>90／>360 天、`refund_failed`、`rejected`）；另：~~隱私權政策加入 Resend 並修正第 18 行~~（2026-10-20 已修正、未 commit）、Production Admin 設定、Auth 後續（驗證信 `redirect_to` 原因待確認、首頁 `#error` 無提示、Resend Click Tracking 仍為 ON——見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」之 External / Pending）
 
 ### Step 11 — 首購 E2E（2026-10-19，TEST — 資料驗證 PASS）
 - **環境**：穩定 Preview `https://joti-git-preview-contract-review-ui-jotiyoga.vercel.app`；同日先將 branch `preview/contract-review-ui` 由 `8592900` fast-forward 至 `e0b081f`（與 `main` 相同，含 PlanPurchase 409 修正；未 force、未動 `main`／Production），Vercel 自動部署 Preview `joti-8spisjirn-jotiyoga.vercel.app`（`dpl_EB9LttwZe1nh1yFEtz1u4W7xu87h`，READY），穩定網址已指向此部署；TEST Supabase、`VITE_ENABLE_PURCHASE=true`、TEST `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=穩定 Preview
@@ -646,6 +652,84 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **Pending（驗證）**：ContractReviewPage 於瀏覽器實際觸發 409／401／503 的畫面驗證——Preview 不易自然觸發，待自然情境出現時確認，不為測試刻意修改資料
   - **Future Decision**：Privacy Policy 是否需揭露 Supabase、Resend、Vercel、Bunny 等服務之資料儲存國家／地區（見 Open Questions）；決定前不寫入政策
   - **External / Pending**：Resend Support 確認 `auth.joti.yoga` Click Tracking 是否關閉（Dashboard 顯示 ON 且設定無法保存；先前已確認驗證信連結未被改寫）；確認前 Privacy Policy 不對信件追蹤作額外承諾
+
+### Step 11 — Production Hosting／$0 平台費用評估（2026-10-20，Discovery — 決策未定）
+- **目標**：在不降低 Production reliability／security／legal compliance 的前提下，評估維持 $0 固定平台月費的可行性；完整決策狀態見 ADR `docs/development/adr/0004-production-hosting-platform.md`
+- **Hosting**：Vercel Hobby 依 Vercel Fair Use Guidelines 不得用於商業（含向訪客收款）用途，正式開放付款後不可作為 Production
+  - **Cloudflare Pages Free**：Candidate／External Confirmation Pending（未採用）——Cloudflare Self-Serve Subscription Agreement §2.2.1(h)（禁止於接受 Free Services 之 web property 處理或收集信用卡資料）對 JOTI 架構（卡片資料由 ECPay hosted payment page 處理，JOTI 前端不接收或儲存卡片資料，webhook 直達 Supabase）存在解釋疑義（「web property」「process」「credit card information」未定義）；`joti.yoga` DNS 已使用 Cloudflare Free，此疑義亦涉及現有 DNS
+  - **Vercel Pro**：Production fallback（Production-ready，未選定）；Cloudflare 確認前不得移除
+  - 若採 Cloudflare 屬 hosting layer migration（前端／Supabase／ECPay／Edge Functions／DB 原則上不需重做）；最終決策前不進行正式 Production migration，僅允許可逆 PoC
+- **Supabase Free**：keep-alive（`.github/workflows/supabase-keepalive.yml`，約每 6 小時）已存在並正常運作（2026-10-14 起排程執行全部成功）；Free 方案無平台 backup／PITR（Supabase 官方文件確認），需自建加密 off-site backup
+- **追蹤事項**：
+  - **External / Pending**：Cloudflare 對 §2.2.1(h) 之書面確認（涵蓋 Pages Free 與 DNS Free 上的 JOTI 付款架構）
+    - **2026-10-20**：英文詢問信**已擬定、尚未送出**（全文未存入 repo）。內容：說明 JOTI 架構（靜態 SPA、ECPay hosted payment page、ReturnURL 直達 Supabase 不經 Cloudflare、payload 無卡片資料）、引用 §2.2.1 lead-in／§2.2.1(h)（2025-09-12）與 Developer Platform Service-Specific Terms（2026-09-28），提出 6 題：(1) Free 方案（DNS＋Pages）可否用於商業付費會員網站；(2) 導向第三方 hosted payment page 是否屬「process or collect credit card information」；(3)「web property」是否指整個 zone、僅使用 DNS Free 是否即適用；(4) 付款狀態／交易編號／付款方式類別是否屬「credit card information」；(5) 若不允許需何種方案；(6) 回覆可否視為 §2.2.1 之「expressly permitted in writing」
+    - **TODO（使用者）**：補上帳號 Email、署名與聯絡信箱；確認 `joti.yoga` apex／`www` 是否開啟 Cloudflare proxy 並於信中註明；送出管道建議以 Dashboard Support case（帳號／帳務類別）為主、Sales 聯絡表單為備用（實際受理管道未確認）；送出後保留 case 編號、回覆全文、回覆人身分與日期，寫入 ADR 0004
+    - **此信無法解決之疑義**：一般 Support 回覆不一定等同正式書面允許（取得前 ADR 0004 維持 External Confirmation Pending）；確認僅對回覆當下條款有效（依 Platform Selection Gate 第 11 項定期複查）；未涵蓋 Pages Functions／Workers／proxy／WAF 等其他用法（改用時須重新確認）；正面回覆後仍需可逆 PoC 與 Production Validation 方可改為 Accepted
+  - **Future Decision**：Hosting 最終決策（Cloudflare Pages Free 或 Vercel Pro，見 ADR 0004）
+  - **Future Decision**：是否接受 Supabase Free 長期營運風險（不視「正式開放付款前升級 Pro」為既定決策），待 backup／restore 驗證與整體風險評估後決定；連帶決定備份頻率／RPO／保存期限／存放位置（及隱私權政策是否需提及）、升級付費方案觸發條件（契約審閱／同意紀錄之 RPO 缺口見「Step 11 — Supabase Free Backup／Restore Discovery」）
+  - **TODO**：Supabase Free 加密 off-site backup（`public`＋`auth`）、每次備份之 restore verification、災難還原手冊與設定清單（Auth 設定、Edge Functions、secrets），上線前至少一次 DR drill（細項與正式開放付款前最低要求見「Step 11 — Supabase Free Backup／Restore Discovery」）
+  - ~~**Pending（驗證）**：GitHub Actions 經 Session pooler（IPv4）執行 `pg_dump`（Supabase 官方僅列直連供 `pg_dump`，直連為 IPv6-only）；含 `auth` schema 之 restore 至一般 PostgreSQL 17~~——2026-10-20 更新：官方 backup/restore 指南已明示預設使用 Session pooler；還原目標須為 Supabase 環境而非一般 PostgreSQL，見「Step 11 — Supabase Free Backup／Restore Discovery」
+  - **TODO（P1，正式開放付款前）**：Payment reconciliation——每日 QueryTradeInfo 回查找出「已付款未開通」、webhook 異常偵測、Order／Service Period／payment_event 交叉比對（與 Supabase 方案無關，Pro 亦需要）
+
+### Step 11 — Supabase Free Backup／Restore Discovery（2026-10-20，Discovery — 未實作、未實際 dump）
+- **範圍**：Production 唯讀 catalog 盤點（僅 SELECT）、Supabase 官方文件（Backup and Restore using the CLI、Database Backups）、`supabase db dump --dry-run` 檢視實際 `pg_dump` 參數；**未連 Production 執行 `pg_dump`**（需 DB 密碼，屬使用者憑證），未修改任何設定、Production 或專案架構
+- **Production 現況**：PostgreSQL 17.11、DB 12 MB；`public` 14 張表全部啟用 RLS、31 條 policy；資料 practices 4、profiles 1，其餘 0；Auth 1 user、2 identities（email、google），無 MFA，auth migration `20260831180000`；`auth.users` 上有自訂 trigger `on_auth_user_created` → `public.handle_new_user()`；extensions：`btree_gist`（`public`）、`pgcrypto`／`uuid-ossp`（`extensions`）；Storage／Vault／Realtime publication 皆 0；無自訂 LOGIN role；repo 無 `supabase/migrations`（schema 由 `supabase/schema*.sql` 手動套用；14 份 SQL 之實際套用順序記錄於「Step 11 — Production Environment Build」，但災難復原以 dump 為準）
+- **已確認**：
+  - 官方指南「Use the Session pooler connection string by default」；GitHub runner 無 IPv6，須走 Session pooler（port 5432）；官方流程為 `db dump --role-only`／schema／`--data-only` 三段，以 `psql --single-transaction` 搭配 `session_replication_role = replica` 還原
+  - CLI 實際執行 `pg_dump`（dry-run 確認）；本機無 Docker／`pg_dump`，GitHub Actions 可用 runner 內建 Docker 執行 CLI，或安裝 PGDG `postgresql-client-17` 直接執行
+  - Free 方案無平台 backup／PITR，官方建議 Free 專案定期以 CLI `db dump` 自行匯出並異地保存
+  - **涵蓋範圍**：schema dump 含 `public` 表／function／RLS／grant；data dump 含 `public` 與 **Auth 資料（`auth.users`、`identities`、`sessions` 等，含 bcrypt 密碼雜湊）**，僅排除 `auth.schema_migrations`；**schema dump 排除整個 `auth` schema 與 `extensions`**（2026-10-21 TEST Drill 更正：schema dump **仍含** `CREATE EXTENSION`（含 `btree_gist`），見「Step 11 — Supabase Free Backup／Restore TEST Drill」）
+  - **因此還原須另補**：~~`create extension btree_gist`~~（2026-10-21 實測不需要）；`on_auth_user_created` trigger（`supabase/schema.sql:117-120` 有定義，需確認與 Production 一致）——漏補時新註冊使用者不會建立 profile，且不會報錯
+  - **還原目標須為已具 Auth schema 的 Supabase 環境**（新 Supabase project 或 Supabase CLI 本地 stack），一般 PostgreSQL 僅能檢查資料、無法驗證 Auth 可用性
+  - **不在資料庫備份內**：Edge Function secrets（Supabase 只顯示 digest，無法取回原值）；Auth 設定（Site URL、Redirect URLs、密碼長度、SMTP、Google provider、信件範本、Rate limits）；新 project 的 URL／API key 必然改變。Edge Functions（11 個）原始碼與 `verify_jwt` 設定在 git，可重新 deploy（`config.toml` 的 `project_id` 為 TEST）
+- **災難復原流程（Production 完全損壞，草案）**：建立新 Supabase project（Free 上限 2 個，需先刪除 TEST 或已損壞 project）→ 啟用 `btree_gist`、依序還原 roles／schema／data → 補 auth trigger → 依清單重設 Auth → 重新 deploy Functions 與 secrets → 更新 Vercel env 並重新 deploy、Google OAuth callback（`<ref>.supabase.co/auth/v1/callback`）、keepalive secret → 確認 ECPay 是否接受新 ReturnURL 網域 → 與 ECPay 對帳補回備份後付款之訂單
+- **RPO／RTO（估算，未驗證）**：RPO 等於備份間隔（每日 ≤24 小時、每 6 小時 ≤6 小時；GitHub cron 可能延遲或跳過）；付款可透過 ECPay 對帳補回，**備份後產生之契約審閱／同意紀錄無法補回**（法律證據缺口）；RTO 有手冊並演練過約 2–4 小時，首次無手冊更久
+- **Supabase Free 無法補足之風險**：無 PITR（RPO 下限為備份間隔）；無 SLA、支援有限；2 個 project 上限使緊急重建須先刪除 project；無自訂網域，還原後 URL 必然改變，牽動 ECPay ReturnURL（綠界 Q1／Q2 未回覆）與 Google OAuth；帳號層級問題（例如帳號停用）無法以備份解決
+- **追蹤事項**：
+  - **Pending（驗證）**（2026-10-21：除「使用者是否需重新登入」與「實際 RTO」外已由 TEST Drill 驗證，見「Step 11 — Supabase Free Backup／Restore TEST Drill」）：經 Session pooler 實際 dump 是否成功；還原至 Supabase stack 時 auth 欄位相容性（data dump 為附欄位名 INSERT，目標較新多欄位通常可行、較舊缺欄位會失敗）；補 trigger／extension 後 `public` 完整性；還原後實際登入與新註冊建立 profile；使用者是否需重新登入（新 JWT key）；實際 RTO
+  - **TODO（正式開放付款前，最低要求）**：(1) 一次 Production dump＋還原至隔離 Supabase stack 之完整驗證（筆數、FK／constraint 含 `btree_gist` exclusion、RLS 與 31 條 policy、function 與 trigger 數量（function 比對須排除 extension 成員：盤點所得 209 個 public function 含 `btree_gist` 之 function，「Step 11 — Production Environment Build」建置時記錄之自建 function 為 21 個，是否仍準確待實測時重新計算；trigger 應為 2 個：`auth.users.on_auth_user_created`、`profiles.protect_profile_system_fields_trigger`）、`auth.users` 筆數與密碼雜湊、GoTrue password grant 登入、新註冊建立 profile）；(2) 加密異地自動備份並於 Production 實際執行一次；(3) 災難還原手冊、Auth 設定清單、secrets 存放於密碼管理器；(4) 至少一次依手冊之 DR drill 並記錄實際 RTO；(5) Payment reconciliation（已列 P1）
+  - **TODO（文件修正）**：備份範圍與還原流程須明列 auth trigger、~~`btree_gist`~~、secrets 另行保存、還原後 URL 變更（2026-10-21：另須明列 function ACL 重設，見「Step 11 — Supabase Free Backup／Restore TEST Drill」）
+  - **Future Decision**：契約審閱／同意紀錄之 RPO 是否可接受，以及備份頻率（併入「Supabase Free 長期營運」決策）
+  - **Future Decision**：備份存放位置與加密方式（決定前不建立正式 backup workflow）
+  - **Future Decision**：是否建立最小權限之備份專用 role（目前只能以權限偏大之 `postgres` 角色 dump；專用 role 需能讀取 `auth` schema，作法待評估）
+  - **TODO（使用者，正式自動備份前）**（2026-10-21：已由使用者設定 GitHub Secret `SUPABASE_PROD_DB_URL`，Production 唯讀驗證已使用並確認有效，見「Step 11 — Supabase Production Read-only Backup Validation」）：自動備份需將 Production DB 密碼（或日後之備份專用 role 憑證）設為 GitHub Secret——目前 Production DB 密碼僅由使用者自行保管（見「Step 11 — Production Environment Build」）；TEST 演練另需 TEST DB 密碼（見下方建議下一步）
+  - **建議下一步（待核准）**（2026-10-21：(a) 已完成且通過；登入驗證改為僅在隔離環境內重設已還原使用者之密碼，未於 TEST 建立帳號，見「Step 11 — Supabase Free Backup／Restore TEST Drill」）：最小隔離驗證分兩階段——(a) TEST 演練：獨立 drill branch 上之手動觸發 GitHub Actions job（不進 `main`），經 Session pooler dump TEST → runner 上 `supabase start` → 還原並跑完整性檢查，log 只輸出筆數與檢查結果、dump 檔不上傳、runner 跑完即銷毀（需使用者將 TEST DB 密碼設為 GitHub Secret；登入驗證需於 TEST 建立一次性測試帳號，另經同意）；(b) TEST 通過後對 Production 唯讀 dump，同流程僅驗證筆數與結構、不驗證真實帳號密碼
+
+### Step 11 — Supabase Free Backup／Restore TEST Drill（2026-10-21，TEST 驗證 — 完整通過）
+- **環境**：drill branch `drill/backup-restore-test`（不進 `main`；本地 worktree `C:\Luckster-core-drill`）上之一次性 GitHub Actions workflow `.github/workflows/supabase-backup-restore-drill.yml`，僅 push 該 branch 該檔案時觸發；`permissions: {}`；來源 Guard 僅接受 TEST（`postgres.ngznngqmbhxejkjbqomh`、`*.pooler.supabase.com:5432`），偵測到 Production ref 即中止；GitHub Secret `SUPABASE_TEST_DB_URL`（TEST Session pooler 連線字串，使用者設定）。repo 為 public，log 僅輸出筆數／hash／名稱／PASS-FAIL，密碼、email、token 以 `::add-mask::` 遮蔽；dump 檔僅存 runner 暫存目錄，`shred` 刪除，不上傳 artifact、不進 repo。**Production 未接觸**
+- **流程**：CLI v2.117.0 經 Session pooler 官方三段 dump（roles／schema／data）→ 來源唯讀 fingerprint 與 metadata 擷取 → runner 上 `supabase init`＋`supabase start`（隔離本地 stack）→ 還原 → 比對 → GoTrue 登入／新註冊／RLS 實測 → `supabase stop --no-backup`＋清除
+- **最終結果（run `39565844414`）**：dump 127 秒（資料約 49 KB）；psql 還原 exit 0；**43 項 fingerprint 全部一致**（public 每表資料 hash、`auth.users` 含 bcrypt 密碼雜湊、`auth.identities`、function 定義、function ACL、`anon`／`authenticated`／`service_role` 可執行函式清單（8／8／22）、trigger、RLS、31 條 policy、constraint、index、欄位、table／sequence grant、`anon`／`authenticated`／`authenticator` 之 `statement_timeout`）；已還原使用者經 GoTrue password grant 登入並經 REST 僅見自己的 profile；新註冊自動建立 profile（role member）；RLS：新使用者 6 筆中僅見 1 筆、anon 見 0 筆；清理後無殘留 container／volume／工作目錄。整個 job 約 5 分鐘
+- **已驗證之還原流程**（官方 CLI 還原＋僅以下經實測證明必要之修正）：
+  1. `roles.sql` 僅跳過 `GRANT SET ON PARAMETER "log_min_messages" TO "supabase_realtime_admin";`（平台給 Realtime 角色之授權；本地非 superuser 之 `postgres` 無權執行，整個 `--single-transaction` 還原因此 rollback）；其餘（含 3 個角色之 `statement_timeout`）保留
+  2. 本地 stack 之 GoTrue／Storage 映像固定為 hosted TEST 版本（v2.197.0／v1.80.2，經公開 `/auth/v1/health`、`/storage/v1/version` 查得，寫入 `supabase/.temp/gotrue-version`、`storage-version`）——CLI 內建 GoTrue 較舊時 data 還原因缺少 `auth.mfa_recovery_code_sets` 失敗
+  3. 還原後從來源補回 **auth schema** 之自訂 trigger（`on_auth_user_created`；storage trigger 由 storage-api 自行建立，不補）
+  4. 還原後**依來源重設全部 public function ACL**：22 個函式先 `REVOKE ALL … FROM PUBLIC, anon, authenticated, service_role`，再依來源 `aclexplode` 逐條 GRANT（46 條）
+  - **未採用**（實測不需要）：`supabase_admin` OWNER 註解、`cli_login_postgres` 處理（TEST 無此角色）、預先建立 extension
+- **重要發現**：
+  - 🔴 **只照官方流程還原時，14 個原本僅 `service_role` 可執行之付款／契約函式會變成 `anon`／`authenticated` 也可執行**（`fulfill_checkout_session`、`apply_order_payment`、`mark_refund_processed`、`apply_service_period_early_termination`、`agree_to_contract`、`create_checkout_session` 等）。原因：`pg_dump` 僅記錄相對 PostgreSQL 內建預設值之權限差異，而 Supabase 之 default privileges 會自動授予新函式 `anon`／`authenticated` EXECUTE，dump 不會重現原本 SQL 中的 `revoke`。實測：未重設前 `functions.acl`／`exec.anon`／`exec.authenticated` 皆與來源不一致，重設後完全一致。新 hosted Supabase project 亦有相同 default privileges，推斷同樣會發生（未驗證）
+  - Discovery 更正：schema dump **含** `btree_gist`（不需預建）；TEST 無 `cli_login_postgres`；只有 auth trigger 需另補
+  - Free 專案資料量小：dump 主要耗時在 CLI 下載 Postgres 映像
+- **正式 backup 設計之必要結論**：真正災難時來源已不存在，本次 drill 之補回步驟係從「仍存在的來源」即時擷取。**正式 backup 必須在備份當下一併保存 `pg_dump` 無法可靠重建之 metadata**——至少：auth schema 自訂 trigger 定義、全部 public function ACL（REVOKE／GRANT 語句）、以及用於還原後比對之 fingerprint（含 function ACL 與各角色可執行函式清單）——並納入每次 restore verification 之必過比對；function ACL 不一致即視為還原失敗
+- **追蹤事項**：
+  - **Pending（驗證）**：還原至**新 hosted Supabase project** 時，roles.sql 第 13 行與 function ACL 問題是否同樣發生；原密碼登入（本次僅證明密碼雜湊完全相同）與 Google 登入帳號；還原後使用者是否需重新登入；實際 RTO
+  - ~~**Pending（驗證）**：Production 經 Session pooler 唯讀 dump 與 metadata 擷取（下一步，不還原）~~——2026-10-21 已完成並通過，見「Step 11 — Supabase Production Read-only Backup Validation」
+  - **TODO（正式 backup 設計時）**：備份當下保存上述 metadata 與 fingerprint；每次演練前查 hosted GoTrue／Storage 版本並對齊本地 stack（drill workflow 目前寫死 v2.197.0／v1.80.2）
+  - ~~**TODO（清理，待決定）**：drill branch、worktree `C:\Luckster-core-drill`、Secret `SUPABASE_TEST_DB_URL` 暫時保留；public repo 中 drill 之 workflow run 紀錄是否刪除~~——2026-10-21：drill branch（本地與遠端）與 worktree 已刪除；兩個已驗證之 workflow 檔案（`supabase-backup-restore-drill.yml`、`supabase-backup-prod-readonly-check.yml`）與 commit 清單已先保存於 repo 外 `C:\Luckster-core-archive\supabase-backup-drill\`，供正式 backup workflow 實作參考；**TODO（使用者）**：於 GitHub 刪除 Secret `SUPABASE_TEST_DB_URL`（`SUPABASE_PROD_DB_URL` 保留）；public repo 中 drill 之 workflow run 紀錄是否刪除仍待決定
+
+### Step 11 — Supabase Production Read-only Backup Validation（2026-10-21，Production 唯讀驗證 — 通過）
+- **目的**：確認 Production 可被已驗證之 backup／verification 流程正確讀取，並取得正式 backup 設計所需之資料與 metadata；**不還原**
+- **方式**：drill branch 上之一次性 workflow `.github/workflows/supabase-backup-prod-readonly-check.yml`（commit `e158282`；drill branch 已刪除，檔案保存於 repo 外 `C:\Luckster-core-archive\supabase-backup-drill\`），GitHub Secret `SUPABASE_PROD_DB_URL`（Production Session pooler 連線字串，使用者設定；**保留**供後續正式 backup workflow 使用）；Guard 僅接受 `postgres.qhyfpabyqksuwjzshjtu`、`*.pooler.supabase.com:5432`；所有 psql session 使用 `default_transaction_read_only=on`，`pg_dump` 本身於唯讀交易執行；log 僅輸出筆數／hash／名稱；dump 與 metadata 僅存 runner，`shred` 刪除，未保存
+- **結果（run `39586533510`，全部步驟成功）**：
+  - Session pooler 連線與 `SUPABASE_PROD_DB_URL` 憑證正常
+  - 三段 dump 134 秒（roles 370 B、schema 135 KB、data 19 KB）
+  - **完整性**：public／auth 每張表之 data.sql 筆數與 Production 即時筆數完全一致（public 14 張表＝14 個 COPY 區塊＝14 條建表語句；`auth.users` 1 筆；合計 15 筆；`auth.schema_migrations` 依設計排除）；schema.sql 含 31 條 policy、14 張表啟用 RLS、`btree_gist`；auth trigger 不在 schema.sql（預期，已另行擷取）
+  - **還原所需 metadata 可取得**：auth trigger 1 個（`auth.users.on_auth_user_created`）、function ACL 63 條（REVOKE 21、GRANT 42）、fingerprint 43 項
+  - **Production 未修改**：dump 前後 43 項 fingerprint 完全相同；未執行任何寫入、schema 或設定變更
+- **與 TEST 之差異（皆符合預期）**：自建 function 21 個（TEST 22 個，差異為 TEST 專屬之 `rls_auto_enable`）；`anon`／`authenticated`／`service_role` 可執行函式 7／7／21；**僅 `service_role` 可執行之付款／契約函式 14 個**（與 TEST 相同，任何還原後均須維持不開放給 `anon`／`authenticated`）；`anon`／`authenticated` 可執行者為 `complete_practice_session`、`get_membership_status`、`handle_new_user`、`is_admin`、`protect_profile_system_fields`、`record_module_usage`、`save_practice_session_progress`
+- **結論**：Production 可以已驗證之流程完整備份；roles.sql 同樣含 `GRANT SET ON PARAMETER "log_min_messages" TO "supabase_realtime_admin"`，TEST 驗證之還原修正（跳過該行、補 auth trigger、依備份時保存之 function ACL 重設）同樣適用於 Production
+- **追蹤事項**：
+  - **Pending（驗證）**：Production 備份之實際還原驗證（本輪依指示未進行）
+  - **Future Decision**：正式 backup 之 storage、加密、retention、排程（沿用「Step 11 — Supabase Free Backup／Restore Discovery」之 Future Decision）
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -732,7 +816,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`**（2026-10-13 更新：Redirect URLs 已含 `https://joti-*-jotiyoga.vercel.app/**`，Preview 上 Email + Password／驗證信／重設密碼／Google 登入已實測成功，不再阻塞 Preview 登入；`Site URL` 仍為 `localhost:4190`，僅作為 fallback；本機開發若要測重設密碼，`http://localhost:5173/auth/reset-password` 尚未加入允許清單）：原記載如下——影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
 2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。（2026-10-16 更新：`origin/main` 為 **`8592900`**——`8ac0bcd`（Purchase Entry 開關）與 A1 合併之 `dee932c`／`53df3cf`／`8592900` 皆已 push 並自動部署 Production；2026-10-16 PlanPurchase 409 修正亦已 push `main`）
-3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）、**Production Auth（Email + Password + Google、Resend SMTP、Google OAuth；2026-10-15 E2E 驗證通過）**（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth 完成」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Admin 設定、Production Edge Functions／secrets；Vercel Production 已為新版並指向 Production Supabase（2026-10-16 起由 push `main` 經 Git integration 自動部署），最後綁定 `joti.yoga`；正式開放付款前升級 Pro。
+3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）、**Production Auth（Email + Password + Google、Resend SMTP、Google OAuth；2026-10-15 E2E 驗證通過）**（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth 完成」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Admin 設定、Production Edge Functions／secrets；Vercel Production 已為新版並指向 Production Supabase（2026-10-16 起由 push `main` 經 Git integration 自動部署），最後綁定 `joti.yoga`；正式開放付款前升級 Pro（2026-10-20：改列 Future Decision，見「Step 11 — Production Hosting／$0 平台費用評估」）。（2026-10-20：`contract_versions` v1.0 建立前置條件與順序見「Step 11 — Production Environment Build」之「`contract_versions` 尚未建立」；目前尚不可建立）
 4. **ECPay 正式上線準備（2026-10-19 更新）**：**已確定正式採用綠界科技 ECPay**（取代原「ECPay／PAYUNi 候選、最終平台未決定」記載；PAYUNi 不採用，申請是否撤回待決定；Oen 已通過審核但不採用）。ECPay TEST 整合與 E2E 已完成。待辦：(a) 綠界正式特店審核、正式 MerchantID／HashKey／HashIV；(b) 綠界回覆 Q1／Q2（ReturnURL 可否用 `*.supabase.co`、是否須自有網域）、Q4（一般賣家）與履約保證；(c) **ECPay live mode 程式修改**（2026-10-19 程式修改、本機檢查、TEST 部署與 TEST 回歸 **PASS**；程式尚未 commit（TODO）；Production 未部署（External／Pending），見「Step 11 — ECPay LIVE mode Implementation」；原記載：）——目前 `_shared/ecpayAdapter.ts`（建立付款第 79 行、退款第 168 行）、`ecpay-webhook`（第 87 行，非 test 時只回應不處理）、`confirm-checkout-session`（第 119 行）在 `ECPAY_MODE !== "test"` 時一律拒絕或略過；需允許 `ECPAY_MODE=live`＋正式主機 `payment.ecpay.com.tw`，保留模式／主機一致檢查（`ecpayConfigError()`），並以 TEST 回歸驗證 test 模式行為不變；(d) Production 部署時必須明確設定 `ACTIVE_PAYMENT_PROVIDER=ecpay`（未設定時程式預設 `oen`）
 5. Step 11（Production Readiness）已開始：11.1、11.2 已完成；Production 基礎設施 Discovery 已完成並確立決策；Production 建置進行中，見第 3 項（子步驟編號待排定）。
 6. 補完 3 個新 Warm Up Module：上傳 Bunny 影片、填入 `.md` 的 `Primary Video URL`、加入 `modules.js`、跑 `validate:module-video` + `:audit`、commit。
@@ -741,7 +825,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 9. ~~Plan Change（Step 10）透過 Oen 真實 hosted checkout 的視覺化 E2E~~——**2026-10-19 結案（不再進行）**：JOTI 目前不提供方案變更、採用 ECPay（見「Step 11 — 付款模式與方案變更規則落實」）
 10. **ECPay 後續**：依官方文件查核結果更新後的問題清單送綠界（見上方「ECPay 官方文件查核」小節）；由經營者／法律評估退款期限影響（年方案 90 天後人工退刷、超過 360 天無法退刷、到期後開始的提前購買時間）與履約保證；決定後再另行排程程式調整（例如超過 90 天標記人工退款）；決定 TEST 測試資料是否清理；正式環境開通後以真實小額交易驗證退款。
 11. **ECPay Checkout Session Flow（2026-10-19 更新）**：(a) `b79151e` 已 commit／push；(b) 驗證現況——有效期間內購買 → `active_service_period_exists`（A3 PASS）；同一會員雙分頁 → 後端 409 `checkout_session_in_progress`、未建立第二筆 Session（A3 PASS），畫面「付款進行中」修正已上 `main`，**Pending（驗證）**：UI 情境未實測；JOTI 返回頁顯示「付款已確認，你的帳號狀態已更新。」（2026-10-19 TEST 回歸 PASS）；**Pending（驗證）**：webhook 晚到由 `confirm-checkout-session` 開通；雙方付款成功之 rejected 競態以 PGlite SQL 測試為依據；(c)(d) Step 11.1／11.2 已 push；(e) 向綠界確認 AIO 付款頁有效時間，決定 30 分鐘 Session 與「付款進行中」文案是否調整；(f) Preview 仍顯示舊「訂閱 JOTI」（`VITE_ENABLE_SUBSCRIBE=true`）待處理。TEST 目前 `ACTIVE_PAYMENT_PROVIDER=ecpay`、`SITE_URL`=穩定 Preview `joti-git-preview-contract-review-ui-jotiyoga.vercel.app`；`+trial2` 目前為有效月方案（至 2026-11-19）
-12. **Production Readiness Checkpoint 後續**：見「Step 11 — Production Readiness Checkpoint A1–A3」的「下一步與依賴」（PlanPurchase 修正 Preview 實測與 commit、2026-10-19 首購 E2E、ContractReviewPage 同類錯誤、Production 開放付款前工作）；**2026-10-19 首購 E2E 資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）；剩餘 TEST 項目：PlanPurchase「付款進行中」畫面 Preview 實測（需「已同意、無方案」帳號；目前兩個測試會員皆有有效方案）、webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示；**2026-10-19 ECPay LIVE mode：TEST 部署與回歸 PASS**，剩餘追蹤見「Step 11 — ECPay LIVE mode Implementation」（TODO：commit 本輪程式（含已修正的 0 元退款前端文案 `terminationResult.js`）；Pending（驗證）：`confirm-checkout-session` 晚到路徑、雙分頁 UI、0 元退款 E2E；Future Decision：>90 天退款；External／Pending：Production LIVE）；**2026-10-20**：Privacy Policy 文字更新、ContractReviewPage 錯誤處理修正已完成（未 commit），追蹤見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」
+12. **Production Readiness Checkpoint 後續**：見「Step 11 — Production Readiness Checkpoint A1–A3」的「下一步與依賴」（PlanPurchase 修正 Preview 實測與 commit、2026-10-19 首購 E2E、ContractReviewPage 同類錯誤、Production 開放付款前工作）；**2026-10-19 首購 E2E 資料驗證 PASS**（見「Step 11 — 首購 E2E（2026-10-19）」）；剩餘 TEST 項目：PlanPurchase「付款進行中」畫面 Preview 實測（需「已同意、無方案」帳號；目前兩個測試會員皆有有效方案）、webhook 晚到由 `confirm-checkout-session` 開通、JOTI 返回頁顯示；**2026-10-19 ECPay LIVE mode：TEST 部署與回歸 PASS**，剩餘追蹤見「Step 11 — ECPay LIVE mode Implementation」（TODO：commit 本輪程式（含已修正的 0 元退款前端文案 `terminationResult.js`）；Pending（驗證）：`confirm-checkout-session` 晚到路徑、雙分頁 UI、0 元退款 E2E；Future Decision：>90 天退款；External／Pending：Production LIVE）；**2026-10-20**：Privacy Policy 文字更新、ContractReviewPage 錯誤處理修正已完成（未 commit），追蹤見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」；**2026-10-20 Hosting／$0 評估**：Cloudflare 書面確認（External）、Hosting 最終決策與 Supabase Free 長期營運（Future Decision）、Supabase backup／restore（TODO／Pending）、Payment reconciliation（P1）、Vercel Pro 為 fallback，見「Step 11 — Production Hosting／$0 平台費用評估」與 ADR 0004；Supabase backup／restore 之 Discovery 結果與最低驗證要求見「Step 11 — Supabase Free Backup／Restore Discovery」
 
 ---
 
@@ -755,6 +839,9 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Open Questions（法律／商業模型，待決）
 
+- **Production Hosting 最終決策（Future Decision，2026-10-20 新增）**：Cloudflare Pages Free（Candidate，待 Cloudflare 書面確認）或 Vercel Pro（fallback）——見 ADR `docs/development/adr/0004-production-hosting-platform.md`
+- **Supabase Free 長期營運（Future Decision，2026-10-20 新增）**：是否接受 Free 方案（無平台 backup／PITR、無 SLA、2 個 Free 專案上限）之營運風險，或升級 Pro；待自建 backup／restore 驗證與整體風險評估後決定（取代原「正式開放付款前升級 Pro」之既定記載），見「Step 11 — Production Hosting／$0 平台費用評估」；2026-10-20 Backup／Restore Discovery 另確認 Free 無法補足之風險（無 PITR、備份後之契約審閱／同意紀錄無法補回、還原後 Supabase URL 必然改變、2 個 project 上限使緊急重建須先刪除 project），見「Step 11 — Supabase Free Backup／Restore Discovery」
+- **Production 契約類 Functions 部署時機（Future Decision，2026-10-20 新增）**：契約類 Functions 部署且 `contract_versions` 為 current 後，已登入帳號可繞過前端 `VITE_ENABLE_PURCHASE` 直接呼叫 `start-contract-review`／`agree-to-contract`，於正式上線前即產生 Production 正式契約同意紀錄；風險有限（需登入、仍受 3 日審閱限制），但部署時機需配合上線與 Production E2E 計畫決定
 - **Privacy Policy 資料儲存國家／地區揭露（Future Decision，2026-10-20 新增）**：是否需於隱私權政策揭露 Supabase（Production：Singapore）、Resend（Tokyo）、Vercel、Bunny 等服務之資料儲存國家／地區——屬法律判斷，決定前不寫入政策（見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）
 - 契約條款發生重大變更時，審閱／通知程序具體如何處理（是否需要新的審閱期、期間多長）——待法律顧問或經營者確認。
 - ~~Payment Authorization 具體採用哪一個 Oen API 端點／參數組合實現「先綁卡、僅扣款一次」~~——**2026-10-19 結案**：JOTI 採 ECPay 購買當下付款，不採先綁卡後扣款模式（見「Step 11 — 付款模式與方案變更規則落實」）
@@ -768,6 +855,14 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-21（Supabase Production Read-only Backup Validation 通過（run `39586533510`）：經 Session pooler 唯讀 dump，筆數與即時資料一致、auth trigger／function ACL／fingerprint 可取得、前後 fingerprint 相同證實 Production 未修改；`SUPABASE_PROD_DB_URL` 保留）
+
+2026-10-21（Supabase Free Backup／Restore TEST Drill 完整通過：經 Session pooler dump TEST、還原至隔離本地 stack，43 項 fingerprint 一致，登入／新註冊建立 profile／RLS 正常，清理完整；發現官方流程還原會使 14 個付款／契約函式開放給 `anon`／`authenticated`，已以依來源重設 function ACL 修正並納入必過比對；正式 backup 須於備份當下保存 auth trigger、function ACL 等 metadata；更正 Discovery 之 `btree_gist` 判斷）
+
+2026-10-20（Production Hosting／$0 評估：新增 ADR 0004（Cloudflare Pages Candidate／Vercel Pro fallback）與 Engineering Guide「Third-Party Platform Selection Gate」；「正式開放付款前升級 Pro」改列 Future Decision；新增 Cloudflare §2.2.1(h) 書面確認（External）、Supabase backup／restore（TODO／Pending）、Payment reconciliation（P1）；Cloudflare 英文詢問信已擬定、尚未送出；Supabase Free Backup／Restore Discovery：確認 Session pooler 為官方預設、data dump 含 Auth 資料、schema dump 不含 auth trigger 與 `btree_gist`、還原目標須為 Supabase 環境，新增 Pending（驗證）／TODO／Future Decision 與兩階段隔離驗證建議）
+
+2026-10-20（記錄 Production `contract_versions` v1.0 建立前置條件：上線時間（Future Decision）、v1.0 定稿（網站欄位依 `joti.yoga`、第七條分期措辭）、建立／部署順序、`effective_at` 不影響生效、3 日審閱排程；Open Questions 新增契約類 Functions 部署時機）
 
 2026-10-20（Privacy Policy 依實際架構更新（ECPay、Resend、Email＋密碼、契約審閱與同意紀錄、退款紀錄）；ContractReviewPage 非 2xx 錯誤解析與同意失敗訊息顯示修正；皆未 commit；新增 Future Decision（資料儲存國家揭露）、External／Pending（Resend Click Tracking）；ContractReviewPage 瀏覽器 409 驗證為 Pending（驗證））
 
