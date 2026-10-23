@@ -789,15 +789,26 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **實作**（`luckster-ai/joti-ops` commit `d48cac0`）：
   - Production backup 排程 `47 */6 * * *`（UTC 00:47／06:47／12:47／18:47，與 keepalive 的 :17 錯開）
   - Restore Drill 排程 `23 3 * * 0`（每週日 03:23 UTC）；只選完整（已上傳 asset）之備份
-  - Backup freshness：最新完整備份須 ≤ 8 小時（排程執行時強制，手動執行僅提示）
-  - Healthchecks.io：兩個 check（Cron、UTC；backup grace 2 小時、drill grace 6 小時），每次 run 送 `/start` 與成功或 `/fail`；Secrets `HC_BACKUP_PING_URL`、`HC_DRILL_PING_URL`
+  - Backup freshness：最新完整備份須 ~~≤ 8 小時~~ ≤ 12 小時（2026-10-23 調整，見下方「排程實際觀察」）（排程執行時強制，手動執行僅提示）
+  - Healthchecks.io：兩個 check（Cron、UTC；backup grace ~~2 小時~~ 6 小時（2026-10-23 調整）、drill grace 6 小時），每次 run 送 `/start` 與成功或 `/fail`；Secrets `HC_BACKUP_PING_URL`、`HC_DRILL_PING_URL`
   - 保存期限輪替 `scripts/retention.py`，於每次 publish 後執行；安全規則：只處理 `backup-YYYYMMDD-HHMMZ`、不刪不完整 Release、最新完整備份必留、剩餘完整備份少於 4 份時拒絕刪除；離線模擬 400 天 1,601 份備份 → 保留 67 份，符合規則
 - **最小驗證（手動觸發各一次）**：
   - Backup run `39748542541`：16 步驟全部成功；Healthchecks start／success 回報；新備份 `backup-20261022-0836Z` 建立並通過 SHA-256 驗證；retention 判斷 2 份皆保留、刪除 0 份；Production 前後 43 項 fingerprint 一致
   - Restore Drill run `39749042224`：15 步驟全部成功；選到最新備份 `backup-20261022-0836Z`；freshness 0.0 小時（手動執行未強制）；43 項 fingerprint 一致、function ACL 7／7／21 相同；登入／新註冊／RLS 正常；Healthchecks start／success 回報；清理完整
   - 兩個 workflow 排程狀態皆為 active
+- **排程實際觀察（2026-10-22／23，已接受）**：
+  - 前三次 scheduled backup 都成功，但都比排程晚啟動：
+    - 12:47Z 時段：17:39Z 啟動，晚 4 小時 52 分，產生 `backup-20261022-1742Z`
+    - 18:47Z 時段：21:56Z 啟動，晚 3 小時 9 分，產生 `backup-20261022-2159Z`
+    - 00:47Z 時段：05:26Z 啟動，晚 4 小時 39 分，產生 `backup-20261023-0529Z`
+  - 實際備份間隔最長約 7.5 小時，接近原本 8 小時的 freshness 上限
+  - Healthchecks 原本的 grace 是 2 小時，三次都先誤判為 down，備份完成後才恢復 up（10 月共 3 次 downtime，合計 6 小時 51 分）
+  - 期間 Restore Drill 沒有被觸發
+  - **結論**：接受 GitHub Actions schedule 的延遲特性。「每 6 小時」是 RPO／備份間隔的**目標，不是保證**，實際間隔可能更長。調整後的門檻：
+    - Healthchecks backup grace：2 小時 → 6 小時（直接在 Healthchecks 網頁上修改）
+    - Restore Drill freshness：8 小時 → 12 小時（`joti-ops` commit `b341df7`）
 - **追蹤事項**：
-  - **Pending（驗證）**：第一次排程執行（含 Healthchecks 判定逾時／失敗之實際通知）；排程失敗時 GitHub 通知寄送之帳號（commit 作者 `joti-yoga`、push 帳號 `luckster-ai`）；實際 Actions 用量；retention 實際刪除（第一次將於第 8 天後發生）
+  - **Pending（驗證）**：~~第一次排程執行~~（2026-10-23 已觀察，見上方「排程實際觀察」）；新門檻下 Healthchecks 是否不再誤報；第一次排程 Restore Drill（週日 03:23 UTC）能否通過 12 小時 freshness 檢查；Healthchecks 誤報信是否實際寄達；排程失敗時 GitHub 通知寄送之帳號（commit 作者 `joti-yoga`、push 帳號 `luckster-ai`）；實際 Actions 用量；retention 實際刪除（第一次將於第 8 天後發生）
   - **TODO（尚未開始）**：USB 離線副本（頻率與地點待決定）；`SUPABASE_PROD_DB_URL` 自 public repo 移除（ADR：ops repo 備份穩定運作後）；DR runbook；正式開放付款前 hosted DR drill
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
@@ -924,6 +935,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-23（ADR 0005 Phase 1 排程實際觀察：前三次 scheduled backup 都成功，但晚 3–5 小時啟動；接受 GitHub schedule 延遲，6 小時改明確記為目標、不是保證；Healthchecks backup grace 2 → 6 小時、Restore Drill freshness 8 → 12 小時（`joti-ops` `b341df7`））
 
 2026-10-23（ADR 0004 與 Production Hosting 最終選型補充未來備案原則：日後如果 Cloudflare Free 不適用，再重新比較 Cloudflare 付費方案與 Vercel Pro，不預先決定；目前決策不變）
 
