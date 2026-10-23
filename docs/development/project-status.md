@@ -684,7 +684,15 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - Cloudflare Registrar 必須使用 Cloudflare nameserver，所以就算 Hosting 改到 Vercel，DNS 仍留在 Cloudflare
 - **可移植性**（ADR 0004「Portability guardrails」）：現有 Git＋React/Vite＋Supabase＋ECPay＋Bunny 架構已足以支援 Cloudflare Free → Paid（僅方案變更）與 Cloudflare → Vercel Pro（重接 Vercel、同樣 `VITE_*`、改 DNS，Production 設定因網域不變而不需修改）；**不建立兩套 Production、現在不需額外準備**。守則：Production 只使用 `joti.yoga`（不用 `*.pages.dev`）、不使用 Pages Functions／Workers／`wrangler`、`vercel.json` 與 `_redirects` 並存、Node 版本以兩平台皆讀取之方式固定、Cloudflare 上線後斷開 Vercel Git 自動 deploy
 - **追蹤事項**：
-  - **TODO（待指示）**：可逆 PoC（`*.pages.dev`、不含 Production 資料／設定：build 讀取 `../docs/legal`、`_redirects`、Production／Preview 環境變數含 `VITE_ENABLE_PURCHASE`、TEST Supabase Preview Redirect URL；決定 Pages 或 Workers static assets）→ Production validation（綁定 `joti.yoga`、Supabase Site URL／Redirect URLs、`SITE_URL`、Google OAuth、隱私權政策「網站託管」、Production E2E）→ 斷開 Vercel Git 自動 deploy
+  - **PoC 結果（2026-10-23，通過）**：
+    - 設定：Cloudflare Pages 專案 `joti-poc`，Git 連到 `luckster-ai/Luckster-core`；Root 為 `frontend`，Build 為 `npm run build`，Output 為 `dist`，Node 24；連 TEST Supabase
+    - 在 `joti-poc.pages.dev` 確認正常：TEST Supabase 連線、Google 登入、帳號資料、會員內容、Bunny.net 影片播放、方案頁、帳號頁、登出、`/legal/privacy`、`/pricing`、`/contract-review`
+    - SPA deep routes 與 F5 重新整理正常，**不需要 `_redirects`**（build 沒有 `404.html`，Pages 會自動做 SPA fallback）；`frontend/vercel.json` 保留給 Vercel fallback
+    - 採用 **Pages**，不用 Workers static assets
+  - **TODO（待指示）**：
+    - Cutover 前補確認 PoC 未涵蓋的項目：branch Preview deployment，以及只在 Preview 開啟的 `VITE_ENABLE_PURCHASE`（購買流程由 Production E2E 涵蓋）
+    - Node 版本目前是在 Cloudflare dashboard 設定，尚未依守則改成兩個平台都會讀取的檔案（例如 `.nvmrc`）
+    - ~~可逆 PoC~~（2026-10-23 通過）→ Production validation（綁定 `joti.yoga`、Supabase Site URL／Redirect URLs、`SITE_URL`、Google OAuth、隱私權政策「網站託管」、Production E2E）→ 斷開 Vercel Git 自動 deploy
   - **External（非阻塞）**：Cloudflare §2.2.1(h) 書面詢問（2026-10-20 已擬定，尚未送出）
 
 ### Step 11 — Supabase Free Backup／Restore Discovery（2026-10-20，Discovery — 未實作、未實際 dump）
@@ -935,6 +943,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-23（Cloudflare Pages PoC 收尾：`joti-poc` 通過；採用 Pages；SPA 不需要 `_redirects`；Production validation 與 cutover 尚未進行）
 
 2026-10-23（ADR 0005 Phase 1 排程實際觀察：前三次 scheduled backup 都成功，但晚 3–5 小時啟動；接受 GitHub schedule 延遲，6 小時改明確記為目標、不是保證；Healthchecks backup grace 2 → 6 小時、Restore Drill freshness 8 → 12 小時（`joti-ops` `b341df7`））
 

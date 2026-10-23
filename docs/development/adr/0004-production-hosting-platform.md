@@ -1,6 +1,6 @@
 # ADR 0004: Production Hosting Platform
 
-**Status:** Accepted — Cloudflare Pages Free selected as the Production hosting platform (2026-10-22); not yet implemented. A reversible PoC and Production validation must pass before migration. Vercel Pro remains the fallback.
+**Status:** Accepted — Cloudflare Pages Free selected as the Production hosting platform (2026-10-22); not yet implemented. The reversible PoC passed (2026-10-23); Production validation must pass before migration. Vercel Pro remains the fallback.
 
 **Last reviewed:** 2026-10-23
 
@@ -70,6 +70,12 @@ The written inquiry to Cloudflare (drafted 2026-10-20) should still be sent; it 
 ### Conditions before Production
 
 1. **Reversible PoC** on `*.pages.dev` with no Production data or configuration: the build can read `../docs/legal`; SPA routing via `_redirects`; Production and Preview environment variables (including `VITE_ENABLE_PURCHASE`); Preview URLs work with the TEST Supabase Redirect URLs. Pages or Workers static assets is chosen here.
+   - **Result (2026-10-23): passed.**
+     - Setup: Cloudflare Pages project `joti-poc` with Git integration to `luckster-ai/Luckster-core`; root `frontend`, build `npm run build`, output `dist`, Node 24; TEST Supabase.
+     - Verified on `joti-poc.pages.dev`: TEST Supabase connection; Google sign-in; account data; member content; Bunny.net video playback; the pricing and account pages; sign-out; `/legal/privacy`, `/pricing` and `/contract-review`.
+     - SPA routing: deep routes and reloads work without a `_redirects` file. The build has no `404.html`, so Pages applies its automatic SPA fallback.
+     - **Pages** is chosen over Workers static assets.
+     - Not covered by the PoC, to be checked before cutover: branch Preview deployments with Preview-only variables (`VITE_ENABLE_PURCHASE`) and the purchase flow. The purchase flow is covered by the Production E2E.
 2. **Production validation:** bind `joti.yoga`; update Supabase Site URL / Redirect URLs, `SITE_URL`, Google OAuth branding URLs and the privacy policy hosting entry; run the Production E2E on Cloudflare.
 
 ### Fallback to Vercel Pro if
@@ -96,13 +102,13 @@ Keep the hosting replaceable without running two Productions:
 - No Pages Functions, Workers, `wrangler` configuration or Cloudflare-only runtime features (e.g. Access, Image Resizing); the site stays a plain static build.
 - The frontend reads only JOTI's own `VITE_*` variables, never host-provided ones.
 - Prefer Pages (git integration, no config file in the repo) over Workers static assets unless the PoC shows a problem.
-- Keep `frontend/vercel.json` next to `frontend/public/_redirects`; each host ignores the other's file.
+- Keep `frontend/vercel.json`; Vercel needs it for SPA rewrites. Cloudflare Pages needs no `_redirects` file (PoC: automatic SPA fallback). Add one only if a `404.html` is ever introduced. Each host ignores the other's file.
 - Pin the Node version in a form both hosts read (e.g. `.nvmrc`); Vercel currently builds with Node 24.x.
 - After Cloudflare passes Production validation, **disconnect the Vercel project's Git integration** (keep the project): otherwise every push keeps publishing a second public copy on `*.vercel.app`, which would also be commercial use on Hobby.
 
 ## Consequences
 
-- **Migration scope:** a hosting-layer migration only. React / Vite code, Supabase (Database, Auth, Edge Functions), ECPay integration, Bunny.net and the database schema do not change. Required changes: replace `frontend/vercel.json` with a `_redirects` file; configure build root `frontend`, command `npm run build`, output `dist`, and Production / Preview environment variables; bind `joti.yoga`; update Supabase Site URL / Redirect URLs (TEST wildcard moves from `*.vercel.app` to `*.pages.dev`), Production and TEST `SITE_URL`, Google OAuth branding URLs; update the privacy policy hosting entry and the deployment / Preview workflow documentation. The Production E2E must then run on the new hosting.
+- **Migration scope:** a hosting-layer migration only. React / Vite code, Supabase (Database, Auth, Edge Functions), ECPay integration, Bunny.net and the database schema do not change. Required changes: no routing file is needed on Pages (PoC 2026-10-23), and `frontend/vercel.json` stays for the fallback; configure build root `frontend`, command `npm run build`, output `dist`, and Production / Preview environment variables; bind `joti.yoga`; update Supabase Site URL / Redirect URLs (TEST wildcard moves from `*.vercel.app` to `*.pages.dev`), Production and TEST `SITE_URL`, Google OAuth branding URLs; update the privacy policy hosting entry and the deployment / Preview workflow documentation. The Production E2E must then run on the new hosting.
 - **Cost:** $0 fixed hosting cost. Free Services have no SLA and no liability (§2.6).
 - **Cloudflare Free → paid:** an account / plan change; site, DNS, domain and JOTI architecture stay the same.
 - **Fallback cost:** switching to Vercel Pro only requires reconnecting and upgrading the existing Vercel project, setting the same `VITE_*` variables, adding `joti.yoga` and changing its DNS record (DNS only); Production Supabase / `SITE_URL` / ECPay / OAuth settings do not change because the domain does not; only the TEST Preview wildcard (`*.pages.dev` → `*.vercel.app`) and the privacy policy hosting entry change, followed by a Production E2E. No code change. Cost is the Pro seat fee. Netlify's paid Personal plan ($9 / month, 1,000 credits) is a possible cheaper paid option but has not been evaluated.
