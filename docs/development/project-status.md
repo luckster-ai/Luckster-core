@@ -677,6 +677,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **排除**：Vercel Hobby（僅限非商業）、GitHub Pages（明文禁止 online business／e-commerce）、**Netlify Free**（每月 300 credits 硬上限，用完時帳號內所有專案暫停至下個計費週期且不可加購；JOTI 每次 push `main` 皆 deploy Production，2026-10-22 單日即 90 credits）
 - **Platform Selection Gate**：Cloudflare §2.2.1(h) 以**低風險例外**接受——JOTI 不在 Cloudflare 服務之網站處理或收集卡片資料；`joti.yoga` DNS 原本即在 Cloudflare Free，風險既存；切換成本低。Cloudflare 書面詢問仍建議送出，但不阻擋上線
 - **升級原則**：目前成本最低 → 優先 Cloudflare；需升級時先評估留在 Cloudflare，若 Cloudflare 付費方案明顯比 Vercel Pro 貴且切換成本低則選較具成本效益者；每次升級重新比較成本與適配性
+- **未來備案原則**（2026-10-23）：目前決策不變，繼續執行 Cloudflare Pages Free 計畫，不需要等 Cloudflare 回覆。日後如果確認 Cloudflare Free 不適用，再重新比較當時的 Cloudflare 付費方案與 Vercel Pro。屆時選哪一個不預先決定，依當時的實際價格、Cloudflare 的方案要求、JOTI 狀態及遷移／維護成本判斷。2026-10-23 已完成的比較可以直接作為基礎，不需要重做完整 Hosting Discovery。比較重點記在 ADR 0004「Upgrade policy」：
+  - Cloudflare 沒有獨立的 Pages Pro，付費選項是 Workers Paid（$5 起）或網域 Pro（$20–25）
+  - Vercel Pro 每個席位 $20，含 $20 用量
+  - JOTI 在兩邊的用量費用都接近 0
+  - Cloudflare Registrar 必須使用 Cloudflare nameserver，所以就算 Hosting 改到 Vercel，DNS 仍留在 Cloudflare
 - **可移植性**（ADR 0004「Portability guardrails」）：現有 Git＋React/Vite＋Supabase＋ECPay＋Bunny 架構已足以支援 Cloudflare Free → Paid（僅方案變更）與 Cloudflare → Vercel Pro（重接 Vercel、同樣 `VITE_*`、改 DNS，Production 設定因網域不變而不需修改）；**不建立兩套 Production、現在不需額外準備**。守則：Production 只使用 `joti.yoga`（不用 `*.pages.dev`）、不使用 Pages Functions／Workers／`wrangler`、`vercel.json` 與 `_redirects` 並存、Node 版本以兩平台皆讀取之方式固定、Cloudflare 上線後斷開 Vercel Git 自動 deploy
 - **追蹤事項**：
   - **TODO（待指示）**：可逆 PoC（`*.pages.dev`、不含 Production 資料／設定：build 讀取 `../docs/legal`、`_redirects`、Production／Preview 環境變數含 `VITE_ENABLE_PURCHASE`、TEST Supabase Preview Redirect URL；決定 Pages 或 Workers static assets）→ Production validation（綁定 `joti.yoga`、Supabase Site URL／Redirect URLs、`SITE_URL`、Google OAuth、隱私權政策「網站託管」、Production E2E）→ 斷開 Vercel Git 自動 deploy
@@ -919,6 +924,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-23（ADR 0004 與 Production Hosting 最終選型補充未來備案原則：日後如果 Cloudflare Free 不適用，再重新比較 Cloudflare 付費方案與 Vercel Pro，不預先決定；目前決策不變）
 
 2026-10-22（Production Hosting 最終選型：Cloudflare Pages Free（ADR 0004 Accepted），Vercel Pro 為 fallback；排除 Vercel Hobby／GitHub Pages／Netlify Free；§2.2.1(h) 以 Platform Selection Gate 低風險例外接受；記錄升級原則與可移植性守則；尚未進行 PoC／migration）
 

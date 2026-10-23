@@ -2,7 +2,7 @@
 
 **Status:** Accepted — Cloudflare Pages Free selected as the Production hosting platform (2026-10-22); not yet implemented. A reversible PoC and Production validation must pass before migration. Vercel Pro remains the fallback.
 
-**Last reviewed:** 2026-10-22
+**Last reviewed:** 2026-10-23
 
 ---
 
@@ -86,6 +86,7 @@ Lowest cost now, so Cloudflare first; at every upgrade, compare again:
 - If Cloudflare Free stops fitting (limits, reliability, terms), first evaluate upgrading **within Cloudflare** — same platform, best continuity with the registrar / DNS setup.
 - If Cloudflare's paid option is clearly more expensive than Vercel Pro and switching is cheap, choose the more cost-effective option.
 - The goal is neither "always Cloudflare" nor "always keep Vercel": prices and fit are re-checked at each upgrade decision, using current official pricing.
+- **If Cloudflare Free is later confirmed not to fit JOTI** (added 2026-10-23): compare the Cloudflare paid options and Vercel Pro again at that time. Which one is chosen is not decided in advance. It depends on the prices, Cloudflare's plan requirements, JOTI's situation and the migration and maintenance cost at that time. The 2026-10-23 comparison is the starting point, so no full hosting discovery is needed. Its findings: Cloudflare has no separate "Pages Pro" plan, so the paid options are Workers Paid (from $5/month) or the Pro domain plan ($20–25/month). Vercel Pro costs $20 per seat and includes $20 of usage. JOTI's usage costs are close to zero on both. Cloudflare Registrar requires Cloudflare nameservers, so if `joti.yoga` stays with Cloudflare Registrar, its DNS remains on Cloudflare even when hosting moves to Vercel.
 
 ### Portability guardrails
 
