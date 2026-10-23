@@ -689,8 +689,15 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
     - 在 `joti-poc.pages.dev` 確認正常：TEST Supabase 連線、Google 登入、帳號資料、會員內容、Bunny.net 影片播放、方案頁、帳號頁、登出、`/legal/privacy`、`/pricing`、`/contract-review`
     - SPA deep routes 與 F5 重新整理正常，**不需要 `_redirects`**（build 沒有 `404.html`，Pages 會自動做 SPA fallback）；`frontend/vercel.json` 保留給 Vercel fallback
     - 採用 **Pages**，不用 Workers static assets
+  - **Preview 驗證（2026-10-23，通過）**：
+    - 從與 `main` 相同的 commit 建立 branch `preview/cloudflare-poc`，Pages Preview deployment 成功；Preview 環境變數有 `VITE_ENABLE_PURCHASE=true`
+    - 已刪除 `joti-poc` Production 環境的 `VITE_ENABLE_PURCHASE`，與計畫一致；購買開關差異已確認：Production `/pricing` 顯示「付費方案即將開放」，Preview 不顯示
+    - TEST Supabase Redirect URLs 已加入 `https://*.joti-poc.pages.dev/**`，Preview 網址 Google 登入正常
+    - 未完成：「一般會員 → ECPay 付款頁」。登入的是 Admin 帳號，`canOfferPurchase()` 依設計不對 Admin 提供購買，不是 Preview 設定問題
+    - 附記：TEST Supabase 的 Site URL 目前是 `https://joti-poc.pages.dev`（PoC 期間設定）
   - **TODO（待指示）**：
-    - Cutover 前補確認 PoC 未涵蓋的項目：branch Preview deployment，以及只在 Preview 開啟的 `VITE_ENABLE_PURCHASE`（購買流程由 Production E2E 涵蓋）
+    - ~~Cutover 前補確認 PoC 未涵蓋的項目：branch Preview deployment，以及只在 Preview 開啟的 `VITE_ENABLE_PURCHASE`~~（2026-10-23 已確認，見下方「Preview 驗證」）
+    - **Pending（驗證）**：用一般 TEST 會員從 Preview 進入 ECPay 付款頁（不付款）。有符合條件的既有 TEST 帳號時再補測，不為此修改 TEST 資料；這不是 Cloudflare 設定問題。完整付款 E2E 留到 Production validation
     - Node 版本目前是在 Cloudflare dashboard 設定，尚未依守則改成兩個平台都會讀取的檔案（例如 `.nvmrc`）
     - ~~可逆 PoC~~（2026-10-23 通過）→ Production validation（綁定 `joti.yoga`、Supabase Site URL／Redirect URLs、`SITE_URL`、Google OAuth、隱私權政策「網站託管」、Production E2E）→ 斷開 Vercel Git 自動 deploy
   - **External（非阻塞）**：Cloudflare §2.2.1(h) 書面詢問（2026-10-20 已擬定，尚未送出）
@@ -943,6 +950,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-23（Cloudflare Pages Preview 驗證：`preview/cloudflare-poc` deployment 成功；Preview `VITE_ENABLE_PURCHASE=true`；`joti-poc` Production 已移除此變數，購買開關差異已確認；TEST 已加入 Redirect URL `*.joti-poc.pages.dev`，Google 登入正常；一般會員 → ECPay 付款頁因帳號是 Admin 未驗證，列 Pending）
 
 2026-10-23（Cloudflare Pages PoC 收尾：`joti-poc` 通過；採用 Pages；SPA 不需要 `_redirects`；Production validation 與 cutover 尚未進行）
 

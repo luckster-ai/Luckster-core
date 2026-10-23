@@ -75,7 +75,11 @@ The written inquiry to Cloudflare (drafted 2026-10-20) should still be sent; it 
      - Verified on `joti-poc.pages.dev`: TEST Supabase connection; Google sign-in; account data; member content; Bunny.net video playback; the pricing and account pages; sign-out; `/legal/privacy`, `/pricing` and `/contract-review`.
      - SPA routing: deep routes and reloads work without a `_redirects` file. The build has no `404.html`, so Pages applies its automatic SPA fallback.
      - **Pages** is chosen over Workers static assets.
-     - Not covered by the PoC, to be checked before cutover: branch Preview deployments with Preview-only variables (`VITE_ENABLE_PURCHASE`) and the purchase flow. The purchase flow is covered by the Production E2E.
+     - **Preview check (2026-10-23): passed.**
+       - Branch `preview/cloudflare-poc` (same commit as `main`) deployed as a Pages Preview, using Preview variables with `VITE_ENABLE_PURCHASE=true`.
+       - `VITE_ENABLE_PURCHASE` was removed from the `joti-poc` Production environment, matching the plan. The purchase switch now differs correctly: Production `/pricing` shows the "not open yet" note and Preview does not.
+       - Google sign-in works on the Preview URL after adding `https://*.joti-poc.pages.dev/**` to the TEST Supabase Redirect URLs.
+     - Not done: the step "ordinary member → ECPay payment page". The signed-in account is an Admin, and `canOfferPurchase()` deliberately offers no purchase to admins. This is not a Cloudflare Preview problem. Re-test later with an existing eligible TEST member if one is available. The full payment E2E remains part of Production validation.
 2. **Production validation:** bind `joti.yoga`; update Supabase Site URL / Redirect URLs, `SITE_URL`, Google OAuth branding URLs and the privacy policy hosting entry; run the Production E2E on Cloudflare.
 
 ### Fallback to Vercel Pro if
