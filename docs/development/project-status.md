@@ -698,7 +698,12 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **TODO（待指示）**：
     - ~~Cutover 前補確認 PoC 未涵蓋的項目：branch Preview deployment，以及只在 Preview 開啟的 `VITE_ENABLE_PURCHASE`~~（2026-10-23 已確認，見下方「Preview 驗證」）
     - **Pending（驗證）**：用一般 TEST 會員從 Preview 進入 ECPay 付款頁（不付款）。有符合條件的既有 TEST 帳號時再補測，不為此修改 TEST 資料；這不是 Cloudflare 設定問題。完整付款 E2E 留到 Production validation
-    - Node 版本目前是在 Cloudflare dashboard 設定，尚未依守則改成兩個平台都會讀取的檔案（例如 `.nvmrc`）
+      - 2026-10-24 唯讀檢查：今天沒有合適的帳號，不阻擋後續 Hosting 工作。有同意合約的兩個一般會員都有到 11/19 的有效服務期間；可以購買的兩個都沒同意合約，也沒開始審閱期
+      - 最適合的是 `luckster.ai.workspace+trial2@gmail.com`，可在 11/19 之後使用；測試前先確認它那筆 `open` checkout session 的狀態
+    - ~~Node 版本目前是在 Cloudflare dashboard 設定，尚未依守則改成兩個平台都會讀取的檔案（例如 `.nvmrc`）~~——2026-10-24 已在 repo 固定為 Node 24，需要兩個檔案，因為沒有兩個平台都讀的單一檔案：
+      - `frontend/.nvmrc`（`24`）給 Cloudflare Pages：build image v3 讀 `.nvmrc`，不讀 `engines`
+      - `frontend/package.json` 的 `engines.node`（`24.x`）給 Vercel：Vercel 讀這個欄位，不讀 `.nvmrc`
+      - 兩個檔案要一起改；從乾淨的 checkout 執行 `npm ci` 加 `npm run build` 通過
     - ~~可逆 PoC~~（2026-10-23 通過）→ Production validation（綁定 `joti.yoga`、Supabase Site URL／Redirect URLs、`SITE_URL`、Google OAuth、隱私權政策「網站託管」、Production E2E）→ 斷開 Vercel Git 自動 deploy
   - **External（非阻塞）**：Cloudflare §2.2.1(h) 書面詢問（2026-10-20 已擬定，尚未送出）
 
@@ -950,6 +955,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-24（Node 版本固定為 24：Cloudflare 讀 `frontend/.nvmrc`，Vercel 讀 `frontend/package.json` 的 `engines.node`；Preview → ECPay 付款頁的 TEST 帳號唯讀檢查：今天沒有合適的帳號，`+trial2` 可在 11/19 之後使用，不阻擋後續工作）
 
 2026-10-23（Cloudflare Pages Preview 驗證：`preview/cloudflare-poc` deployment 成功；Preview `VITE_ENABLE_PURCHASE=true`；`joti-poc` Production 已移除此變數，購買開關差異已確認；TEST 已加入 Redirect URL `*.joti-poc.pages.dev`，Google 登入正常；一般會員 → ECPay 付款頁因帳號是 Admin 未驗證，列 Pending）
 

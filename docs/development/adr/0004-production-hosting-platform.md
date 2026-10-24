@@ -107,7 +107,10 @@ Keep the hosting replaceable without running two Productions:
 - The frontend reads only JOTI's own `VITE_*` variables, never host-provided ones.
 - Prefer Pages (git integration, no config file in the repo) over Workers static assets unless the PoC shows a problem.
 - Keep `frontend/vercel.json`; Vercel needs it for SPA rewrites. Cloudflare Pages needs no `_redirects` file (PoC: automatic SPA fallback). Add one only if a `404.html` is ever introduced. Each host ignores the other's file.
-- Pin the Node version in a form both hosts read (e.g. `.nvmrc`); Vercel currently builds with Node 24.x.
+- Pin the Node version in the repo (done 2026-10-24, Node 24). No single file is read by both hosts, so there are two:
+  - `frontend/.nvmrc` (`24`) for Cloudflare Pages. Build image v3 reads `.nvmrc`, `.node-version` or `NODE_VERSION`, but not `package.json` `engines`.
+  - `frontend/package.json` `engines.node` (`24.x`) for Vercel. Vercel reads this and it overrides the dashboard setting, but Vercel does not read `.nvmrc`.
+  - Change both together. The `NODE_VERSION=24` dashboard variable on the Pages project and Vercel's 24.x project setting stay as they are and match the repo.
 - After Cloudflare passes Production validation, **disconnect the Vercel project's Git integration** (keep the project): otherwise every push keeps publishing a second public copy on `*.vercel.app`, which would also be commercial use on Hobby.
 
 ## Consequences
