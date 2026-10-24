@@ -1,8 +1,8 @@
 # ADR 0004: Production Hosting Platform
 
-**Status:** Accepted — Cloudflare Pages Free selected as the Production hosting platform (2026-10-22); not yet implemented. The reversible PoC passed (2026-10-23); Production validation must pass before migration. Vercel Pro remains the fallback.
+**Status:** Accepted — Cloudflare Pages Free selected as the Production hosting platform (2026-10-22). **Implemented 2026-10-24**: `joti.yoga` is served by the Cloudflare Pages project `joti` after the PoC (2026-10-23) and the Production validation passed. The Vercel project is kept and has not been disconnected yet. Vercel Pro remains the fallback.
 
-**Last reviewed:** 2026-10-23
+**Last reviewed:** 2026-10-24
 
 ---
 
@@ -80,7 +80,18 @@ The written inquiry to Cloudflare (drafted 2026-10-20) should still be sent; it 
        - `VITE_ENABLE_PURCHASE` was removed from the `joti-poc` Production environment, matching the plan. The purchase switch now differs correctly: Production `/pricing` shows the "not open yet" note and Preview does not.
        - Google sign-in works on the Preview URL after adding `https://*.joti-poc.pages.dev/**` to the TEST Supabase Redirect URLs.
      - Not done: the step "ordinary member → ECPay payment page". The signed-in account is an Admin, and `canOfferPurchase()` deliberately offers no purchase to admins. This is not a Cloudflare Preview problem. Re-test later with an existing eligible TEST member if one is available. The full payment E2E remains part of Production validation.
-2. **Production validation:** bind `joti.yoga`; update Supabase Site URL / Redirect URLs, `SITE_URL`, Google OAuth branding URLs and the privacy policy hosting entry; run the Production E2E on Cloudflare.
+2. **Production validation:** bind `joti.yoga`; update Supabase Site URL / Redirect URLs, Google OAuth branding URLs and the privacy policy hosting entry; run the Production E2E on Cloudflare. `SITE_URL` is **set** (`https://joti.yoga`) when the payment Edge Functions are first deployed to Production; Production has no Edge Functions and no `SITE_URL` yet.
+   - **Result (2026-10-24): passed for the current Production scope (payments closed).**
+     - Project `joti` (separate from `joti-poc`), created from `luckster-ai/Luckster-core`.
+       - Build settings: Production branch `main`, root `frontend`, `npm run build`, output `dist`.
+       - Production variables: only `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, both for Production Supabase.
+       - Preview branch: **None**, so no Preview builds use Production variables. Preview testing stays on `joti-poc` (TEST).
+     - Build of `8bd89a6`: Node 24.22.1 with no `NODE_VERSION` set, so `.nvmrc` is in effect (the image default is 22.16.0).
+     - The bundle contains the Production Supabase ref and no TEST ref. After normalising the Supabase URL and key, it is identical to the `joti-poc` Production bundle, so the purchase and subscribe switches are off.
+     - Checked on `joti-3da.pages.dev`: SPA deep routes return 200; the legal pages render; public Production data (official practices) loads.
+     - `joti.yoga` is bound as a custom domain (Active, SSL) and serves the same bundle. Production Supabase Site URL is `https://joti.yoga`, and the Redirect URLs include `https://joti.yoga/auth/callback` and `/auth/reset-password`.
+     - Verified manually by the owner on `joti.yoga`: Google sign-in, account data, member content, Bunny.net playback and `/pricing` with payments still closed.
+     - Not covered: the payment E2E, which needs the payment launch and `SITE_URL`.
 
 ### Fallback to Vercel Pro if
 
@@ -102,7 +113,7 @@ Lowest cost now, so Cloudflare first; at every upgrade, compare again:
 
 Keep the hosting replaceable without running two Productions:
 
-- **Production is only ever addressed as `joti.yoga`**, never `*.pages.dev`: Supabase Site URL / Redirect URLs, `SITE_URL`, ECPay return pages, Google OAuth and the privacy policy all point at the domain, so a host change does not touch them.
+- **Production is only ever addressed as `joti.yoga`**, never `*.pages.dev`: Supabase Site URL / Redirect URLs, `SITE_URL` (once set), ECPay return pages, Google OAuth and the privacy policy all point at the domain, so a host change does not touch them.
 - No Pages Functions, Workers, `wrangler` configuration or Cloudflare-only runtime features (e.g. Access, Image Resizing); the site stays a plain static build.
 - The frontend reads only JOTI's own `VITE_*` variables, never host-provided ones.
 - Prefer Pages (git integration, no config file in the repo) over Workers static assets unless the PoC shows a problem.

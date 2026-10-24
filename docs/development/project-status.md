@@ -672,7 +672,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **TODO（P1，正式開放付款前）**：Payment reconciliation——每日 QueryTradeInfo 回查找出「已付款未開通」、webhook 異常偵測、Order／Service Period／payment_event 交叉比對（與 Supabase 方案無關，Pro 亦需要）
 
 
-### Step 11 — Production Hosting 最終選型（ADR 0004）（2026-10-22，已定案 — 未實作）
+### Step 11 — Production Hosting 最終選型（ADR 0004）（2026-10-22 定案；2026-10-24 Production 已切換至 Cloudflare Pages）
 - **決策**：**Cloudflare Pages Free** 為 Production Hosting；Vercel Pro 為 fallback（Cloudflare Pages 通過 Production validation 前保留 Vercel 專案）；完整內容以 ADR `docs/development/adr/0004-production-hosting-platform.md`（Status：Accepted）為準
 - **排除**：Vercel Hobby（僅限非商業）、GitHub Pages（明文禁止 online business／e-commerce）、**Netlify Free**（每月 300 credits 硬上限，用完時帳號內所有專案暫停至下個計費週期且不可加購；JOTI 每次 push `main` 皆 deploy Production，2026-10-22 單日即 90 credits）
 - **Platform Selection Gate**：Cloudflare §2.2.1(h) 以**低風險例外**接受——JOTI 不在 Cloudflare 服務之網站處理或收集卡片資料；`joti.yoga` DNS 原本即在 Cloudflare Free，風險既存；切換成本低。Cloudflare 書面詢問仍建議送出，但不阻擋上線
@@ -704,7 +704,28 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
       - `frontend/.nvmrc`（`24`）給 Cloudflare Pages：build image v3 讀 `.nvmrc`，不讀 `engines`
       - `frontend/package.json` 的 `engines.node`（`24.x`）給 Vercel：Vercel 讀這個欄位，不讀 `.nvmrc`
       - 兩個檔案要一起改；從乾淨的 checkout 執行 `npm ci` 加 `npm run build` 通過
-    - ~~可逆 PoC~~（2026-10-23 通過）→ Production validation（綁定 `joti.yoga`、Supabase Site URL／Redirect URLs、`SITE_URL`、Google OAuth、隱私權政策「網站託管」、Production E2E）→ 斷開 Vercel Git 自動 deploy
+    - ~~可逆 PoC~~（2026-10-23 通過）→ ~~Production validation~~（2026-10-24 通過，見下方「Production validation 與切換」）→ 斷開 Vercel Git 自動 deploy（尚未進行）
+  - **Production validation 與切換（2026-10-24，通過；適用目前付款關閉的範圍）**：
+    - 正式 Pages 專案 `joti`，與 `joti-poc` 分開：
+      - Production branch 為 `main`，自動部署開啟
+      - Production 變數只有 Production Supabase 的 `VITE_SUPABASE_URL`／`VITE_SUPABASE_ANON_KEY`
+      - Preview branch 為 **None**，避免 Preview 用 Production 變數 build
+      - TEST／Preview 驗證繼續使用 `joti-poc`
+    - `8bd89a6` 的 build 使用 Node 24.22.1；專案沒有設定 `NODE_VERSION`，而映像預設是 22.16.0，可推得 `.nvmrc` 生效
+    - Bundle 含 Production Supabase ref、不含 TEST ref；把 Supabase URL 與 key 正規化後，和 `joti-poc` Production 的 bundle 完全相同，購買／訂閱開關都是關閉
+    - `/pricing` 未登入時顯示價格卡片，這是原本的設計（價格卡片不受開關控制）
+    - 在 `joti-3da.pages.dev` 確認：SPA 深層路由回傳 200、法律頁正常、可讀到 Production 公開資料（官方練習）
+    - `joti.yoga` 已綁定為 `joti` 的 custom domain（Active、SSL），提供相同的 bundle
+    - Production Supabase 的 Site URL 為 `https://joti.yoga`，Redirect URLs 已加入 `joti.yoga` 的 `/auth/callback` 與 `/auth/reset-password`（Vercel 的兩筆仍保留）
+    - 使用者在 `joti.yoga` 手動驗證：Google 登入、帳號資料、會員內容、Bunny 影片播放、`/pricing`（付款仍關閉）都正常
+    - `SITE_URL`：Production 目前沒有這個 secret，也沒有部署任何 Edge Function，這是合理的狀態。它只被付款相關的 Edge Functions 用來組付款後的導回網址；**付款上線、部署這些 functions 時，再新增 `SITE_URL=https://joti.yoga`**
+    - Vercel Production（`joti-jotiyoga.vercel.app`）仍保留，Git 自動部署尚未斷開
+  - **TODO（待指示）**：
+    - 斷開 Vercel Git 自動部署（保留專案），同時移除 Production Supabase 中 Vercel 的兩筆 Redirect URL
+    - 隱私權政策「網站託管」仍寫 Vercel，要改成 Cloudflare（這是 `docs/legal` 內容變更）
+    - 刪除遠端 branch `preview/cloudflare-poc`
+  - **Future Decision**：`www.joti.yoga` 目前沒有任何記錄或服務，是否要設定並轉址到 `joti.yoga`
+  - **Pending（驗證）**：付款 E2E（付款上線時，與 `SITE_URL` 設定一起進行）
   - **External（非阻塞）**：Cloudflare §2.2.1(h) 書面詢問（2026-10-20 已擬定，尚未送出）
 
 ### Step 11 — Supabase Free Backup／Restore Discovery（2026-10-20，Discovery — 未實作、未實際 dump）
@@ -955,6 +976,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-24（Production Hosting 切換：`joti.yoga` 由 Cloudflare Pages 專案 `joti` 提供，Production validation 通過（目前付款關閉）；Production Supabase 的 Site URL／Redirect URLs 已改為 `joti.yoga`；`SITE_URL` 付款上線時再設定；Vercel 保留、尚未斷開；`joti-poc` 維持 TEST／Preview 用途）
 
 2026-10-24（Node 版本固定為 24：Cloudflare 讀 `frontend/.nvmrc`，Vercel 讀 `frontend/package.json` 的 `engines.node`；Preview → ECPay 付款頁的 TEST 帳號唯讀檢查：今天沒有合適的帳號，`+trial2` 可在 11/19 之後使用，不阻擋後續工作）
 
