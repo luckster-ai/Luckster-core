@@ -704,7 +704,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
       - `frontend/.nvmrc`（`24`）給 Cloudflare Pages：build image v3 讀 `.nvmrc`，不讀 `engines`
       - `frontend/package.json` 的 `engines.node`（`24.x`）給 Vercel：Vercel 讀這個欄位，不讀 `.nvmrc`
       - 兩個檔案要一起改；從乾淨的 checkout 執行 `npm ci` 加 `npm run build` 通過
-    - ~~可逆 PoC~~（2026-10-23 通過）→ ~~Production validation~~（2026-10-24 通過，見下方「Production validation 與切換」）→ 斷開 Vercel Git 自動 deploy（尚未進行）
+    - ~~可逆 PoC~~（2026-10-23 通過）→ ~~Production validation~~（2026-10-24 通過，見下方「Production validation 與切換」）→ ~~斷開 Vercel Git 自動 deploy~~（2026-10-24 完成，見下方「Hosting 收尾」）
   - **Production validation 與切換（2026-10-24，通過；適用目前付款關閉的範圍）**：
     - 正式 Pages 專案 `joti`，與 `joti-poc` 分開：
       - Production branch 為 `main`，自動部署開啟
@@ -719,11 +719,25 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
     - Production Supabase 的 Site URL 為 `https://joti.yoga`，Redirect URLs 已加入 `joti.yoga` 的 `/auth/callback` 與 `/auth/reset-password`（Vercel 的兩筆仍保留）
     - 使用者在 `joti.yoga` 手動驗證：Google 登入、帳號資料、會員內容、Bunny 影片播放、`/pricing`（付款仍關閉）都正常
     - `SITE_URL`：Production 目前沒有這個 secret，也沒有部署任何 Edge Function，這是合理的狀態。它只被付款相關的 Edge Functions 用來組付款後的導回網址；**付款上線、部署這些 functions 時，再新增 `SITE_URL=https://joti.yoga`**
-    - Vercel Production（`joti-jotiyoga.vercel.app`）仍保留，Git 自動部署尚未斷開
+    - ~~Vercel Production（`joti-jotiyoga.vercel.app`）仍保留，Git 自動部署尚未斷開~~（2026-10-24 已退場，見下方「Hosting 收尾」）
   - **TODO（待指示）**：
-    - 斷開 Vercel Git 自動部署（保留專案），同時移除 Production Supabase 中 Vercel 的兩筆 Redirect URL
-    - 隱私權政策「網站託管」仍寫 Vercel，要改成 Cloudflare（這是 `docs/legal` 內容變更）
+    - ~~斷開 Vercel Git 自動部署（保留專案），同時移除 Production Supabase 中 Vercel 的兩筆 Redirect URL~~（2026-10-24 完成）
+    - ~~隱私權政策「網站託管」仍寫 Vercel，要改成 Cloudflare~~（2026-10-24 完成）
     - 刪除遠端 branch `preview/cloudflare-poc`
+  - **Hosting 收尾（2026-10-24）**：
+    - 隱私權政策「五、第三方服務」的網站託管已從 Vercel 改為 Cloudflare
+    - ADR 0005 災難還原步驟中的 Vercel 已改為目前的 hosting（Cloudflare Pages `joti`）
+    - Vercel 專案 `joti`：
+      - 已斷開 Git，push 不再部署
+      - Deployment Protection 開啟 Vercel Authentication，範圍是 All Deployments
+      - 舊網址 `joti-jotiyoga.vercel.app`、`joti-git-main-jotiyoga.vercel.app`、`frontend-ebon-seven-40.vercel.app` 未登入時都回 302，導向 Vercel 登入，不再公開提供網站
+      - 專案、設定與 deployment 都保留作為 fallback，沒有刪除任何東西
+      - 要切回 Vercel 時：重新連 Git、關閉 Protection、升級 Pro
+    - Production Supabase Redirect URLs 已移除 Vercel 的兩筆，現在只剩 `https://joti.yoga/auth/callback` 與 `/auth/reset-password`；Site URL 為 `https://joti.yoga`
+    - Google OAuth：Production client「JOTI Production Supabase Auth」的 JavaScript 來源已從 `https://joti-jotiyoga.vercel.app` 改為 `https://joti.yoga`；Redirect URI 是 Production Supabase 的 `/auth/v1/callback`，不需要改
+    - **Future Decision（重要，正式對外開放前）**：Google OAuth 應用程式仍是「測試」發布狀態，測試使用者只有 1 位（`luckster.ai.workspace@gmail.com`），所以**其他人目前無法在 Production 用 Google 登入**；Email＋密碼登入不受影響
+      - 發布前要在 Branding 補上首頁 `https://joti.yoga`、隱私權政策 `/legal/privacy`、服務條款 `/legal/terms`，以及授權網域 `joti.yoga`；這些欄位目前都是空的
+      - 發布時需不需要 Google 驗證（例如品牌驗證、網域擁有權）待確認
   - **Future Decision**：`www.joti.yoga` 目前沒有任何記錄或服務，是否要設定並轉址到 `joti.yoga`
   - **Pending（驗證）**：付款 E2E（付款上線時，與 `SITE_URL` 設定一起進行）
   - **External（非阻塞）**：Cloudflare §2.2.1(h) 書面詢問（2026-10-20 已擬定，尚未送出）
@@ -976,6 +990,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-24（Hosting 收尾：隱私權政策網站託管改為 Cloudflare；Vercel 已斷開 Git，並以 Vercel Authentication（All Deployments）停止公開提供，專案保留作為 fallback；Production Supabase 已移除 Vercel Redirect URL；Google OAuth JavaScript 來源改為 `joti.yoga`；發現 OAuth 應用程式仍是「測試」狀態、只有 1 位測試使用者，列為正式開放前的 Future Decision）
 
 2026-10-24（Production Hosting 切換：`joti.yoga` 由 Cloudflare Pages 專案 `joti` 提供，Production validation 通過（目前付款關閉）；Production Supabase 的 Site URL／Redirect URLs 已改為 `joti.yoga`；`SITE_URL` 付款上線時再設定；Vercel 保留、尚未斷開；`joti-poc` 維持 TEST／Preview 用途）
 

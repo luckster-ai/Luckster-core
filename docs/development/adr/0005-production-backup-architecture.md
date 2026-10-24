@@ -94,7 +94,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 3. Restore with the verified procedure; re-create auth triggers; re-apply function ACLs; compare the fingerprint until it passes.
 4. Re-apply project configuration from the configuration checklist (Auth: Site URL, Redirect URLs, password length, SMTP, Google provider, templates, rate limits).
 5. Redeploy Edge Functions from git; restore Edge Function secrets from the password manager.
-6. Update Vercel environment variables and redeploy, the Google OAuth callback, any monitoring / keepalive configuration, and the ECPay ReturnURL domain (the Supabase URL always changes on Free).
+6. Update the hosting environment variables (Cloudflare Pages project `joti`, `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`) and redeploy, the Google OAuth callback, any monitoring / keepalive configuration, and the ECPay ReturnURL domain (the Supabase URL always changes on Free).
 7. Reconcile with ECPay to recover payments made after the backup.
 
 **Hosted DR drill:** before payments open, and periodically afterwards, pause TEST, create a temporary hosted project, run the DR runbook end to end and record the RTO.
@@ -138,7 +138,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 
 - The GitHub account is a single point of failure for Phase 1 automation; the USB copy is manual.
 - RPO is bounded by the schedule and GitHub's scheduler; contract records written after the last backup cannot be recovered.
-- Supabase Free limits remain: no PITR, the project URL changes on restore (ECPay ReturnURL, Google OAuth, Vercel), the 2-project limit, no SLA.
+- Supabase Free limits remain: no PITR, the project URL changes on restore (ECPay ReturnURL, Google OAuth, hosting environment variables), the 2-project limit, no SLA.
 - More components to keep consistent: CLI version, service-version pinning, keys, recipients file, Healthchecks.
 
 ## Future Considerations
