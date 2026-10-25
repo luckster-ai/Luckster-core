@@ -822,7 +822,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **前兩次失敗（已解決）**：Supabase CLI checksum 比對檔名錯誤（joti-ops commit `e9e61a3` 修正）；joti-ops 之 `SUPABASE_PROD_DB_URL` 結尾多一個換行（使用者重新設定）。兩次皆在讀取 Production 資料前失敗，未建立 Release
 - **追蹤事項**：
   - ~~**Pending（驗證）**：encrypted backup 尚未實際解密；以 drill key 解密之 Restore Drill 尚未實作（Storage 版本於 manifest 記為 `1.80.2`，drill 對齊本地 stack 時需轉為 `v1.80.2`）~~——2026-10-22 已以 drill key 解密並還原通過（Storage 版本自動轉為 `v1.80.2`），見「Step 11 — Production Backup Phase 1：第一次 Restore Drill」
-  - **TODO（尚未開始）**：~~每 6 小時排程；Healthchecks.io；retention／rotation~~（2026-10-22 已上線，見「Step 11 — Production Backup Phase 1：排程、監控與輪替」）；USB 離線副本；`SUPABASE_PROD_DB_URL` 自 public repo 移除；DR runbook
+  - **TODO（尚未開始）**：~~每 6 小時排程；Healthchecks.io；retention／rotation~~（2026-10-22 已上線，見「Step 11 — Production Backup Phase 1：排程、監控與輪替」）；USB 離線副本；~~`SUPABASE_PROD_DB_URL` 自 public repo 移除~~（2026-10-25 完成）；DR runbook
 
 ### Step 11 — Production Backup Phase 1：第一次 Restore Drill（2026-10-22，通過）
 - **環境**：`luckster-ai/joti-ops` workflow `.github/workflows/supabase-restore-drill.yml`（commit `2a24321`，**僅手動觸發**；權限僅 `contents: read`）與共用 scripts `scripts/check-backup.py`、`scripts/restore-backup.sh`（還原流程亦可供正式 DR 使用）；Secret `BACKUP_DRILL_AGE_KEY`（`drill-v1` 私鑰）。**隔離**：job 不含任何 Production 憑證，Production 主機名稱於 `/etc/hosts` 封鎖並確認生效；還原目標為 runner 上之一次性本地 Supabase stack
@@ -864,7 +864,12 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
     - Restore Drill freshness：8 小時 → 12 小時（`joti-ops` commit `b341df7`）
 - **追蹤事項**：
   - **Pending（驗證）**：~~第一次排程執行~~（2026-10-23 已觀察，見上方「排程實際觀察」）；新門檻下 Healthchecks 是否不再誤報；第一次排程 Restore Drill（週日 03:23 UTC）能否通過 12 小時 freshness 檢查；Healthchecks 誤報信是否實際寄達；排程失敗時 GitHub 通知寄送之帳號（commit 作者 `joti-yoga`、push 帳號 `luckster-ai`）；實際 Actions 用量；retention 實際刪除（第一次將於第 8 天後發生）
-  - **TODO（尚未開始）**：USB 離線副本（頻率與地點待決定）；`SUPABASE_PROD_DB_URL` 自 public repo 移除（ADR：ops repo 備份穩定運作後）；DR runbook；正式開放付款前 hosted DR drill
+  - **TODO（尚未開始）**：USB 離線副本（頻率與地點待決定）；~~`SUPABASE_PROD_DB_URL` 自 public repo 移除（ADR：ops repo 備份穩定運作後）~~（2026-10-25 完成，見下方）；DR runbook；正式開放付款前 hosted DR drill
+  - **`SUPABASE_PROD_DB_URL` 與 Keepalive（2026-10-25）**：
+    - 已從 `Luckster-core`（public）的 Repository Secrets 移除 `SUPABASE_PROD_DB_URL`。移除前確認所有 branch（`main`、三個 `preview/*`）的 workflow 都沒有參照它；現在 `Luckster-core` 只剩 `SUPABASE_PROD_ANON_KEY`
+    - **更正**：Keepalive（`supabase-keepalive.yml`）只使用 `SUPABASE_PROD_ANON_KEY`，每 6 小時發一次唯讀 REST GET，和這個 DB secret **無關**（先前說「keepalive 依賴此 secret」是錯的）
+    - **決定：保留 Keepalive**。Supabase 只寫「Free projects are paused after 1 week of inactivity」，沒有定義什麼算 activity。Keepalive 成本極低、只用 anon key，又和 backup 互相獨立，所以保留作為第二個活動來源，不做停用實驗
+    - `joti-ops` 的 `SUPABASE_PROD_DB_URL` 是 backup 正在用的，**保留、不修改**
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -990,6 +995,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-25（`Luckster-core` 的 `SUPABASE_PROD_DB_URL` 已移除，沒有任何 workflow 使用；更正 Keepalive 只用 anon key、和此 secret 無關；決定保留 Keepalive；`joti-ops` 同名 secret 保留）
 
 2026-10-24（Hosting 收尾：隱私權政策網站託管改為 Cloudflare；Vercel 已斷開 Git，並以 Vercel Authentication（All Deployments）停止公開提供，專案保留作為 fallback；Production Supabase 已移除 Vercel Redirect URL；Google OAuth JavaScript 來源改為 `joti.yoga`；發現 OAuth 應用程式仍是「測試」狀態、只有 1 位測試使用者，列為正式開放前的 Future Decision）
 
