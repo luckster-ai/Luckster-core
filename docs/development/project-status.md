@@ -838,7 +838,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 清理後無殘留 container／volume／工作目錄；drill key 用後即刪除
 - **結論**：加密之 Production 備份本身即足以還原，不需連回 Production；第一次備份已實際驗證可解密、可還原
 - **追蹤事項**：
-  - **Pending（驗證，待 hosted DR drill）**：還原至新 hosted project 時 `log_min_messages` 與 function ACL 之行為；使用者是否需重新登入；Google 帳號；原密碼登入；以 **master key** 解密（目前僅 drill key 實際解密過）；Auth 設定、Edge Functions、secrets 之重建；實際 RTO
+  - **Pending（驗證，待 hosted DR drill）**：~~還原至新 hosted project 時 `log_min_messages` 與 function ACL 之行為~~；使用者是否需重新登入；Google 帳號；~~原密碼登入；以 **master key** 解密~~；Auth 設定、Edge Functions、secrets 之重建；~~實際 RTO~~（2026-10-26 hosted DR drill 已驗證刪除線項目，見「Step 11 — Hosted DR Drill」；Auth 設定等的重建在演練中刻意不做，因為不能改動 Production）
   - ~~**TODO（尚未開始）**：每週 drill 排程與 backup freshness 檢查（ADR 0005；排程啟用前不加入）~~——2026-10-22 已上線，見「Step 11 — Production Backup Phase 1：排程、監控與輪替」
 
 ### Step 11 — Production Backup Phase 1：排程、監控與輪替（2026-10-22，上線）
@@ -873,12 +873,45 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - 同一時期的 backup check：grace 改為 6 小時後沒有再發生 downtime
 - **追蹤事項**：
   - **Pending（驗證）**：~~第一次排程執行~~（2026-10-23 已觀察，見上方「排程實際觀察」）；~~新門檻下 Healthchecks 是否不再誤報；第一次排程 Restore Drill（週日 03:23 UTC）能否通過 12 小時 freshness 檢查~~（2026-10-25 皆已確認，見上方「第一次排程 Restore Drill」）；Healthchecks 誤報信是否實際寄達；排程失敗時 GitHub 通知寄送之帳號（commit 作者 `joti-yoga`、push 帳號 `luckster-ai`）；實際 Actions 用量；retention 實際刪除（第一次將於第 8 天後發生）
-  - **TODO（尚未開始）**：USB 離線副本（頻率與地點待決定）；~~`SUPABASE_PROD_DB_URL` 自 public repo 移除（ADR：ops repo 備份穩定運作後）~~（2026-10-25 完成，見下方）；DR runbook；正式開放付款前 hosted DR drill
+  - **TODO（尚未開始）**：USB 離線副本（頻率與地點待決定）；~~`SUPABASE_PROD_DB_URL` 自 public repo 移除（ADR：ops repo 備份穩定運作後）~~（2026-10-25 完成，見下方）；~~DR runbook；正式開放付款前 hosted DR drill~~（2026-10-26 完成，見「Step 11 — Hosted DR Drill」）
   - **`SUPABASE_PROD_DB_URL` 與 Keepalive（2026-10-25）**：
     - 已從 `Luckster-core`（public）的 Repository Secrets 移除 `SUPABASE_PROD_DB_URL`。移除前確認所有 branch（`main`、三個 `preview/*`）的 workflow 都沒有參照它；現在 `Luckster-core` 只剩 `SUPABASE_PROD_ANON_KEY`
     - **更正**：Keepalive（`supabase-keepalive.yml`）只使用 `SUPABASE_PROD_ANON_KEY`，每 6 小時發一次唯讀 REST GET，和這個 DB secret **無關**（先前說「keepalive 依賴此 secret」是錯的）
     - **決定：保留 Keepalive**。Supabase 只寫「Free projects are paused after 1 week of inactivity」，沒有定義什麼算 activity。Keepalive 成本極低、只用 anon key，又和 backup 互相獨立，所以保留作為第二個活動來源，不做停用實驗
     - `joti-ops` 的 `SUPABASE_PROD_DB_URL` 是 backup 正在用的，**保留、不修改**
+### Step 11 — Hosted DR Drill（2026-10-26，Completed／Passed）
+- **備份**：Release `backup-20261026-0528Z`（2026-10-26 05:28:10 UTC），加密檔 SHA-256 與 Release 記錄一致；用 **master-v1** 解密；`check-backup.py` 通過
+- **演練環境**：暫停 TEST；由經營者在 org JOTI Production（Singapore）建立臨時 project `joti-dr-drill`；Production、Cloudflare、Google OAuth、ops secrets 都沒有改動
+- **結果**：
+  - `restore-backup.sh` 成功：roles.sql 照預期跳過 1 行，套用 1 個 auth trigger 與 63 條 function ACL
+  - **43／43 項 fingerprint 完全一致**；auth migration 與備份相同；`auth.users` 1、identities 2、profiles 1、practices 4
+  - 被還原的會員以**原密碼登入成功**（session returned）
+  - 新建 user 自動觸發 `on_auth_user_created`，建立 profile（role `member`、試用開始時間已設定）
+  - hosted 環境的還原行為和本機 stack 相同，沒有 hosted 特有差異
+- **時間點（台灣時間）**：
+  - 14:15 開始下載備份（RTO 起點）
+  - 約 14:25 master key 暫存檔就位
+  - 14:50 前完成解密、驗證、暫停 TEST、建立臨時 project
+  - 14:50:52–14:52:01 restore
+  - **14:52:28 驗證完成（RTO 終點）**
+  - 約 15:00–15:07 完成登入與註冊測試
+  - 15:14 前經營者刪除臨時 project，並刪除本機解密檔與連線字串檔
+  - 15:14:55 開始恢復 TEST
+  - 15:19:01 TEST 恢復可查詢（practices 4 筆），`joti-poc` 正常讀到 TEST 資料，drill 結束
+- **RTO：37 分鐘**（14:15 → 14:52，資料庫約 12 MB），含第一次的工具準備。實際災難時還要加上重新設定 Auth、OAuth、Cloudflare 與 ops 的時間，估計再 30–60 分鐘
+- **發現**：
+  - 本機原本沒有 `psql` 17，已在演練中安裝
+  - master key 暫存檔的檔名就是私鑰本身，演練中被印出 → **master-v1 視為已外洩**
+  - project ref 少打一個字母，導致 DNS 查不到（已更正）
+  - 步驟與結果已寫入 `joti-ops` `docs/dr-runbook.md` 的 Drill log
+- **追蹤事項**：
+  - **TODO（安全，獨立任務，下一步）**：`master-v1` → `master-v2` 輪換
+    - 經營者用 `age-keygen` 產生 `master-v2`，私鑰只放進密碼管理器
+    - 更新 `joti-ops` 的 `recipients.txt`（`master-v2`＋`drill-v1`）
+    - 舊備份依保存期限自然淘汰，不重新加密；最後一份 master-v1 備份淘汰前，master-v1 私鑰仍需保留（ADR 0005）
+  - **Pending（驗證）**：Google 帳號在還原後的 project 登入；會員現有 session 在還原後是否仍有效（預期需重新登入）
+  - **Future Decision**：Supabase Free 或 Pro。RTO 已量測，可據此決定（見 Open Questions）
+
 ### Step 11 — 契約 v1 與現行營運同步（2026-10-25）
 - **範圍**：只同步 Hosting、金流、退款手續費這三項現況。契約仍是正式發布前的 v1；Production 尚無正式 acceptance，所以直接修改 v1，不建立 v1.1。`joti-online-teaching-contract.md` 與 `versions/v1.0.md` 已一起修改，兩份內容一致
 - **Hosting**：契約沒有點名網站託管業者。第十九條第三方服務寫的是「包含但不限於」，第十七條寫的是網路服務商或第三方服務商故障，都和改用 Cloudflare 不衝突，所以不修改。唯一的修改是第一條「網站」欄位從 `[待填寫]` 填入 `https://joti.yoga`（《網際網路教學服務定型化契約應記載事項》第二點第一款要求記載網站網址）
@@ -1039,7 +1072,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ## Open Questions（法律／商業模型，待決）
 
 - ~~**Production Hosting 最終決策（Future Decision，2026-10-20 新增）**：Cloudflare Pages Free（Candidate，待 Cloudflare 書面確認）或 Vercel Pro（fallback）~~——2026-10-22 定案：Cloudflare Pages Free（Vercel Pro 為 fallback），見 ADR `docs/development/adr/0004-production-hosting-platform.md`與「Step 11 — Production Hosting 最終選型（ADR 0004）」
-- **Supabase Free 長期營運（Future Decision，2026-10-20 新增）**：是否接受 Free 方案（無平台 backup／PITR、無 SLA、2 個 Free 專案上限）之營運風險，或升級 Pro；待自建 backup／restore 驗證與整體風險評估後決定（取代原「正式開放付款前升級 Pro」之既定記載），見「Step 11 — Production Hosting／$0 平台費用評估」；2026-10-20 Backup／Restore Discovery 另確認 Free 無法補足之風險（無 PITR、備份後之契約審閱／同意紀錄無法補回、還原後 Supabase URL 必然改變、2 個 project 上限使緊急重建須先刪除 project），見「Step 11 — Supabase Free Backup／Restore Discovery」；2026-10-22 Production backup 架構已定案（ADR 0005，不以付費服務為前提），是否升級仍待 hosted DR drill 之 RPO／RTO 結果
+- **Supabase Free 長期營運（Future Decision，2026-10-20 新增）**：是否接受 Free 方案（無平台 backup／PITR、無 SLA、2 個 Free 專案上限）之營運風險，或升級 Pro；待自建 backup／restore 驗證與整體風險評估後決定（取代原「正式開放付款前升級 Pro」之既定記載），見「Step 11 — Production Hosting／$0 平台費用評估」；2026-10-20 Backup／Restore Discovery 另確認 Free 無法補足之風險（無 PITR、備份後之契約審閱／同意紀錄無法補回、還原後 Supabase URL 必然改變、2 個 project 上限使緊急重建須先刪除 project），見「Step 11 — Supabase Free Backup／Restore Discovery」；2026-10-22 Production backup 架構已定案（ADR 0005，不以付費服務為前提），是否升級仍待 hosted DR drill 之 RPO／RTO 結果（2026-10-26：hosted DR drill 通過，RTO 37 分鐘，決策條件已具備，見「Step 11 — Hosted DR Drill」）
 - **Production 契約類 Functions 部署時機（Future Decision，2026-10-20 新增）**：契約類 Functions 部署且 `contract_versions` 為 current 後，已登入帳號可繞過前端 `VITE_ENABLE_PURCHASE` 直接呼叫 `start-contract-review`／`agree-to-contract`，於正式上線前即產生 Production 正式契約同意紀錄；風險有限（需登入、仍受 3 日審閱限制），但部署時機需配合上線與 Production E2E 計畫決定
 - **Privacy Policy 資料儲存國家／地區揭露（Future Decision，2026-10-20 新增）**：是否需於隱私權政策揭露 Supabase（Production：Singapore）、Resend（Tokyo）、Vercel、Bunny 等服務之資料儲存國家／地區——屬法律判斷，決定前不寫入政策（見「Step 11 — Privacy Policy 與 ContractReviewPage 錯誤處理」）
 - 契約條款發生重大變更時，審閱／通知程序具體如何處理（是否需要新的審閱期、期間多長）——待法律顧問或經營者確認。
@@ -1054,6 +1087,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-26（Hosted DR Drill 通過：`backup-20261026-0528Z`、43／43 fingerprint 一致、原密碼登入與新註冊 profile 皆正常、RTO 37 分鐘；臨時 project 已刪除、TEST 已恢復；master-v1 視為已外洩，`master-v2` 輪換列為獨立安全任務）
 
 2026-10-26（Paid Membership Launch 決策：reconciliation 採每日人工唯讀比對（新增 `payment-reconciliation.md`）；`refund_failed`／`rejected` 人工處理；第七條第三項不改；超過 90 天退款與 Contract v1.0 定稿等綠界；契約類 Functions 等定稿後再部署；`effective_at` 開放時才設定；合約工作版本 commit 在 branch `contract/v1-wip`）
 

@@ -57,7 +57,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 - **No new standalone keepalive.** The backup connects to Production every 6 hours; no additional keepalive is added unless real observation shows it is needed (see "Pending verification"). The existing `supabase-keepalive.yml` in `Luckster-core` is not changed by this ADR. It sends a read-only REST GET with **only `SUPABASE_PROD_ANON_KEY`** every 6 hours and does not use `SUPABASE_PROD_DB_URL`. *Decision (2026-10-25): keep it.* Supabase states only that Free projects "are paused after 1 week of inactivity" and does not define activity. The keepalive is cheap, uses the anon key only, and is independent of the backup, so it stays as a second activity source.
 - **USB offline copy:** the encrypted backup sets (with their manifests) are copied **manually and periodically** to a USB drive kept offline, as an extra line of defence. Adopting the USB offline copy is decided; how often it is made and where the drive is kept are deferred (see "Deferred / future phases").
 - **Supabase Storage objects are out of scope of the database dump.** The dump contains Storage metadata rows (`storage.buckets`, `storage.objects`) but **not file contents**. Production currently has 0 buckets and 0 objects (course video is on Bunny.net). Any future use of Supabase Storage needs its own backup design before Production use.
-- **RTO is not yet known.** It will be measured in the first hosted DR drill; no RTO figure in project documents counts as verified until then.
+- **RTO measured: 37 minutes** in the hosted DR drill on 2026-10-26: backup download to verified restore, for a database of about 12 MB. This includes first-time tooling. A real recovery adds reconnecting Auth, OAuth, hosting and ops, estimated at another 30–60 minutes.
 
 ### 2. Architectural recommendations
 
@@ -97,7 +97,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 6. Update the hosting environment variables (Cloudflare Pages project `joti`, `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`) and redeploy, the Google OAuth callback, any monitoring / keepalive configuration, and the ECPay ReturnURL domain (the Supabase URL always changes on Free).
 7. Reconcile with ECPay to recover payments made after the backup.
 
-**Hosted DR drill:** before payments open, and periodically afterwards, pause TEST, create a temporary hosted project, run the DR runbook end to end and record the RTO.
+**Hosted DR drill:** before payments open, and periodically afterwards, pause TEST, create a temporary hosted project, run the DR runbook end to end and record the RTO. **First drill completed and passed on 2026-10-26** with backup `backup-20261026-0528Z`, decrypted with `master-v1`. Results: 43 / 43 fingerprint keys identical; original-password sign-in worked; new sign-up created a profile; RTO 37 min. The temporary project was deleted and TEST resumed. Details are in the Ops Repo runbook's drill log.
 
 ### 3. Deferred / future phases
 
@@ -112,8 +112,8 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 
 ### 4. Pending verification
 
-- **Hosted restore:** whether the `log_min_messages` grant and the function-ACL widening behave the same when restoring into a new **hosted** project (only a local stack was tested); whether members must sign in again after a restore; Google-linked accounts; login with original passwords (the drill proved password hashes are identical, not an original-password login).
-- **RTO** — measured only by the first hosted DR drill.
+- ~~**Hosted restore:** whether the `log_min_messages` grant and the function-ACL widening behave the same when restoring into a new **hosted** project~~: verified 2026-10-26, same behaviour as the local stack; original-password sign-in verified. Still open: Google-linked account sign-in on a restored project, and whether existing sessions survive (expect members to sign in again).
+- ~~**RTO** — measured only by the first hosted DR drill.~~ Measured: 37 min (2026-10-26).
 - **Pause prevention:** whether a database connection every 6 hours counts as activity for Supabase's Free-plan pause. Supabase does not define activity, so this cannot be confirmed from documentation; the keepalive is kept (decided 2026-10-25), so no confirmation is needed.
 - ~~**Weekly drill from an encrypted backup only** (the TEST drill re-captured metadata from a live source; the new drill must work from the saved files alone).~~ Verified: manual runs on 2026-10-22 and the first scheduled run on 2026-10-25.
 - **GitHub Actions budget** — estimated from the first runs (backup 202 s → 4 billed minutes, drill 155 s → 3 minutes): about 495 of the 2,000 free minutes per month; confirm against actual usage once the schedules run.
