@@ -862,8 +862,15 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - **結論**：接受 GitHub Actions schedule 的延遲特性。「每 6 小時」是 RPO／備份間隔的**目標，不是保證**，實際間隔可能更長。調整後的門檻：
     - Healthchecks backup grace：2 小時 → 6 小時（直接在 Healthchecks 網頁上修改）
     - Restore Drill freshness：8 小時 → 12 小時（`joti-ops` commit `b341df7`）
+- **第一次排程 Restore Drill（2026-10-25，成功）**：
+  - `joti-ops` 的 GitHub Actions run #3 由排程觸發，耗時約 2 分 44 秒
+  - 排程時間是 03:23 UTC，實際在 08:34 UTC 才啟動，晚了約 5 小時 11 分，原因是 GitHub schedule 延遲
+  - Healthchecks `JOTI Restore Drill` 收到 Started → OK，沒有 downtime，也沒有警報；延遲仍在 6 小時 grace 內
+  - 還原、43 項 fingerprint 比對、Login／Signup／RLS 測試都通過（workflow 只有在這些都通過後才送 success ping）
+  - 這次確認了自動排程 Restore Drill 的完整流程。GitHub schedule 延遲視為既有的觀察結果，維持目前的 6 小時 grace 與 12 小時 freshness 門檻
+  - 同一時期的 backup check：grace 改為 6 小時後沒有再發生 downtime
 - **追蹤事項**：
-  - **Pending（驗證）**：~~第一次排程執行~~（2026-10-23 已觀察，見上方「排程實際觀察」）；新門檻下 Healthchecks 是否不再誤報；第一次排程 Restore Drill（週日 03:23 UTC）能否通過 12 小時 freshness 檢查；Healthchecks 誤報信是否實際寄達；排程失敗時 GitHub 通知寄送之帳號（commit 作者 `joti-yoga`、push 帳號 `luckster-ai`）；實際 Actions 用量；retention 實際刪除（第一次將於第 8 天後發生）
+  - **Pending（驗證）**：~~第一次排程執行~~（2026-10-23 已觀察，見上方「排程實際觀察」）；~~新門檻下 Healthchecks 是否不再誤報；第一次排程 Restore Drill（週日 03:23 UTC）能否通過 12 小時 freshness 檢查~~（2026-10-25 皆已確認，見上方「第一次排程 Restore Drill」）；Healthchecks 誤報信是否實際寄達；排程失敗時 GitHub 通知寄送之帳號（commit 作者 `joti-yoga`、push 帳號 `luckster-ai`）；實際 Actions 用量；retention 實際刪除（第一次將於第 8 天後發生）
   - **TODO（尚未開始）**：USB 離線副本（頻率與地點待決定）；~~`SUPABASE_PROD_DB_URL` 自 public repo 移除（ADR：ops repo 備份穩定運作後）~~（2026-10-25 完成，見下方）；DR runbook；正式開放付款前 hosted DR drill
   - **`SUPABASE_PROD_DB_URL` 與 Keepalive（2026-10-25）**：
     - 已從 `Luckster-core`（public）的 Repository Secrets 移除 `SUPABASE_PROD_DB_URL`。移除前確認所有 branch（`main`、三個 `preview/*`）的 workflow 都沒有參照它；現在 `Luckster-core` 只剩 `SUPABASE_PROD_ANON_KEY`
@@ -995,6 +1002,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-26（ADR 0005 Phase 1：第一次排程 Restore Drill 於 2026-10-25 成功（`joti-ops` run #3，約 2 分 44 秒，因 GitHub schedule 延遲晚約 5 小時 11 分）；Healthchecks Started → OK、沒有 downtime；維持 6 小時 grace 與 12 小時 freshness）
 
 2026-10-25（`Luckster-core` 的 `SUPABASE_PROD_DB_URL` 已移除，沒有任何 workflow 使用；更正 Keepalive 只用 anon key、和此 secret 無關；決定保留 Keepalive；`joti-ops` 同名 secret 保留）
 
