@@ -102,7 +102,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 ### 3. Deferred / future phases
 
 - **Phase 2: Backblaze B2 + Object Lock** as a second, deletion-resistant off-site copy — optional, not added now (Object Lock pricing still to be confirmed).
-- **Upgrading Supabase** (Pro / PITR) or other paid services — possible later; the architecture does not assume them. Even with Pro, an off-site copy outside Supabase remains required.
+- **Upgrading Supabase** (Pro / PITR) or other paid services — **decided 2026-10-26: stay on Free at launch.** The self-built backup (6-hourly, encrypted, off-site, weekly drill) and the hosted DR drill (restore RTO 37 min; full recovery estimated at 1–1.5 h) cover recovery. Free-plan pausing is mitigated by the keepalive and the backup connections. Pro would mainly add no pausing and an SLA; PITR is a separate add-on. Revisit when downtime would cost more than Pro, after any pause or outage incident, or if an RPO below 6 h is needed. Even with Pro, an off-site copy outside Supabase remains required.
 - **Retention for USB copies** — whether and how the decided retention applies to the USB offline copies.
 - **Least-privilege backup role** instead of `postgres` — the CLI dump switches to the `postgres` role; whether a read-only role (for example via `pg_read_all_data`) can produce a complete dump needs evaluation.
 - **Privacy policy disclosure** of backup storage location and retention — part of the existing data-residency Future Decision.
@@ -144,7 +144,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 ## Future Considerations
 
 - Add Phase 2 (B2 + Object Lock) if the GitHub-only risk becomes unacceptable or before the data grows significantly.
-- Revisit the Supabase plan decision using real RTO / RPO results from the hosted DR drill.
+- ~~Revisit the Supabase plan decision using real RTO / RPO results from the hosted DR drill.~~ Done 2026-10-26: stay on Free (see "Deferred / future phases"); revisit on the triggers listed there.
 - Revisit Supabase Storage if file uploads are introduced.
 
 ---
