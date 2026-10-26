@@ -101,7 +101,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - JOTI 正式網站網域**已確定為 `joti.yoga`**（2026-10-12 Production Readiness Discovery 確認）。
 - **尚未綁定**：依決策，待 Production 環境（Supabase Production 專案、Auth、SMTP、health check 等）準備完成後才綁定 `joti.yoga`；在此之前不設定 DNS／Vercel／Supabase 網域。
 - 因此目前仍不能把 Vercel deployment URL 當成最終正式網站網址。
-- 法律文件中的 `[待填寫]`（網站欄位）目前仍存在，**原因是正式網域尚未綁定上線**，不是因為合約仍處於法律草案狀態；何時填入 `joti.yoga`（綁定前或綁定後）尚未決定。
+- ~~法律文件中的 `[待填寫]`（網站欄位）目前仍存在，**原因是正式網域尚未綁定上線**，不是因為合約仍處於法律草案狀態；何時填入 `joti.yoga`（綁定前或綁定後）尚未決定。~~——2026-10-25：`joti.yoga` 已上線，契約與 `v1.0.md` 第一條網站欄位已填入 `https://joti.yoga`
 
 ---
 
@@ -398,8 +398,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **目前資料狀態**：Production **沒有 Auth users**、測試交易或其他 TEST 資料（`auth.users` 與其餘 13 張 public 表皆為 0 筆）
 - **`contract_versions` 尚未建立**：v1.0 待正式上線時間確定後再建立（`effective_at` 採正式上線時間，見上方「遷移資料決策」）
   - **前置條件（2026-10-20 確認，尚未全部具備，目前不可建立）**：
-    1. **Future Decision**：正式上線時間（`effective_at` 為 `not null`，依決策採正式上線時間）
-    2. **v1.0 契約文字定稿後才建立**：`content_identifier = 'v1.0'` 直接對應 `docs/legal/versions/v1.0.md`，Production 首位會員同意後即不得再改 v1.0（只能建立 v1.1）；目前尚待——契約第 25 行網站欄位 `[待填寫]`（External／Pending：依 `joti.yoga` 綁定）、第七條第三項「單次給付之總價」與年方案分期之關係（Future Decision）
+    1. **Future Decision**：正式上線時間（`effective_at` 為 `not null`，依決策採正式上線時間）（2026-10-26：正式開放付費會員時才設定）
+    2. **v1.0 契約文字定稿後才建立**：`content_identifier = 'v1.0'` 直接對應 `docs/legal/versions/v1.0.md`，Production 首位會員同意後即不得再改 v1.0（只能建立 v1.1）；目前尚待——~~契約第 25 行網站欄位 `[待填寫]`（External／Pending：依 `joti.yoga` 綁定）~~（2026-10-25 已填入 `https://joti.yoga`）、~~第七條第三項「單次給付之總價」與年方案分期之關係（Future Decision）~~（2026-10-26 結案：代表契約總價，分期只是付款方式，條文不改）
     3. **順序**：v1.0 定稿 → 建立 `contract_versions` v1.0 → 部署契約類 Functions（`start-contract-review`／`agree-to-contract`／`reaccept-contract`）→ Production 真實帳號開始審閱 → 付款類 Functions＋secrets → 滿 3 日後 Production E2E
   - **注意**：程式只依 `is_current` 判斷目前版本（schema 以部分唯一索引保證同時僅一筆 `is_current`），**不檢查 `effective_at`**——`is_current = true` 且 Functions 已部署時，契約審閱即可開始，不會等到 `effective_at`；`effective_at` 僅為紀錄欄位
   - **排程**：Production 真實 E2E 帳號須於預定測試日至少 3 日前開始審閱（前提為 contract version 與契約類 Functions 已就緒）
@@ -879,6 +879,56 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
     - **更正**：Keepalive（`supabase-keepalive.yml`）只使用 `SUPABASE_PROD_ANON_KEY`，每 6 小時發一次唯讀 REST GET，和這個 DB secret **無關**（先前說「keepalive 依賴此 secret」是錯的）
     - **決定：保留 Keepalive**。Supabase 只寫「Free projects are paused after 1 week of inactivity」，沒有定義什麼算 activity。Keepalive 成本極低、只用 anon key，又和 backup 互相獨立，所以保留作為第二個活動來源，不做停用實驗
     - `joti-ops` 的 `SUPABASE_PROD_DB_URL` 是 backup 正在用的，**保留、不修改**
+### Step 11 — 契約 v1 與現行營運同步（2026-10-25）
+- **範圍**：只同步 Hosting、金流、退款手續費這三項現況。契約仍是正式發布前的 v1；Production 尚無正式 acceptance，所以直接修改 v1，不建立 v1.1。`joti-online-teaching-contract.md` 與 `versions/v1.0.md` 已一起修改，兩份內容一致
+- **Hosting**：契約沒有點名網站託管業者。第十九條第三方服務寫的是「包含但不限於」，第十七條寫的是網路服務商或第三方服務商故障，都和改用 Cloudflare 不衝突，所以不修改。唯一的修改是第一條「網站」欄位從 `[待填寫]` 填入 `https://joti.yoga`（《網際網路教學服務定型化契約應記載事項》第二點第一款要求記載網站網址）
+- **金流**：第八條、第十九條、附件一都已寫綠界科技 ECPay，不需修改
+- **退款手續費**（2026-10-25 依經營者決定修正）：第十一條第五項改為：會員**自行申請提前終止**時，甲方可以從依第三、四項算出的退款金額中，扣除該次付款或退款實際發生、且綠界／銀行不退還給甲方的手續費。條件與例外：
+  - 扣除金額以有紀錄可查的實際費用為限，退款時要列明扣除項目和金額
+  - **不得扣除**：可歸責於甲方（違約、服務品質瑕疵、無法提供服務）、會員因第十二條重大變更而終止、法令規定應由甲方負擔或應全額返還
+  - 附件一「退款方式」已揭露這項扣除
+  - 原第五、六項依序改為第六、七項；Service Period 退款公式沒有改；`payment-legal-spec.md` 第 11 節已同步
+  - 目前退款程式沒有扣手續費，如要實際扣除，需要另外實作，本次不做
+- **第二十條（違約處理）**：依應記載事項第十一點修正
+  - 刪除「得依情節輕重不予退款」及「不得請求任何形式之退款或補償」
+  - 改為：甲方因會員違約而終止時，仍應依第十一條第三、四項按比例返還尚未提供服務部分的費用，只能扣除違約金，**最高不超過返還金額的 20%**
+  - 違約情形的清單沒有改，也沒有新增其他扣除項目
+- **Legal Review**：
+  - **第十一條第五項扣除手續費的合法性**：應記載事項第十八點第二項「按已提供服務比例結算」規定，超收的費用應按比例返還，明文允許的扣除只有「可歸責於消費者」時、不超過 20% 的違約金，沒有提到手續費。這項扣除是否符合規範、會不會被認為顯失公平（不得記載事項第二點），尚未確認
+  - **違約終止時，第三方手續費能否另外扣除或納入違約金**：未確認。目前第二十條只寫違約金，沒有寫手續費
+  - **七日解除權**（消保法第 19 條）是否適用 JOTI：如果適用，消費者解除時「無須負擔任何費用」。這是既有的 OPEN／LEGAL REVIEW（見 `joti-business-legal-framework.md` 第 4 節），第十一條第五項第 3 款「法令另有規定」涵蓋這種情形
+- **退款手續費：待綠界確認（2026-10-26）**
+  - **已確認**：
+    - JOTI 的綠界報價單已明列各付款方式的原始交易手續費與相關費用
+    - 綠界業務曾透過 LINE 說明，退款時可能有「原交易手續費不退」的情況
+  - **未確認**：
+    - 查到的綠界公開官方文件，至少部分退款情境的說明和業務的 LINE 說法不完全一致
+    - 所以**不能**把「退款一定扣除原交易手續費」當成已確認的規則；第十一條第五項的扣除原則，目前只是經營者的方向，不是已確認的最終業務規則
+  - **External／Pending（向綠界確認）**：以 JOTI 與綠界實際適用的正式合作契約、合約與費率、交易／退款規範，以及綠界對 JOTI 特約商店的**正式書面說明**為主要依據，逐一確認每種付款方式：
+    1. 原始交易手續費
+    2. 退款方式
+    3. 原交易手續費是否退回
+    4. 退款相關費用由誰負擔
+    5. 費用實際從哪個帳務或餘額扣除
+    6. 會員實際收到的退款金額
+  - **暫停等待確認的工作**：
+    - 退款手續費扣除的實作：退款程式維持現狀，不新增手續費計算
+    - 第十一條第五項與附件一「退款方式」的最終文字：目前是未 commit 的修改，保留現狀不回滾，確認後再依結果定稿或修正
+    - 契約 v1.0 定稿，以及之後建立 Production `contract_versions` v1.0：v1.0 一旦有正式會員同意就不能再改，所以要等這項確認
+  - **目前程式狀態**：退款程式（DoAction 退刷）依第十一條第三、四項計算，**不扣任何手續費**；程式與文件沒有衝突，因為文件也已標明扣除規則尚未生效
+- **另見**：`frontend/src/data/business.js` 的註解仍寫「沒有確認的網域，不要加網站欄位」；網站 Footer 目前沒有顯示網站欄位，所以不影響，本次不修改程式碼
+
+### Paid Membership Launch 決策（2026-10-26，經營者決定）
+- **Payment reconciliation**：上線初期採 **A：每日人工唯讀比對**（Order、Service Period、payment_event、checkout session 與綠界後台），程序見 `docs/business/payment/payment-reconciliation.md`；SQL 已在 TEST 以唯讀交易執行、無語法錯誤。QueryTradeInfo 自動化現在不開發（Future）
+- **`refund_failed`／`rejected`**：上線初期人工處理（在綠界後台退刷並記錄於該訂單），不開發自動 retry
+- **第七條第三項「單次給付之總價」**：代表該方案的契約總價；信用卡分期只是付款方式，不改變契約總價。判斷現行條文已能表達，不修改。原「單次給付之總價與分期關係」Future Decision 結案
+- **年方案付款超過 90 天的退款**：暫不新增退款費率或扣款規則；等綠界正式書面說明及必要確認後，再完成 Contract v1.0 定稿
+- **契約類 Functions**：Contract v1.0 定稿並建立 `contract_versions` 後才部署到 Production，不提前部署。原「Production 契約類 Functions 部署時機」Future Decision 結案
+- **`effective_at`**：正式開放付費會員時才設定，現在不設定
+- **合約工作版本**：未提交的合約修改（第一條網站欄位、第十一條第五項、第二十條、附件一）以工作版本 commit，標示為**待綠界確認、Contract v1.0 尚未定稿**；不建立 Production `contract_versions`
+  - 因為 `docs/legal/` 會打包進網站，push `main` 就會讓 `joti.yoga/legal/terms` 公開這些尚未定稿的條文，所以合約兩份檔案 commit 在 branch **`contract/v1-wip`**，不合併到 `main`。定稿時再合併
+  - `payment-legal-spec.md` 與本文件不會打包進網站，照常在 `main`
+
 ### JOTI Business & Legal Framework
 - 新建 `docs/legal/joti-business-legal-framework.md`：JOTI 法律／商業營運框架與法源索引，整理網際網路教學服務定型化契約規範、消保法審閱期間與網路交易解除權例外、公平交易法第 21 條廣告規範、YouTube Audio Library 音樂授權、商業登記法與網路交易稅務等官方法源，逐項附官方來源連結，並區分 **CURRENT／OPEN-LEGAL REVIEW／FUTURE**
 - 明確定位為索引文件，**不取代**既有契約（`joti-online-teaching-contract.md`）、Payment 規格（`payment-legal-spec.md`／`payment-integration-rules.md`）或其他專門文件，只指向對應文件並記錄法律來源、適用原因與目前狀態
@@ -1005,9 +1055,15 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Last Updated
 
+2026-10-26（Paid Membership Launch 決策：reconciliation 採每日人工唯讀比對（新增 `payment-reconciliation.md`）；`refund_failed`／`rejected` 人工處理；第七條第三項不改；超過 90 天退款與 Contract v1.0 定稿等綠界；契約類 Functions 等定稿後再部署；`effective_at` 開放時才設定；合約工作版本 commit 在 branch `contract/v1-wip`）
+
 2026-10-26（Paid Membership Launch 準備：Google OAuth 已發布（Branding 補齊、非機密範圍、不需送審）；DR runbook 草稿已建立於 `joti-ops` `docs/dr-runbook.md`（`e3449e5`），尚未以 hosted DR drill 演練）
 
 2026-10-26（ADR 0005 Phase 1：第一次排程 Restore Drill 於 2026-10-25 成功（`joti-ops` run #3，約 2 分 44 秒，因 GitHub schedule 延遲晚約 5 小時 11 分）；Healthchecks Started → OK、沒有 downtime；維持 6 小時 grace 與 12 小時 freshness）
+
+2026-10-26（退款手續費狀態整理：綠界報價單與業務 LINE 說法已知，但公開官方文件部分情境不一致，「退款扣除原交易手續費」尚未確認；需依正式合約／費率／退款規範與綠界書面說明逐一確認各付款方式；確認前不改退款程式，第十一條第五項等未 commit 的修改保留不回滾，契約 v1.0 定稿等待此項確認）
+
+2026-10-25（契約 v1 同步現行營運：第一條網站欄位填入 `https://joti.yoga`；第十一條第五項：會員自行提前終止時，可扣除實際發生且不退還的金流／銀行手續費，可歸責於甲方等情形除外，合法性列為 Legal Review；第二十條依應記載事項第十一點改為按比例返還、違約金最高 20%；Hosting、ECPay 條款原本就一致）
 
 2026-10-25（`Luckster-core` 的 `SUPABASE_PROD_DB_URL` 已移除，沒有任何 workflow 使用；更正 Keepalive 只用 anon key、和此 secret 無關；決定保留 Keepalive；`joti-ops` 同名 secret 保留）
 
