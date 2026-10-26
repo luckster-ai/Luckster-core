@@ -735,9 +735,11 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
       - 要切回 Vercel 時：重新連 Git、關閉 Protection、升級 Pro
     - Production Supabase Redirect URLs 已移除 Vercel 的兩筆，現在只剩 `https://joti.yoga/auth/callback` 與 `/auth/reset-password`；Site URL 為 `https://joti.yoga`
     - Google OAuth：Production client「JOTI Production Supabase Auth」的 JavaScript 來源已從 `https://joti-jotiyoga.vercel.app` 改為 `https://joti.yoga`；Redirect URI 是 Production Supabase 的 `/auth/v1/callback`，不需要改
-    - **Future Decision（重要，正式對外開放前）**：Google OAuth 應用程式仍是「測試」發布狀態，測試使用者只有 1 位（`luckster.ai.workspace@gmail.com`），所以**其他人目前無法在 Production 用 Google 登入**；Email＋密碼登入不受影響
-      - 發布前要在 Branding 補上首頁 `https://joti.yoga`、隱私權政策 `/legal/privacy`、服務條款 `/legal/terms`，以及授權網域 `joti.yoga`；這些欄位目前都是空的
-      - 發布時需不需要 Google 驗證（例如品牌驗證、網域擁有權）待確認
+    - ~~**Future Decision（重要，正式對外開放前）**：Google OAuth 應用程式仍是「測試」發布狀態~~——**2026-10-26 已發布（實際運作中）**：
+      - Branding 補上首頁 `https://joti.yoga`、隱私權政策 `https://joti.yoga/legal/privacy`、服務條款 `https://joti.yoga/legal/terms`
+      - 授權網域原本已有 `joti.yoga`（隨 JavaScript 來源變更自動加入）、兩個 Supabase 網域，以及舊的 `joti-jotiyoga.vercel.app`（不影響，未移除）。2026-10-24「這些欄位都是空的」是誤判：首頁、政策、條款三欄當時確實是空的，但授權網域不是
+      - 範圍只有非機密的 `openid`、`userinfo.email`、`userinfo.profile`，沒有 logo、網域不到 10 個，依 Google 提示**不需要送審**
+      - **Pending（驗證）**：用非測試帳號在 `joti.yoga` 實際做一次 Google 登入
   - **Future Decision**：`www.joti.yoga` 目前沒有任何記錄或服務，是否要設定並轉址到 `joti.yoga`
   - **Pending（驗證）**：付款 E2E（付款上線時，與 `SITE_URL` 設定一起進行）
   - **External（非阻塞）**：Cloudflare §2.2.1(h) 書面詢問（2026-10-20 已擬定，尚未送出）
@@ -1002,6 +1004,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-26（Paid Membership Launch 準備：Google OAuth 已發布（Branding 補齊、非機密範圍、不需送審）；DR runbook 草稿已建立於 `joti-ops` `docs/dr-runbook.md`（`e3449e5`），尚未以 hosted DR drill 演練）
 
 2026-10-26（ADR 0005 Phase 1：第一次排程 Restore Drill 於 2026-10-25 成功（`joti-ops` run #3，約 2 分 44 秒，因 GitHub schedule 延遲晚約 5 小時 11 分）；Healthchecks Started → OK、沒有 downtime；維持 6 小時 grace 與 12 小時 freshness）
 

@@ -87,7 +87,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 - Controls: owner as the only member; strong 2FA (passkey / security key) on the account; no collaborators, forks, self-hosted runners or `pull_request_target` workflows; workflows with `permissions: {}` and `contents: write` only for the job that publishes Releases; minimal, pinned third-party actions (prefer none); no secrets or data in logs.
 - Once the Ops Repo backup runs reliably, `SUPABASE_PROD_DB_URL` is removed from the public `Luckster-core` repository. **Done 2026-10-25**: no workflow on any `Luckster-core` branch referenced it; the keepalive uses only the anon key. The `joti-ops` secret of the same name is the one the backup uses, and it stays.
 
-**Disaster recovery outline** (to become the DR runbook):
+**Disaster recovery outline** (the full DR runbook is `docs/dr-runbook.md` in the Ops Repo, draft 2026-10-26, not yet exercised on a hosted project):
 
 1. Download the latest Release (or use the USB copy), decrypt with the master key, verify SHA-256.
 2. Create a new hosted Supabase project (Free limit is 2 projects; paused projects do not count, so pause TEST or delete the broken project).
@@ -107,7 +107,7 @@ The drill re-captured items 1–2 from a live source. In a real disaster the sou
 - **Least-privilege backup role** instead of `postgres` — the CLI dump switches to the `postgres` role; whether a read-only role (for example via `pg_read_all_data`) can produce a complete dump needs evaluation.
 - **Privacy policy disclosure** of backup storage location and retention — part of the existing data-residency Future Decision.
 - **Supabase Storage file backup** — only if Supabase Storage is used in Production.
-- **Where the DR runbook lives** (public `docs/` or the Ops Repo) and whether Auth configuration becomes code (`supabase/config.toml` + `supabase config push`).
+- ~~**Where the DR runbook lives** (public `docs/` or the Ops Repo)~~: in the Ops Repo (`docs/dr-runbook.md`, 2026-10-26). It holds no secrets and can move to public `docs/` later. Still open: whether Auth configuration becomes code (`supabase/config.toml` + `supabase config push`).
 - **USB copy cadence and storage location** — to be decided by the owner; until then the USB layer's protection depends on how recently a copy was made.
 
 ### 4. Pending verification
