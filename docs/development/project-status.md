@@ -1041,6 +1041,23 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ---
 
+## Waiting on ECPay（綠界外部依賴彙整，2026-10-27）
+
+不依賴綠界的 Launch prerequisite 都已完成，正式開放付費會員目前只等以下綠界事項。下表彙整現有各節的待確認內容，細節以原小節為準（「ECPay 官方文件查核」、Open Questions「ECPay 待綠界確認」、「Step 11 — 契約 v1 與現行營運同步」）。
+
+| # | 待綠界的事項 | 卡住的工作 | 必要性 |
+|---|---|---|---|
+| 1 | **正式特店核准**，以及 LIVE 的 MerchantID、HashKey、HashIV | Production 付款 Functions 與 LIVE secrets、Production E2E、開放購買 | **Blocker** |
+| 2 | **ReturnURL**：正式環境是否接受 `*.supabase.co`（Q1）；是否必須和登記網站同網域、`payment.joti.yoga` 是否可行（Q2） | `ECPAY_RETURN_URL` 的 LIVE 設定；若不接受，需要改成自有網域的方案 | **Blocker** |
+| 3 | **退款手續費的正式書面說明**：各付款方式的原始交易手續費、退款方式、原交易手續費是否退回、退款費用由誰負擔、從哪個帳務扣除、會員實際收到的金額 | 第十一條第五項與附件一定稿 → **Contract v1.0 定稿**（branch `contract/v1-wip`）→ 建立 Production `contract_versions` → 部署契約類 Functions → 3 日審閱 → Production E2E | **Blocker** |
+| 4 | **退款期限**：90／360 天的起算點、超過 360 天有沒有其他退款管道、`Action=R` 的 `TotalAmount` 語意、關帳前能不能部分退刷、自動關帳時間 | 年方案付款超過 90 天的退款處理（經營者已決定等綠界說明後再定），併入 Contract v1.0 定稿 | **Blocker**（併入 #3 的定稿） |
+| 5 | **一般賣家**：預收制線上課程能不能以一般賣家申請、一般賣家能不能用 DoAction、收款額度、年方案是否適用遞延性服務履約保證（Q4） | 特店申請類型與退款方式；如需履約保證，另需規劃 | **需確認**（可能影響 #1） |
+| 6 | **主機 IP 鎖定**是否只是選用（Q3） | 如果是必要，需要固定 IP proxy（目前列為不做的 PoC） | **需確認** |
+| 7 | **AIO 付款頁有效時間**（10300025「訂單已過期」） | JOTI 30 分鐘 Checkout Session 與「付款進行中」文案是否調整 | 品質（不阻擋） |
+
+- **收到回覆後的順序**：#3、#4 → Contract v1.0 定稿並合併 `contract/v1-wip` → `contract_versions` v1.0 → 契約類 Functions、Admin → 測試帳號開始 3 日審閱（不必等 #1） → #1、#2 → 付款類 Functions＋LIVE secrets（`SITE_URL=https://joti.yoga`、`ACTIVE_PAYMENT_PROVIDER=ecpay`）→ Production E2E（小額真實付款＋DoAction 退款，同時實測手續費）→ Cloudflare `joti` 開啟 `VITE_ENABLE_PURCHASE=true`、設定 `effective_at`
+- **不是等綠界的事項**：PAYUNi 申請是否撤回（經營者自行決定）；11/19 之後的 Preview → ECPay 補測（不阻擋）
+
 ## In Progress
 
 - **新增 3 個 Warm Up Module**（`MW005` 脊椎彎曲熱身、`MW006` 脊椎扭轉熱身、`MW007` 貓牛式熱身）：`.md` 內容（Summary / Description / Learning Outcomes / Tags / Prerequisites）已撰寫，**尚未上傳 Bunny 影片**（`.md` 的 `Primary Video URL` 是空的），**尚未加入 `data/modules.js`**，未 commit。
@@ -1096,6 +1113,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（新增「Waiting on ECPay」彙整：正式特店與 LIVE 金鑰、ReturnURL、退款手續費書面說明、退款期限、一般賣家、IP 鎖定、付款頁有效時間，以及收到回覆後的上線順序）
 
 2026-10-27（master-v2 輪換完成：backup run #22 → `backup-20261027-0247Z` Recipients `master-v2,drill-v1`，master-v2 實際解密驗證通過）
 
