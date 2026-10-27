@@ -1,24 +1,27 @@
-// Local-device storage for learner-built Practices (Practice Builder →
-// Save), keyed by slug.
+import { useEffect, useSyncExternalStore } from 'react'
+import { supabase } from '../lib/supabaseClient'
+import { useAuth } from './useAuth'
+
+// Custom Practices (Practice Builder → Save), keyed by slug. The slug is
+// also the Practice id written to practice_sessions.
 //
-// This is NOT a synced Learner Data / accounts system -- it is
-// single-device, browser-local storage. It exists to bridge Save ->
-// Practice Detail -> Practice Player -> re-open -> edit -> Save-again
-// (Sprint 1E), reusing the existing PracticePage / PracticePlayer /
-// PracticeBuilder components without writing learner-created content
-// into the shared Official Practice store (Supabase), which is
-// admin-authored content, not per-learner data.
-//
-// Backed by localStorage (Sprint 1E; was sessionStorage through Sprint
-// 1D): saveCustomPractice already overwrites by slug, so calling it
-// again with the same slug (see PracticeBuilder.jsx's edit-mode Save)
-// is already an update-in-place, not a duplicate. Switching to
-// localStorage is what makes "leave the Builder, come back later, edit
-// it" actually survive a closed tab/browser restart on this device --
-// sessionStorage never could. Still local-only, no cross-device sync.
-// Once a real Learner Data layer exists, this module should be
-// replaced, not extended.
+// Website Refinement M8b: a signed-in member's Custom Practices live in
+// Supabase (public.custom_practices, supabase/schema_custom_practices.sql)
+// so they follow the member across devices. Visitors keep the original
+// single-device localStorage store. On sign-in, syncCustomPractices():
+//   1. migrates every localStorage Practice to the database with
+//      insert-on-conflict-do-nothing (an existing row wins, so a stale
+//      local copy never overwrites a newer cross-device edit), and removes
+//      a local copy ONLY after its insert succeeded -- a failed or
+//      interrupted migration leaves the local copy in place, so running
+//      it again is always safe;
+//   2. loads the member's rows into an in-memory cache.
+// Reads stay synchronous (getCustomPractice / getAllCustomPractices read
+// the cache plus any not-yet-migrated local copies); components re-render
+// through useCustomPractices() when the cache changes.
 const STORAGE_KEY = 'joti:custom-practices'
+const TABLE = 'custom_practices'
+const DESCRIPTION = '由學員自由組課建立的練習。'
 
 function readAll() {
   try {
@@ -33,31 +36,168 @@ function writeAll(all) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
   } catch {
-    // localStorage unavailable (e.g. private browsing) — the built
-    // Practice simply won't persist; Builder composition itself is
-    // unaffected.
+    // localStorage unavailable (e.g. private browsing) -- a visitor's
+    // built Practice simply won't persist.
   }
 }
 
-// Overwrites by slug — calling this again with a slug that already
-// exists (see PracticeBuilder.jsx's edit-mode Save) updates that
-// Practice in place rather than creating a duplicate.
-export function saveCustomPractice(practice) {
+function removeLocal(slug) {
   const all = readAll()
-  all[practice.slug] = practice
+  if (!(slug in all)) return
+  delete all[slug]
   writeAll(all)
 }
 
-export function getCustomPractice(slug) {
-  const all = readAll()
-  return all[slug] || null
+function rowToPractice(row) {
+  return {
+    id: row.id,
+    slug: row.id,
+    title: row.title,
+    chineseTitle: row.title,
+    difficulty: 'Beginner',
+    description: DESCRIPTION,
+    isCustom: true,
+    modules: row.modules,
+    builderSections: row.builder_sections ?? undefined,
+    relaxationPosition: row.relaxation_position ?? undefined
+  }
 }
 
-// Sprint 2A — Practice Hub "我的練習": makes existing saved Practices
-// discoverable without a URL. Read-only, reuses the same readAll() the
-// store already computed internally; no persistence/schema change.
+function practiceToRow(practice, userId) {
+  return {
+    user_id: userId,
+    id: practice.slug,
+    title: practice.chineseTitle || practice.title,
+    modules: practice.modules,
+    builder_sections: practice.builderSections ?? null,
+    relaxation_position: practice.relaxationPosition ?? null
+  }
+}
+
+// ---- in-memory server cache -------------------------------------------
+let cacheUserId = null
+let cache = new Map()
+let cacheReady = false
+let syncPromise = null
+let version = 0
+const listeners = new Set()
+
+function notify() {
+  version += 1
+  listeners.forEach((listener) => listener())
+}
+
+function subscribe(listener) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+function getVersion() {
+  return version
+}
+
+export function syncCustomPractices(userId) {
+  if (!supabase || !userId) {
+    if (cacheUserId !== null || cache.size > 0) {
+      cacheUserId = null
+      cache = new Map()
+      cacheReady = false
+      notify()
+    }
+    return Promise.resolve()
+  }
+
+  if (cacheUserId === userId && (cacheReady || syncPromise)) {
+    return syncPromise || Promise.resolve()
+  }
+
+  cacheUserId = userId
+  cache = new Map()
+  cacheReady = false
+  notify()
+
+  const run = (async () => {
+    for (const practice of Object.values(readAll())) {
+      const { error } = await supabase
+        .from(TABLE)
+        .upsert(practiceToRow(practice, userId), { onConflict: 'user_id,id', ignoreDuplicates: true })
+      if (!error) removeLocal(practice.slug)
+    }
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('id, title, modules, builder_sections, relaxation_position, updated_at')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false })
+
+    if (cacheUserId !== userId) return
+    if (!error && Array.isArray(data)) {
+      cache = new Map(data.map((row) => [row.id, rowToPractice(row)]))
+    }
+    cacheReady = true
+    syncPromise = null
+    notify()
+  })()
+
+  syncPromise = run
+  return run
+}
+
+// Saves (creates or overwrites by slug). Signed-in: database first, and
+// the local copy (if any) is only removed once that write succeeded.
+// Returns { error } -- null on success.
+export async function saveCustomPractice(practice, userId) {
+  if (supabase && userId) {
+    const { error } = await supabase.from(TABLE).upsert(practiceToRow(practice, userId), { onConflict: 'user_id,id' })
+    if (error) return { error }
+    removeLocal(practice.slug)
+    if (cacheUserId === userId) {
+      cache = new Map(cache)
+      cache.set(practice.slug, { ...practice, description: DESCRIPTION, isCustom: true })
+      notify()
+    }
+    return { error: null }
+  }
+
+  const all = readAll()
+  all[practice.slug] = practice
+  writeAll(all)
+  notify()
+  return { error: null }
+}
+
+export function getCustomPractice(slug) {
+  return cache.get(slug) || readAll()[slug] || null
+}
+
 export function getAllCustomPractices() {
-  return Object.values(readAll())
+  const merged = new Map(cache)
+  for (const practice of Object.values(readAll())) {
+    if (!merged.has(practice.slug)) merged.set(practice.slug, practice)
+  }
+  return [...merged.values()]
+}
+
+export function isCustomPracticeSlug(slug) {
+  return typeof slug === 'string' && slug.startsWith('custom-')
+}
+
+// Re-renders the caller whenever the cache changes and starts the sync
+// for the current member. `ready` is false while auth is still resolving
+// or a signed-in member's cache has not loaded yet -- callers use it to
+// avoid showing "not found" for a Practice that is about to arrive.
+export function useCustomPractices() {
+  const { user, loading } = useAuth()
+  const userId = user?.id || null
+  useSyncExternalStore(subscribe, getVersion)
+
+  useEffect(() => {
+    if (loading) return
+    syncCustomPractices(userId)
+  }, [userId, loading])
+
+  const ready = !loading && (!userId || (cacheUserId === userId && cacheReady))
+  return { practices: getAllCustomPractices(), ready, signedIn: Boolean(userId) }
 }
 
 export function generateCustomPracticeSlug() {

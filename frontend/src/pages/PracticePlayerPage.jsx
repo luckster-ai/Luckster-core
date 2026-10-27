@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import modules from '../data/modules'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
-import { getCustomPractice } from '../state/customPracticeStore'
+import { getCustomPractice, isCustomPracticeSlug, useCustomPractices } from '../state/customPracticeStore'
 import { getOfficialPracticeBySlug } from '../state/officialPracticeStore'
 import { getResumableSession } from '../state/practiceActivityStore'
 import { evaluateResumableSession } from '../utils/practiceResume'
@@ -22,13 +22,18 @@ function PracticePlayerPage() {
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
 
+  // Website Refinement M8b: Custom Practices load asynchronously for
+  // signed-in members, so a custom slug waits for them instead of going
+  // to the Official Practice lookup.
+  const { ready: customReady } = useCustomPractices()
   const localPractice = getCustomPractice(slug)
   const hasLocal = Boolean(localPractice)
+  const isCustomSlug = isCustomPracticeSlug(slug)
 
   const [remote, setRemote] = useState({ slug: null, status: 'idle', practice: null })
 
   useEffect(() => {
-    if (hasLocal) return
+    if (hasLocal || isCustomSlug) return
 
     let active = true
 
@@ -45,12 +50,15 @@ function PracticePlayerPage() {
     return () => {
       active = false
     }
-  }, [slug, hasLocal])
+  }, [slug, hasLocal, isCustomSlug])
 
   let status = 'ready'
   let practice = localPractice
 
-  if (!hasLocal) {
+  if (!hasLocal && isCustomSlug) {
+    status = customReady ? 'not-found' : 'resolving'
+    practice = null
+  } else if (!hasLocal) {
     if (remote.slug === slug) {
       status = remote.status
       practice = remote.practice

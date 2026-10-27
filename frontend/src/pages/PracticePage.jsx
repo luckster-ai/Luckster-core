@@ -5,7 +5,7 @@ import foundations from '../data/foundations'
 import formatDuration, { formatVideoDuration } from '../utils/formatDuration'
 import { calculatePracticeDuration } from '../utils/calculatePracticeDuration'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
-import { getCustomPractice } from '../state/customPracticeStore'
+import { getCustomPractice, isCustomPracticeSlug, useCustomPractices } from '../state/customPracticeStore'
 import { getOfficialPracticeBySlug } from '../state/officialPracticeStore'
 import { getResumableSession } from '../state/practiceActivityStore'
 import { evaluateResumableSession } from '../utils/practiceResume'
@@ -24,8 +24,13 @@ function PracticePage() {
   const { user } = useAuth()
   const { isLoggedIn, learnerStatusMap } = useLearnerStatus()
 
+  // Website Refinement M8b: Custom Practices load asynchronously for
+  // signed-in members, so a custom slug waits for them instead of going
+  // to the Official Practice lookup.
+  const { ready: customReady, signedIn } = useCustomPractices()
   const localPractice = getCustomPractice(slug)
   const hasLocal = Boolean(localPractice)
+  const isCustomSlug = isCustomPracticeSlug(slug)
 
   // Only the async Supabase lookup needs state. `resolving` is *derived*
   // (below) from "no remote result for the current slug yet", so nothing
@@ -35,7 +40,7 @@ function PracticePage() {
   const [remote, setRemote] = useState({ slug: null, status: 'idle', practice: null })
 
   useEffect(() => {
-    if (hasLocal) return
+    if (hasLocal || isCustomSlug) return
 
     let active = true
 
@@ -52,12 +57,15 @@ function PracticePage() {
     return () => {
       active = false
     }
-  }, [slug, hasLocal])
+  }, [slug, hasLocal, isCustomSlug])
 
   let status = 'ready'
   let practice = localPractice
 
-  if (!hasLocal) {
+  if (!hasLocal && isCustomSlug) {
+    status = customReady ? 'not-found' : 'resolving'
+    practice = null
+  } else if (!hasLocal) {
     if (remote.slug === slug) {
       status = remote.status
       practice = remote.practice
@@ -170,7 +178,9 @@ function PracticePage() {
 
         {practice.isCustom && (
           <p className="practice-custom-note">
-            這是你建立的練習，儲存在此裝置的瀏覽器中（尚未提供跨裝置同步）。
+            {signedIn
+              ? '這是你建立的練習，已儲存在你的帳號，可以在其他裝置使用。'
+              : '這是你建立的練習，目前儲存在此裝置的瀏覽器中；登入後會同步到你的帳號。'}
           </p>
         )}
 

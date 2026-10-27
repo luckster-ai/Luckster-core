@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { resolvePracticeById, resolveModuleTitles, groupSessionsByDay } from '../utils/practiceHistory'
+import { useCustomPractices } from '../state/customPracticeStore'
 
 // Practice History (Phase 5D). Deliberately not PracticeCard.jsx --
 // that component assumes a full, resolvable Practice object (`.slug`,
@@ -15,6 +16,10 @@ import { resolvePracticeById, resolveModuleTitles, groupSessionsByDay } from '..
 // tracking); showing a second, unrelated number with a similar meaning
 // here would just be confusing, not informative.
 function PracticeHistory({ sessions, officialById, loading }) {
+  // Re-render once the member's Custom Practices load, so rows for a
+  // Practice built on another device resolve and link (M8b).
+  useCustomPractices()
+
   if (loading) return null
 
   if (sessions.length === 0) {

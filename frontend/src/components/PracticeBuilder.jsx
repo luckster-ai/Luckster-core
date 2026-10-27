@@ -14,6 +14,7 @@ import {
 } from '../utils/validatePracticeBuilder'
 import { sectionsForPracticeType, derivePracticeType, PRACTICE_TYPES, getSection } from '../utils/practiceStructure'
 import { saveCustomPractice, generateCustomPracticeSlug, getCustomPractice } from '../state/customPracticeStore'
+import { useAuth } from '../state/useAuth'
 import PracticeSectionCanvas from './PracticeSectionCanvas'
 import PracticeCompositionOverview from './PracticeCompositionOverview'
 import MobileSectionOverview from './MobileSectionOverview'
@@ -33,6 +34,7 @@ import MobileModulePanel from './MobileModulePanel'
 function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { user } = useAuth()
   const isOfficialMode = Boolean(onSave)
 
   // Sprint 1E — Part C: /practice/build?edit={slug} reopens an existing
@@ -176,7 +178,8 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
     const slug = editSlug && existingPractice ? editSlug : generateCustomPracticeSlug()
     const orderedSlugs = assemblePracticeOrder(state, modules)
 
-    saveCustomPractice({
+    setIsSaving(true)
+    const { error: customSaveError } = await saveCustomPractice({
       id: slug,
       slug,
       title: practiceName.trim(),
@@ -193,7 +196,15 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
       // this field); this is additive, edit-flow-only data.
       builderSections: state.sections,
       relaxationPosition: state.relaxationPosition
-    })
+    }, user?.id || null)
+    setIsSaving(false)
+
+    // Website Refinement M8b: a signed-in save goes to the database; on
+    // failure stay on the Builder with the composition intact.
+    if (customSaveError) {
+      setSaveError('儲存失敗，請稍後再試。')
+      return
+    }
 
     navigate(`/practices/${slug}`)
   }
