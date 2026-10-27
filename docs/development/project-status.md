@@ -905,7 +905,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - project ref 少打一個字母，導致 DNS 查不到（已更正）
   - 步驟與結果已寫入 `joti-ops` `docs/dr-runbook.md` 的 Drill log
 - **追蹤事項**：
-  - **TODO（安全，獨立任務，下一步）**：`master-v1` → `master-v2` 輪換
+  - **TODO（安全，獨立任務，下一步）**：`master-v1` → `master-v2` 輪換（2026-10-27：`recipients.txt` 已改為 `master-v2`＋`drill-v1`，`check-recipients.py` 驗證通過，joti-ops 已 commit；**Pending（驗證）**：下一份 backup 的 Release recipients 應為 `master-v2,drill-v1`，並以 master-v2 實際解密一次）
     - 經營者用 `age-keygen` 產生 `master-v2`，私鑰只放進密碼管理器
     - 更新 `joti-ops` 的 `recipients.txt`（`master-v2`＋`drill-v1`）
     - 舊備份依保存期限自然淘汰，不重新加密；最後一份 master-v1 備份淘汰前，master-v1 私鑰仍需保留（ADR 0005）
@@ -1091,6 +1091,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（master key 輪換：joti-ops `recipients.txt` 改為 `master-v2`＋`drill-v1`；master-v1 退役但保留至最後一份 v1 備份淘汰（約 2027-10-27）；待下一份 backup 確認）
 
 2026-10-26（決定上線時維持 Supabase Free；依據為自建備份與 hosted DR drill 結果（RTO 37 分鐘），並記錄重新評估時機）
 
