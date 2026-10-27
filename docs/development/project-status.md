@@ -1076,6 +1076,22 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **Production E2E 帳號**：`luckster.ai.workspace@gmail.com` 已是 Admin，依設計看不到購買入口，所以 Production E2E 要用另一個一般會員帳號（例如 `luckster.ai.workspace+prod-e2e@gmail.com`）。這個帳號在 Contract v1.0 定稿並建立 `contract_versions` 後才建立，接著開始 3 日審閱。11/19 的 TEST 補測不受影響
 - 2026-10-27 一併修正 `payment-reconciliation.md` 查詢 B：只檢查最近 48 小時內過期且仍為 open 的 session，避免所有放棄付款的 session 每天都被列為異常
 
+## 網站優化（正式網站完成前，2026-10-27 記錄；**不是**付費上線 blocker）
+
+經營者整理的 9 項網站優化。正式上線主線不變：網站已在 `joti.yoga` 提供免費試用、付費購買關閉，付費上線只等綠界（見「Waiting on ECPay」）。這些項目和綠界流程互相獨立，可以在等待期間進行。已有的 `docs/development/website-refinement.md`（2026-09-21 audit）當作參考，其中 M1–M5 已處理。
+
+| # | 項目 | 類型 | 狀態 |
+|---|---|---|---|
+| 1 | 首頁第一眼看不出「昆達里尼瑜伽」 | 內容／文案（Hero） | TODO |
+| 2 | 文字排版（參考 audit W13：全站置中、固定欄寬） | 視覺／UI（全站 CSS） | TODO |
+| 3 | 首頁「新手必修」要凸顯是免費課程 | 內容／文案 | TODO（先確認目前試用與 entitlement 中新手必修的實際開放範圍，文案不能和實際規則不一致） |
+| 4 | 把 Foundation、Practice、Module 等英文改成一般使用者能理解的中文名稱 | 內容＋UI 字串 | TODO（先盤點實際出現位置，再決定名詞與替換範圍；**契約 v1 第二條、第四條也使用「Module 影片」等名詞**，要在 Contract v1.0 定稿前決定，避免定稿後用語不一致） |
+| 5 | 新手必修的影片加封面 | 視覺（需要圖片素材） | TODO |
+| 6 | 完整練習（主要產品）優化文案與封面 | 內容＋視覺 | TODO（先確認目前產品定位與頁面結構；封面機制和第 5 項共用） |
+| 7 | 使用者自建練習：沒有記錄觀看未完成的位置、無法「繼續觀看」、跨裝置沒有同步 | 功能 UX | TODO（**先做現況 Discovery**）。已知：自建練習存在瀏覽器 `localStorage`，設計上就是單一裝置，沒有跨裝置同步；繼續觀看使用 `practice_sessions`（`practice_id` 為 text），是否適用自建練習待確認 |
+| 8 | 「關於 JOTI」人物圖片改成經營者本人 | 內容（需要照片素材） | TODO |
+| 9 | 「關於 JOTI」手機畫面，有底色的圖片出現細邊 | 視覺 bug | TODO |
+
 ## In Progress
 
 - **新增 3 個 Warm Up Module**（`MW005` 脊椎彎曲熱身、`MW006` 脊椎扭轉熱身、`MW007` 貓牛式熱身）：`.md` 內容（Summary / Description / Learning Outcomes / Tags / Prerequisites）已撰寫，**尚未上傳 Bunny 影片**（`.md` 的 `Primary Video URL` 是空的），**尚未加入 `data/modules.js`**，未 commit。
@@ -1135,6 +1151,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（新增「網站優化」9 項，不是付費上線 blocker；第 4 項名詞需在 Contract v1.0 定稿前決定，第 7 項先做現況 Discovery）
 
 2026-10-27（狀態整理：Current Phase 加上目前狀態摘要；Operational Status、Final Website Domain、Next Steps、Blockers 標註已過時內容；Waiting on ECPay 記錄確認信待寄出）
 
