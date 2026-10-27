@@ -403,7 +403,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
     3. **順序**：v1.0 定稿 → 建立 `contract_versions` v1.0 → 部署契約類 Functions（`start-contract-review`／`agree-to-contract`／`reaccept-contract`）→ Production 真實帳號開始審閱 → 付款類 Functions＋secrets → 滿 3 日後 Production E2E
   - **注意**：程式只依 `is_current` 判斷目前版本（schema 以部分唯一索引保證同時僅一筆 `is_current`），**不檢查 `effective_at`**——`is_current = true` 且 Functions 已部署時，契約審閱即可開始，不會等到 `effective_at`；`effective_at` 僅為紀錄欄位
   - **排程**：Production 真實 E2E 帳號須於預定測試日至少 3 日前開始審閱（前提為 contract version 與契約類 Functions 已就緒）
-- **Admin 尚未建立**：待 Production Auth 完成、第一個正式帳號建立後再設定 `profiles.role = 'admin'`（2026-10-15：Production Auth 已完成、第一個正式帳號已建立；`profiles.role = 'admin'` 待設定）
+- ~~**Admin 尚未建立**：待 Production Auth 完成、第一個正式帳號建立後再設定 `profiles.role = 'admin'`~~——2026-10-27 已設定並驗證，見「Admin／營運管理」
 - **Auth Email 決策（2026-10-13）**：Production Auth Email 採 **Resend Free**，寄件網域 **`auth.joti.yoga`**；目前不使用 Brevo；行銷／CRM Email 另行評估。**2026-10-14 Resend 網域 `auth.joti.yoga` 已 Verified**（見下方「Step 11 — Production Auth Email（Resend）網域驗證」）；**2026-10-15 Production Supabase Auth SMTP 已設定，並成功寄送驗證信**（見下方「Step 11 — Production Auth 完成」）
 - **Production Auth 已完成（2026-10-15）**：Email + Password + Google，見下方「Step 11 — Production Auth 完成」（設定前的盤點見「Step 11 — Production Auth Discovery」）
 - **Health Check 已上線（2026-10-14）**：GitHub Actions workflow `.github/workflows/supabase-keepalive.yml`（`fb15510`，已 push 到 `origin/main`），workflow 已啟用
@@ -1064,12 +1064,13 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 | 項目 | Discovery 結論 | 目前狀態 |
 |---|---|---|
-| Production Admin 角色（`profiles.role = 'admin'`） | 需要；待第一個正式帳號建立後設定 | **TODO，下一步**：第一個正式帳號已存在，尚未設定。這需要在 Production 寫入資料，Claude Code 的權限規則擋下了 Production 查詢，所以由經營者在 Supabase SQL Editor 執行，或另外授權。`protect_profile_system_fields` 只擋 `authenticated` 角色，SQL Editor 可以正常更新 |
+| Production Admin 角色（`profiles.role = 'admin'`） | 需要；待第一個正式帳號建立後設定 | **完成（2026-10-27）**：經營者在 SQL Editor 設定 `luckster.ai.workspace@gmail.com` 為 `admin`。在 `joti.yoga` 唯讀驗證：`/account` 顯示「會員狀態：Admin」、Header 出現 Admin 連結、`/admin/practices` 列出 P001–P004 四堂已發布的官方 Practice。Production 的 Admin 前端與 DB 權限（`is_admin()` RLS）早已和 TEST 一致，沒有其他設定要補 |
 | Admin 查看 Orders／Payments／Refunds 的頁面 | 初期可用 Supabase Dashboard 直接查表，**建議上線後第一批補上** | 上線初期改用每日唯讀 reconciliation（`payment-reconciliation.md`）；頁面列為上線後第一批 |
 | `expire_pending_orders()` 排程 | 逾期訂單會停在 `pending_payment` | **不需要**：ECPay 流程（`create-order-checkout` 的 Checkout Session 分支）只在付款成功時建立 Order，不會產生 `pending_payment`；這個函式只和舊 Oen 的 order-first 流程有關。Checkout Session 過期由 `expires_at` 判斷，放棄付款的 session 由 reconciliation 查詢 B 檢查 |
 | 錯誤追蹤／監控（Sentry 等） | 非阻塞 | 上線後再評估；目前靠 Supabase／Cloudflare log、Healthchecks、GitHub 通知 |
-| 留言／公開內容的 Admin moderation | 未來原則（Phase 5C 前不建置） | 不在目前範圍；`practice_notes` 尚未建置 |
+| 留言／公開內容的 Admin moderation | 未來原則（不在目前範圍） | 不在目前範圍。**更正**：`practice_notes` 資料表已建置並套用到 Production（`schema_practice_notes.sql`，含 `is_admin()` policy）；尚未建置的是 Admin 的 moderation 操作介面 |
 
+- **Production E2E 帳號**：`luckster.ai.workspace@gmail.com` 已是 Admin，依設計看不到購買入口，所以 Production E2E 要用另一個一般會員帳號（例如 `luckster.ai.workspace+prod-e2e@gmail.com`）。這個帳號在 Contract v1.0 定稿並建立 `contract_versions` 後才建立，接著開始 3 日審閱。11/19 的 TEST 補測不受影響
 - 2026-10-27 一併修正 `payment-reconciliation.md` 查詢 B：只檢查最近 48 小時內過期且仍為 open 的 session，避免所有放棄付款的 session 每天都被列為異常
 
 ## In Progress
@@ -1127,6 +1128,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（Production Admin 角色設定完成並驗證：`/account` 顯示 Admin、Header 有 Admin 連結、`/admin/practices` 列出 4 堂官方 Practice；更正 `practice_notes` 實際已建置；註明 Production E2E 需另用一般會員帳號）
 
 2026-10-27（Admin／營運管理盤點：Production Admin 角色是下一步，待經營者執行；Orders 查詢頁列為上線後第一批；`expire_pending_orders` 排程在 ECPay 流程中不需要；修正 reconciliation 查詢 B）
 
