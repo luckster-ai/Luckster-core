@@ -20,7 +20,7 @@ import { getModuleThumbnailUrl } from '../utils/moduleThumbnail'
 // already established for Modules (getModuleThumbnailUrl, from Sprint
 // 1A) against the Practice's first resolved Module -- a real thumbnail
 // from real repository data, not an invented asset.
-function PracticeCard({ practice, isCustom }) {
+function PracticeCard({ practice, isCustom, resumable }) {
   const totalDuration = calculatePracticeDuration(practice, modules)
   const orderedModules = resolvePracticeModules(practice, modules)
   const thumbnailUrl = orderedModules[0] ? getModuleThumbnailUrl(orderedModules[0]) : null
@@ -36,6 +36,7 @@ function PracticeCard({ practice, isCustom }) {
       </div>
 
       {isCustom && <span className="practice-card-badge">你建立的練習</span>}
+      {resumable && <span className="practice-card-badge practice-card-badge--resume">未完成，可繼續</span>}
 
       <h3>{practice.chineseTitle}</h3>
 

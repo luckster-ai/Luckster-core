@@ -11,13 +11,13 @@ function CoursesSection() {
 
       <div className="cards">
         <Link to="/foundations" className="card course-card">
-          <h3>新手必修 Foundation</h3>
+          <h3>新手必修 <span className="free-badge">免費</span></h3>
 
-          <p>學習正式練習前需要具備的基礎知識與技巧。</p>
+          <p>學習正式練習前需要具備的基礎知識與技巧。所有人都能免費觀看，不需要註冊。</p>
         </Link>
 
         <Link to="/practice" className="card course-card">
-          <h3>完整練習 Full Practice</h3>
+          <h3>完整練習</h3>
 
           <p>開始今日的完整引導練習。</p>
         </Link>

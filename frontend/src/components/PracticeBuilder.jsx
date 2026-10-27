@@ -182,7 +182,7 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
       title: practiceName.trim(),
       chineseTitle: practiceName.trim(),
       difficulty: 'Beginner',
-      description: '由學員自由組課建立的 Practice。',
+      description: '由學員自由組課建立的練習。',
       isCustom: true,
       modules: orderedSlugs,
       // Exact Builder state, alongside the flat modules list above --
@@ -354,7 +354,7 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
       />
 
       <p className="section-description">
-        目前類型：{practiceType === PRACTICE_TYPES.FULL ? '完整練習 Full Practice' : '冥想練習 Meditation Practice'}
+        目前類型：{practiceType === PRACTICE_TYPES.FULL ? '完整練習' : '冥想練習'}
         {' '}
         <span className="builder-type-hint">
           （加入體式 Asana 即成為完整練習，不加入則為冥想練習）
@@ -362,7 +362,7 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
       </p>
 
       <label className="builder-name-field">
-        Practice 名稱
+        練習名稱
         <input
           type="text"
           value={practiceName}
@@ -439,7 +439,7 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
       )}
 
       {!isNameValid && (
-        <p className={hasAttemptedSave ? 'builder-errors' : 'builder-progress'}>請輸入 Practice 名稱。</p>
+        <p className={hasAttemptedSave ? 'builder-errors' : 'builder-progress'}>請輸入練習名稱。</p>
       )}
 
       {isOfficialMode && !isOfficialFieldsValid && hasAttemptedSave && (
@@ -454,7 +454,7 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
         onClick={handleSave}
         disabled={isSaving}
       >
-        {isSaving ? '儲存中…' : saveLabel || '儲存 Practice'}
+        {isSaving ? '儲存中…' : saveLabel || '儲存練習'}
       </button>
     </div>
   )

@@ -161,7 +161,7 @@ export function getCapabilityNote(sectionKey, state, modules) {
 
   if (sectionKey === 'relaxation') {
     if (derivePracticeType(state) === PRACTICE_TYPES.MEDITATION) {
-      return '冥想練習可省略放鬆段落（例如時間較短的練習情境），或由所選 Module 本身已包含放鬆功能。'
+      return '冥想練習可省略放鬆段落（例如時間較短的練習情境），或由所選練習單元本身已包含放鬆功能。'
     }
 
     const coveringId = state.sections.asana[0]
@@ -194,7 +194,7 @@ export function getModuleAvailability(moduleId, { disabledIds, moduleSectionLabe
 
   return {
     disabled: true,
-    reason: sectionLabel ? `已加入「${sectionLabel}」` : '已加入此 Practice'
+    reason: sectionLabel ? `已加入「${sectionLabel}」` : '已加入此練習'
   }
 }
 

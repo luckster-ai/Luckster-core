@@ -110,10 +110,10 @@ function PracticePlayer({
 
       <section className="practice-player-progress">
         {isComplete ? (
-          <p>已完成 {modules.length} / {modules.length} 個 Module</p>
+          <p>已完成 {modules.length} / {modules.length} 個練習單元</p>
         ) : (
           <p>
-            目前進度：第 {currentIndex + 1} / {modules.length} 個 Module —{' '}
+            目前進度：第 {currentIndex + 1} / {modules.length} 個練習單元 —{' '}
             {modules[currentIndex].chineseTitle}
           </p>
         )}
@@ -138,9 +138,9 @@ function PracticePlayer({
 
       {isComplete ? (
         <section className="practice-complete">
-          <h2>練習完成 Practice Complete</h2>
+          <h2>練習完成</h2>
 
-          <p>你已完成整堂 Practice。</p>
+          <p>你已完成整堂練習。</p>
 
           <div className="practice-complete-actions">
             <button onClick={restart}>
@@ -170,11 +170,11 @@ function PracticePlayer({
 
       <section className="practice-player-controls">
         <button onClick={goPrevious} disabled={currentIndex === 0}>
-          上一個 Module
+          上一個練習單元
         </button>
 
         <button onClick={goNext} disabled={isComplete}>
-          下一個 Module
+          下一個練習單元
         </button>
       </section>
     </div>

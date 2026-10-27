@@ -15,7 +15,7 @@ function FoundationPage() {
     return (
       <div className="foundation-page">
         <h1>找不到課程</h1>
-        <p>此 Foundation 不存在。</p>
+        <p>此新手必修課程不存在。</p>
       </div>
     )
   }

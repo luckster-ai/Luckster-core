@@ -255,7 +255,7 @@ function AccountPage() {
               what actually ended it and this page has no way to know
               which. */}
           <p>
-            <strong>Bunny Module 使用時間：</strong>
+            <strong>練習單元觀看時間：</strong>
             {formatVideoDuration(usageSummary.usedSeconds)} / {formatVideoDuration(usageSummary.totalSeconds)}
           </p>
 

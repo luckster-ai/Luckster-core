@@ -164,7 +164,7 @@ function VideoModule({
 
       {showCappedNotice && (
         <div className="video-capped-notice">
-          <p>訪客與試用期已結束的會員，每個 Module 僅能試看 10 秒。</p>
+          <p>訪客與試用期已結束的會員，每個練習單元僅能試看 10 秒。</p>
           <Link to="/account">登入或查看會員狀態</Link>
         </div>
       )}

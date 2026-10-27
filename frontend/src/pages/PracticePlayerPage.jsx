@@ -113,7 +113,7 @@ function PracticePlayerPage() {
     return (
       <div className="practice-page">
         <h1>找不到課程</h1>
-        <p>此 Practice 不存在。</p>
+        <p>此練習不存在。</p>
       </div>
     )
   }

@@ -103,7 +103,7 @@ function ModulePage() {
     return (
       <div className="module-page">
         <h1>找不到課程</h1>
-        <p>此 Module 不存在。</p>
+        <p>此練習單元不存在。</p>
       </div>
     )
   }
@@ -207,7 +207,7 @@ function ModulePage() {
 
       {showCappedNotice && (
         <div className="video-capped-notice">
-          <p>訪客與試用期已結束的會員，每個 Module 僅能試看 10 秒。</p>
+          <p>訪客與試用期已結束的會員，每個練習單元僅能試看 10 秒。</p>
           <Link to="/account">登入或查看會員狀態</Link>
         </div>
       )}

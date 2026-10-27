@@ -117,7 +117,7 @@ function PickerPieceCard({ module, disabled, reason, onAdd, membershipStatus }) 
 
           {showCappedNotice && (
             <div className="video-capped-notice">
-              <p>訪客與試用期已結束的會員，每個 Module 僅能試看 10 秒。</p>
+              <p>訪客與試用期已結束的會員，每個練習單元僅能試看 10 秒。</p>
               <Link to="/account">登入或查看會員狀態</Link>
             </div>
           )}
@@ -144,14 +144,14 @@ function ModulePickerCanvas({ category, modules, currentSectionIds, disabledIds,
     .filter((module) => revealAddedInPlace || !currentSectionIds.includes(module.id))
 
   if (candidates.length === 0) {
-    return <p className="canvas-picker-empty">目前沒有屬於「{category}」的 Module。</p>
+    return <p className="canvas-picker-empty">目前沒有屬於「{category}」的練習單元。</p>
   }
 
   const groups = groupModulesBySubcategory(candidates)
 
   return (
     <div className="canvas-picker">
-      <p className="canvas-picker-label">可加入的 Module</p>
+      <p className="canvas-picker-label">可加入的練習單元</p>
 
       {groups.map((group) => (
         <div className="canvas-picker-group" key={group.subcategory ?? '__ungrouped'}>

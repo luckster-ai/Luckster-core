@@ -31,7 +31,7 @@ export const SECTIONS = [
     min: 1,
     max: 1,
     appliesTo: [PRACTICE_TYPES.FULL, PRACTICE_TYPES.MEDITATION],
-    guidance: '必須 1 部影片，固定位於 Practice 開頭。'
+    guidance: '必須 1 部影片，固定位於練習開頭。'
   },
   {
     key: 'warmup',
@@ -41,7 +41,7 @@ export const SECTIONS = [
     min: 0,
     max: 3,
     appliesTo: [PRACTICE_TYPES.FULL, PRACTICE_TYPES.MEDITATION],
-    guidance: '可選 1–3 部影片。若所選 Asana（或第一個 Meditation Module）本身已包含熱身功能，可省略。'
+    guidance: '可選 1–3 部影片。若所選 Asana（或第一個 Meditation 練習單元）本身已包含熱身功能，可省略。'
   },
   {
     key: 'asana',
@@ -51,7 +51,7 @@ export const SECTIONS = [
     min: 0,
     max: 1,
     appliesTo: [PRACTICE_TYPES.FULL, PRACTICE_TYPES.MEDITATION],
-    guidance: '可選，最多 1 部影片。加入 Asana 即成為 Full Practice；不加入則為 Meditation Practice。'
+    guidance: '可選，最多 1 部影片。加入 Asana 即成為完整練習；不加入則為冥想練習。'
   },
   {
     key: 'relaxation',
@@ -61,7 +61,7 @@ export const SECTIONS = [
     min: 0,
     max: 1,
     appliesTo: [PRACTICE_TYPES.FULL, PRACTICE_TYPES.MEDITATION],
-    guidance: '可選 1 部影片，須發生在 Asana 之後；可放在 Meditation 之前或之後。若所選 Module 本身已包含放鬆功能，可省略。'
+    guidance: '可選 1 部影片，須發生在 Asana 之後；可放在 Meditation 之前或之後。若所選練習單元本身已包含放鬆功能，可省略。'
   },
   {
     key: 'meditation',
@@ -81,7 +81,7 @@ export const SECTIONS = [
     min: 1,
     max: 1,
     appliesTo: [PRACTICE_TYPES.FULL, PRACTICE_TYPES.MEDITATION],
-    guidance: '必須 1 部影片，固定位於 Practice 結尾。'
+    guidance: '必須 1 部影片，固定位於練習結尾。'
   }
 ]
 

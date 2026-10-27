@@ -153,7 +153,7 @@ function PracticeCompositionOverview({
   onSetRelaxationPosition
 }) {
   const totalLabel = totalDuration > 0 ? formatVideoDuration(totalDuration) : '尚未加入影片'
-  const typeLabel = practiceType === PRACTICE_TYPES.FULL ? '完整練習 Full Practice' : '冥想練習 Meditation Practice'
+  const typeLabel = practiceType === PRACTICE_TYPES.FULL ? '完整練習' : '冥想練習'
   const activeSectionConfig = sections.find((sectionConfig) => sectionConfig.key === activeWorkbenchSection) || null
 
   return (

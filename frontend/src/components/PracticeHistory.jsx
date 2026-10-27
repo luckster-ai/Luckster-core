@@ -21,7 +21,7 @@ function PracticeHistory({ sessions, officialById, loading }) {
     return (
       <section className="practice-history">
         <h2>練習歷史</h2>
-        <p>還沒有練習紀錄，開始一堂 Practice 後會顯示在這裡。</p>
+        <p>還沒有練習紀錄，開始一堂練習後會顯示在這裡。</p>
       </section>
     )
   }
@@ -53,9 +53,9 @@ function PracticeHistory({ sessions, officialById, loading }) {
                     <Link to={`/practices/${practice.slug}`}>{practice.chineseTitle}</Link>
                   ) : (
                     <span>
-                      {resolveModuleTitles(session.module_ids).join('、') || '（此 Practice 內容目前無法顯示）'}
+                      {resolveModuleTitles(session.module_ids).join('、') || '（此練習內容目前無法顯示）'}
                       <br />
-                      <small>此 Practice 目前只存在建立時的裝置，無法在這裡開啟。</small>
+                      <small>此練習目前只存在建立時的裝置，無法在這裡開啟。</small>
                     </span>
                   )}
 

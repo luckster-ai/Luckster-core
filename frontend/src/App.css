@@ -648,6 +648,32 @@ footer {
   margin-bottom: 8px;
 }
 
+.practice-card-badge--resume {
+  margin-left: 6px;
+  background: #f4e7a1;
+  color: #3a3a3a;
+}
+
+.practice-resume-note {
+  color: #8a7b54;
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+/* W14: marks 新手必修 as free (YouTube content, no sign-up needed). */
+.free-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: #f4e7a1;
+  color: #3a3a3a;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 1.6;
+  vertical-align: middle;
+}
+
 .practice-card-meta {
   color: #8a7b54;
   font-size: 14px;

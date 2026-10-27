@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import modules from '../data/modules'
 import foundations from '../data/foundations'
-import formatDuration from '../utils/formatDuration'
+import formatDuration, { formatVideoDuration } from '../utils/formatDuration'
 import { calculatePracticeDuration } from '../utils/calculatePracticeDuration'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
 import { getCustomPractice } from '../state/customPracticeStore'
@@ -72,11 +72,11 @@ function PracticePage() {
     ? resolvePracticeModules(practice, modules).map((module) => module.id).join('|')
     : ''
 
-  // Resume (Phase 5E): a 1-12h unfinished session for this Practice makes
-  // the single 開始練習 button become 繼續練習 / 重新開始 (see the CTA
-  // block below). <=1h resumes silently in the Player, so it stays a
-  // single 開始練習 here.
-  const [resume, setResume] = useState({ practiceId: null, done: false, mode: 'none' })
+  // Resume (Phase 5E; Website Refinement M8a): any unfinished session
+  // within the 12h window ('auto' or 'offer') makes the single 開始練習
+  // button become 繼續練習 / 重新開始, with the last position shown, so a
+  // resume is never silent from this page.
+  const [resume, setResume] = useState({ practiceId: null, done: false, evaluation: { mode: 'none' } })
 
   useEffect(() => {
     if (!practiceId) return
@@ -90,7 +90,7 @@ function PracticePage() {
       setResume({
         practiceId,
         done: true,
-        mode: evaluateResumableSession(session, currentModuleIds).mode
+        evaluation: evaluateResumableSession(session, currentModuleIds)
       })
     })
 
@@ -120,7 +120,7 @@ function PracticePage() {
     return (
       <div className="practice-page">
         <h1>找不到課程</h1>
-        <p>此 Practice 不存在。</p>
+        <p>此練習不存在。</p>
       </div>
     )
   }
@@ -152,7 +152,7 @@ function PracticePage() {
 
         {isLoggedIn && missingPrerequisites.length > 0 && (
           <div className="prerequisite-notice">
-            <p>建議先完成以下先備知識，再開始這堂 Practice：</p>
+            <p>建議先完成以下先備知識，再開始這堂練習：</p>
 
             <ul>
               {missingPrerequisites.map((item) => (
@@ -170,14 +170,19 @@ function PracticePage() {
 
         {practice.isCustom && (
           <p className="practice-custom-note">
-            這是你建立的 Practice，儲存在此裝置的瀏覽器中（尚未提供跨裝置同步）。
+            這是你建立的練習，儲存在此裝置的瀏覽器中（尚未提供跨裝置同步）。
           </p>
         )}
 
         {!(resume.done && resume.practiceId === practiceId) ? (
           <p>載入中…</p>
-        ) : resume.mode === 'offer' ? (
+        ) : resume.evaluation.mode !== 'none' ? (
           <>
+            <p className="practice-resume-note">
+              上次看到第 {resume.evaluation.moduleIndex + 1} 個練習單元{' '}
+              {formatVideoDuration(Math.floor(resume.evaluation.positionSeconds))}
+            </p>
+
             <Link to={`/practices/${slug}/play?resume=1`} className="button">
               繼續練習
             </Link>
@@ -194,13 +199,13 @@ function PracticePage() {
 
         {practice.isCustom && (
           <Link to={`/practice/build?edit=${slug}`} className="button secondary">
-            編輯 Practice
+            編輯練習
           </Link>
         )}
       </section>
 
       <section className="practice-sequence-section">
-        <h2>今日練習 Today's Practice</h2>
+        <h2>今日練習</h2>
 
         <ol className="practice-sequence">
           {orderedModules.map((module, index) => (

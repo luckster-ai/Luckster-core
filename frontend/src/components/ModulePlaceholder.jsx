@@ -29,7 +29,7 @@ function ModulePlaceholder({ module, onEnded }) {
       <p>{module.summary}</p>
 
       <p className="module-placeholder-note">
-        影片內容尚未上線，{secondsLeft} 秒後自動進入下一個 Module。
+        影片內容尚未上線，{secondsLeft} 秒後自動進入下一個練習單元。
       </p>
     </div>
   )

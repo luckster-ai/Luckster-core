@@ -67,6 +67,15 @@ body {
   box-sizing: border-box;
 }
 
+/* Below the 1126px column width #root spans the whole viewport, so the
+   template's side borders sit on the screen edges and show as thin light
+   lines next to full-width dark sections (About page, mobile). */
+@media (max-width: 1126px) {
+  #root {
+    border-inline: 0;
+  }
+}
+
 h1,
 h2 {
   font-family: var(--heading);
