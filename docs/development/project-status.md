@@ -1088,7 +1088,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 | 4 | 把 Foundation、Practice、Module 等英文改成一般使用者能理解的中文名稱 | 內容＋UI 字串 | **完成（2026-10-27）**：新手必修／練習／練習單元；`terminology.md` 已同步。契約與 `pricing.js` 的「Module 影片」等用語，待 Contract v1.0 定稿時一併改為「練習單元」 |
 | 5 | 新手必修的影片加封面 | 視覺（需要圖片素材） | TODO |
 | 6 | 完整練習（主要產品）優化文案與封面 | 內容＋視覺 | TODO（先確認目前產品定位與頁面結構；封面機制和第 5 項共用） |
-| 7 | 使用者自建練習：沒有記錄觀看未完成的位置、無法「繼續觀看」、跨裝置沒有同步 | 功能 UX | **M8a 完成（2026-10-27）**：12 小時內明確顯示繼續練習／重新開始與上次進度，我的練習標示未完成。**M8b 跨裝置同步**：決定在正式網站完成前做，資料庫方案待確認 |
+| 7 | 使用者自建練習：沒有記錄觀看未完成的位置、無法「繼續觀看」、跨裝置沒有同步 | 功能 UX | **M8a 完成（2026-10-27）**。**M8b 程式完成，TEST 驗證通過（2026-10-27），待 Production DB 套用**：新表 `custom_practices`（`supabase/schema_custom_practices.sql`：PK `(user_id, id)`、只有本人可讀寫、Admin 與 anon 無權限、`updated_at` 由 trigger 維護）；登入後把 localStorage 的自建練習以 insert-on-conflict-do-nothing 遷移，寫入成功才清除對應的本機副本；訪客仍用 localStorage。TEST 驗證：RLS 模擬（本人可寫讀、冒用他人 user_id／轉移資料列／空清單皆擋下、他人與 anon 讀不到）、遷移、重複遷移（資料庫版本保留）、清空本機後直接開啟練習頁與編輯頁、Builder 儲存（`builder_sections` 來回一致）、練習歷史跨裝置連結 |
 | 8 | 「關於 JOTI」人物圖片改成經營者本人 | 內容（需要照片素材） | TODO |
 | 9 | 「關於 JOTI」手機畫面，有底色的圖片出現細邊 | 視覺 bug | **完成（2026-10-27）**：原因是 `#root` 左右 1px 範本邊框，1126px 以下移除 |
 | 10 | JOTI App Icon（加入手機主畫面後像正式 App 入口） | 視覺＋設定 | TODO。現況（2026-10-27）：`frontend/public/favicon.svg` 仍是 Vite 範本的預設圖示（紫色閃電，不是 JOTI 品牌）；`icons.svg` 也是範本遺留、程式沒有引用；**沒有** web app manifest、`apple-touch-icon`、各尺寸 PNG icon、`theme-color`，也沒有 service worker。`docs/brand/brand-guide.md` 有品牌色（暖白、香檳金、柔光淡黃、深灰），但 repo 裡沒有 Logo 圖檔 |
@@ -1152,6 +1152,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（網站優化：batch 1 已合併 `main` 並部署 Production；M8b 跨裝置同步程式完成、TEST 驗證通過，待 Production DB 套用後再合併前端）
 
 2026-10-27（網站優化：M7 用語、W14 免費標籤、M8a 明確接續、W16 手機細邊完成，TEST Preview 驗證通過；待合併 `main`）
 
