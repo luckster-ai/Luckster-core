@@ -905,7 +905,12 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
   - project ref 少打一個字母，導致 DNS 查不到（已更正）
   - 步驟與結果已寫入 `joti-ops` `docs/dr-runbook.md` 的 Drill log
 - **追蹤事項**：
-  - **TODO（安全，獨立任務，下一步）**：`master-v1` → `master-v2` 輪換（2026-10-27：`recipients.txt` 已改為 `master-v2`＋`drill-v1`，`check-recipients.py` 驗證通過，joti-ops 已 commit；**Pending（驗證）**：下一份 backup 的 Release recipients 應為 `master-v2,drill-v1`，並以 master-v2 實際解密一次）
+  - ~~**TODO（安全，獨立任務，下一步）**：`master-v1` → `master-v2` 輪換~~——**2026-10-27 完成**：
+    - joti-ops `9b29c44` 把 `recipients.txt` 改為 `master-v2`＋`drill-v1`，`check-recipients.py` 驗證通過
+    - 手動執行 backup run #22 成功，產生 Release `backup-20261027-0247Z`，Recipients 為 `master-v2,drill-v1`
+    - 經營者在本機用 master-v2 解密成功：SHA-256 與 Release 一致，`check-backup.py` 通過；之後已刪除私鑰暫存檔與解密檔
+    - 輪換前的 Release 仍為 `master-v1,drill-v1`，沒有修改
+    - master-v1 私鑰標註為「已外洩，只用於舊備份」，保留到最後一份 v1 備份依保存期限淘汰（約 2027-10-27），舊備份不重新加密
     - 經營者用 `age-keygen` 產生 `master-v2`，私鑰只放進密碼管理器
     - 更新 `joti-ops` 的 `recipients.txt`（`master-v2`＋`drill-v1`）
     - 舊備份依保存期限自然淘汰，不重新加密；最後一份 master-v1 備份淘汰前，master-v1 私鑰仍需保留（ADR 0005）
@@ -1091,6 +1096,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（master-v2 輪換完成：backup run #22 → `backup-20261027-0247Z` Recipients `master-v2,drill-v1`，master-v2 實際解密驗證通過）
 
 2026-10-27（master key 輪換：joti-ops `recipients.txt` 改為 `master-v2`＋`drill-v1`；master-v1 退役但保留至最後一份 v1 備份淘汰（約 2027-10-27）；待下一份 backup 確認）
 
