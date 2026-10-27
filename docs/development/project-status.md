@@ -1085,12 +1085,13 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 | 1 | 首頁第一眼看不出「昆達里尼瑜伽」 | 內容／文案（Hero） | TODO |
 | 2 | 文字排版（參考 audit W13：全站置中、固定欄寬） | 視覺／UI（全站 CSS） | TODO |
 | 3 | 首頁「新手必修」要凸顯是免費課程 | 內容／文案 | TODO（先確認目前試用與 entitlement 中新手必修的實際開放範圍，文案不能和實際規則不一致） |
-| 4 | 把 Foundation、Practice、Module 等英文改成一般使用者能理解的中文名稱 | 內容＋UI 字串 | TODO（先盤點實際出現位置，再決定名詞與替換範圍；**契約 v1 第二條、第四條也使用「Module 影片」等名詞**，要在 Contract v1.0 定稿前決定，避免定稿後用語不一致） |
+| 4 | 把 Foundation、Practice、Module 等英文改成一般使用者能理解的中文名稱 | 內容＋UI 字串 | TODO（已有 `docs/brand/terminology.md` 定義名詞與「先理解，再認識原始名稱」原則，以它為基礎，不重新決定；先盤點實際出現位置，再決定替換範圍；**契約 v1 第二條、第四條也使用「Module 影片」等名詞**，要在 Contract v1.0 定稿前決定，避免定稿後用語不一致） |
 | 5 | 新手必修的影片加封面 | 視覺（需要圖片素材） | TODO |
 | 6 | 完整練習（主要產品）優化文案與封面 | 內容＋視覺 | TODO（先確認目前產品定位與頁面結構；封面機制和第 5 項共用） |
 | 7 | 使用者自建練習：沒有記錄觀看未完成的位置、無法「繼續觀看」、跨裝置沒有同步 | 功能 UX | TODO（**先做現況 Discovery**）。已知：自建練習存在瀏覽器 `localStorage`，設計上就是單一裝置，沒有跨裝置同步；繼續觀看使用 `practice_sessions`（`practice_id` 為 text），是否適用自建練習待確認 |
 | 8 | 「關於 JOTI」人物圖片改成經營者本人 | 內容（需要照片素材） | TODO |
 | 9 | 「關於 JOTI」手機畫面，有底色的圖片出現細邊 | 視覺 bug | TODO |
+| 10 | JOTI App Icon（加入手機主畫面後像正式 App 入口） | 視覺＋設定 | TODO。現況（2026-10-27）：`frontend/public/favicon.svg` 仍是 Vite 範本的預設圖示（紫色閃電，不是 JOTI 品牌）；`icons.svg` 也是範本遺留、程式沒有引用；**沒有** web app manifest、`apple-touch-icon`、各尺寸 PNG icon、`theme-color`，也沒有 service worker。`docs/brand/brand-guide.md` 有品牌色（暖白、香檳金、柔光淡黃、深灰），但 repo 裡沒有 Logo 圖檔 |
 
 ## In Progress
 
@@ -1151,6 +1152,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（網站優化新增第 10 項 App Icon：目前 favicon 是 Vite 預設、沒有 manifest／apple-touch-icon；第 4 項以既有 `terminology.md` 為基礎）
 
 2026-10-27（新增「網站優化」9 項，不是付費上線 blocker；第 4 項名詞需在 Contract v1.0 定稿前決定，第 7 項先做現況 Discovery）
 
