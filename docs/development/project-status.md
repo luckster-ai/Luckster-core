@@ -24,6 +24,8 @@
 
 ## Current Phase
 
+> **目前狀態（2026-10-27）**：Paid Membership Launch Preparation。網站已在 `joti.yoga`（Cloudflare Pages）上線，可免費試用，付費購買維持關閉。不依賴綠界的 Launch prerequisite 都已完成：Hosting、Production validation、Production Auth、Google OAuth 發布、Backup Phase 1、hosted DR drill、master-v2 輪換、Supabase 維持 Free、Admin 角色、每日 reconciliation 程序。**正式開放付費會員目前只等綠界**，見「Waiting on ECPay」。本節以下的段落是較早的歷史敘述，現況以這段摘要和各 Step 11 小節為準。
+
 **核心學習系統（Foundation / Module / Practice / Auth / Membership）已完成並上線。**
 
 **JOTI Legal / Business Model v1（Membership Service Basic Agreement + Service Period）已確立並整理成文件。**
@@ -48,7 +50,7 @@
 - 目前沒有正式付費會員。
 - 目前沒有任何正式會員 acceptance record。
 - 尚未有消費者依 JOTI 合約完成正式訂閱／接受契約。
-- Vercel 上已有網站部署，**不代表** JOTI 已經正式開始商業營運。
+- 網站已在 `joti.yoga`（Cloudflare Pages）提供免費試用，付費購買仍關閉（`VITE_ENABLE_PURCHASE` 未設定），**不代表** JOTI 已經正式開始商業營運。（2026-10-27 更新；原記載為 Vercel 部署，Vercel 已於 2026-10-24 退場）
 
 ### Contract Status
 
@@ -99,7 +101,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ### Final Website Domain
 
 - JOTI 正式網站網域**已確定為 `joti.yoga`**（2026-10-12 Production Readiness Discovery 確認）。
-- **尚未綁定**：依決策，待 Production 環境（Supabase Production 專案、Auth、SMTP、health check 等）準備完成後才綁定 `joti.yoga`；在此之前不設定 DNS／Vercel／Supabase 網域。
+- ~~**尚未綁定**：依決策，待 Production 環境準備完成後才綁定 `joti.yoga`~~——**2026-10-24 已綁定**到 Cloudflare Pages 專案 `joti`，Production Supabase Site URL／Redirect URLs 也已改為 `joti.yoga`
 - 因此目前仍不能把 Vercel deployment URL 當成最終正式網站網址。
 - ~~法律文件中的 `[待填寫]`（網站欄位）目前仍存在，**原因是正式網域尚未綁定上線**，不是因為合約仍處於法律草案狀態；何時填入 `joti.yoga`（綁定前或綁定後）尚未決定。~~——2026-10-25：`joti.yoga` 已上線，契約與 `v1.0.md` 第一條網站欄位已填入 `https://joti.yoga`
 
@@ -1055,6 +1057,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 | 6 | **主機 IP 鎖定**是否只是選用（Q3） | 如果是必要，需要固定 IP proxy（目前列為不做的 PoC） | **需確認** |
 | 7 | **AIO 付款頁有效時間**（10300025「訂單已過期」） | JOTI 30 分鐘 Checkout Session 與「付款進行中」文案是否調整 | 品質（不阻擋） |
 
+- **確認信**：2026-10-27 已擬好給綠界的確認信（18 題，涵蓋 #1–#7），**待經營者寄出**；請以書面（電子郵件）回覆
 - **收到回覆後的順序**：#3、#4 → Contract v1.0 定稿並合併 `contract/v1-wip` → `contract_versions` v1.0 → 契約類 Functions、Admin → 測試帳號開始 3 日審閱（不必等 #1） → #1、#2 → 付款類 Functions＋LIVE secrets（`SITE_URL=https://joti.yoga`、`ACTIVE_PAYMENT_PROVIDER=ecpay`）→ Production E2E（小額真實付款＋DoAction 退款，同時實測手續費）→ Cloudflare `joti` 開啟 `VITE_ENABLE_PURCHASE=true`、設定 `effective_at`
 - **不是等綠界的事項**：PAYUNi 申請是否撤回（經營者自行決定）；11/19 之後的 Preview → ECPay 補測（不阻擋）
 
@@ -1083,6 +1086,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 
 ## Next Steps
 
+> 2026-10-27：本節多數項目是較早的歷史紀錄，部分已過時（例如 Vercel、TEST Site URL）。目前的上線順序以「Waiting on ECPay」為準。
+
 1. **修正 TEST Supabase 專案（`ngznngqmbhxejkjbqomh`）Auth 的 `Site URL`**（2026-10-13 更新：Redirect URLs 已含 `https://joti-*-jotiyoga.vercel.app/**`，Preview 上 Email + Password／驗證信／重設密碼／Google 登入已實測成功，不再阻塞 Preview 登入；`Site URL` 仍為 `localhost:4190`，僅作為 fallback；本機開發若要測重設密碼，`http://localhost:5173/auth/reset-password` 尚未加入允許清單）：原記載如下——影響目前連到 TEST 的 Preview／本機登入；Production 將使用獨立新專案，其 URL 設定屬於 Production 建置工作（見第 3 項），不在本項範圍。需要到 Supabase Dashboard（Authentication → URL Configuration）手動更新，把過期的 `localhost:4190` 與 Vercel 改名前的舊網址格式，換成目前實際使用中的 Production 別名與 Preview 萬用字元（`joti-*-jotiyoga.vercel.app`）。這是外部服務設定，不在 repo／CLI 範圍內，需要使用者或有權限的人親自操作。
 2. **Git checkpoint 現況**：先前「Payment Readiness Implementation Sprint 之後的累積工作（Legal/Contract Publication Refinement、Production Publication Polish、Mobile RWD Fix、Contract Terminology Cleanup 等）尚未 commit」的記載**已過時**——該批工作已於 `f22f412`（"refine legal publication readiness"）commit 並 push。`24755b6`（Step 11.1）、`0324c2d`（Step 11.2）、`8d9ec00`（project status）、`2acade2`（TEST Auth）**皆已 push 到 `origin/main`**（2026-10-13）。working tree 另有與上述無關的既有未提交變更（Legacy Oen subscription 修正、`frontend/package.json` 新增 `supabase` devDependency、Warm Up Module 內容、兩份 docs），維持不動。（2026-10-16 更新：`origin/main` 為 **`8592900`**——`8ac0bcd`（Purchase Entry 開關）與 A1 合併之 `dee932c`／`53df3cf`／`8592900` 皆已 push 並自動部署 Production；2026-10-16 PlanPurchase 409 修正亦已 push `main`）
 3. **Production 建置（Step 11，依「Step 11 — Production Readiness Discovery」決策）**：已完成 Production Project（`qhyfpabyqksuwjzshjtu`）建立、schema 套用、4 個 official practices 匯入、health check（GitHub Actions keep-alive，`fb15510`）、Resend `auth.joti.yoga` 網域驗證（2026-10-14 Verified）、**Production Auth（Email + Password + Google、Resend SMTP、Google OAuth；2026-10-15 E2E 驗證通過）**（見「Step 11 — Production Environment Build」與「Step 11 — Production Auth 完成」）；`contract_versions` v1.0 待正式上線時間確定後建立；前端 Email + Password Auth 已完成並經 TEST 驗證（`2acade2`）；接續——Admin 設定、Production Edge Functions／secrets；Vercel Production 已為新版並指向 Production Supabase（2026-10-16 起由 push `main` 經 Git integration 自動部署），最後綁定 `joti.yoga`；正式開放付款前升級 Pro（2026-10-20：改列 Future Decision，見「Step 11 — Production Hosting／$0 平台費用評估」）。（2026-10-20：`contract_versions` v1.0 建立前置條件與順序見「Step 11 — Production Environment Build」之「`contract_versions` 尚未建立」；目前尚不可建立）
@@ -1099,6 +1104,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Blockers
+
+> 2026-10-27：本節列出的項目都已解決或過時（TEST Site URL 現為 `https://joti-poc.pages.dev`、Vercel 已退場、Production Supabase 已建置）。**目前唯一的上線 blocker 是綠界外部依賴**，見「Waiting on ECPay」。
 
 - **TEST Supabase 專案 Auth `Site URL` 過期**（2026-10-13 更新：**已不阻塞 Preview 登入**——Redirect URLs 已含 Preview 萬用字元，Email + Password／Google 登入已於 Preview 實測成功；`Site URL` 仍為 `localhost:4190`，只在 redirect 不在允許清單時作為 fallback，仍建議修正）。原記載：目前會導致連到 TEST 專案的環境點擊登入都被導向 `localhost:4190` 並失敗。需要使用者本人到 Supabase Dashboard 手動更新，AI 無法代為修改外部服務設定。這是目前唯一會直接阻塞「會員實際完成登入」的問題，詳見上方「登入導向 localhost 問題」小節。**2026-10-01 已有第一手重現證據**（見同小節）：即使 `emailRedirectTo` 明確指定正確網址，TEST 專案實際寄出的 Magic Link，`redirect_to` 仍是 `localhost:4190`，不再只是根因推論。此項僅針對 TEST 專案；Production 改用獨立專案後不沿用此設定。
 - **Production Supabase 尚未完成建置**：Production 專案（`qhyfpabyqksuwjzshjtu`）、Database Schema、4 個官方 Practices 與 health check（2026-10-14 上線）已完成，**Production Auth（Email + Password + Google、Resend SMTP）已於 2026-10-15 完成並經 E2E 驗證**；Production Edge Functions／secrets 尚未建置（購買流程目前以 `VITE_ENABLE_PURCHASE` 關閉）；`joti.yoga` 依決策延後綁定。
@@ -1128,6 +1135,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（狀態整理：Current Phase 加上目前狀態摘要；Operational Status、Final Website Domain、Next Steps、Blockers 標註已過時內容；Waiting on ECPay 記錄確認信待寄出）
 
 2026-10-27（Production Admin 角色設定完成並驗證：`/account` 顯示 Admin、Header 有 Admin 連結、`/admin/practices` 列出 4 堂官方 Practice；更正 `practice_notes` 實際已建置；註明 Production E2E 需另用一般會員帳號）
 
