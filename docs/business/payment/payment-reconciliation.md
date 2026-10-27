@@ -21,10 +21,12 @@ from public.checkout_sessions
 where created_at >= now() - interval '24 hours'
 group by status;
 
--- B. Sessions still open after expiry (possible paid-but-not-fulfilled)
+-- B. Sessions that expired in the last 48 hours while still open. Most are abandoned checkouts
+--    (sessions are never closed when abandoned), but each must be checked in the ECPay back
+--    office: one that was paid there is a paid-but-not-fulfilled case.
 select id, user_id, merchant_trade_no, amount, expires_at
 from public.checkout_sessions
-where status = 'open' and expires_at < now();
+where status = 'open' and expires_at < now() and expires_at >= now() - interval '48 hours';
 
 -- C. Fulfilled sessions without a paid order, and rejected sessions (paid at ECPay but refused by JOTI: refund manually)
 select s.id, s.merchant_trade_no, s.status, s.order_id, s.reject_reason, o.status as order_status
@@ -59,7 +61,7 @@ where status = 'refund_failed'
 rollback;
 ```
 
-Expected result: A shows the day's activity; B–F return **no rows**. Any row is a discrepancy.
+Expected result: A shows the day's activity. B lists recently abandoned checkouts: each must be absent from the ECPay successful-transaction list. C–F return **no rows**. Any other row is a discrepancy.
 
 ## 2. ECPay back office
 

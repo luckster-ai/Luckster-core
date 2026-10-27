@@ -1058,6 +1058,20 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 - **收到回覆後的順序**：#3、#4 → Contract v1.0 定稿並合併 `contract/v1-wip` → `contract_versions` v1.0 → 契約類 Functions、Admin → 測試帳號開始 3 日審閱（不必等 #1） → #1、#2 → 付款類 Functions＋LIVE secrets（`SITE_URL=https://joti.yoga`、`ACTIVE_PAYMENT_PROVIDER=ecpay`）→ Production E2E（小額真實付款＋DoAction 退款，同時實測手續費）→ Cloudflare `joti` 開啟 `VITE_ENABLE_PURCHASE=true`、設定 `effective_at`
 - **不是等綠界的事項**：PAYUNi 申請是否撤回（經營者自行決定）；11/19 之後的 Preview → ECPay 補測（不阻擋）
 
+## Admin／營運管理（依既有 Discovery，2026-10-27 盤點）
+
+依據 2026-10-06 Step 11 Production Readiness Discovery 的「非阻塞但建議處理」，以及「Step 11 — Production Environment Build」的「Admin 尚未建立」：
+
+| 項目 | Discovery 結論 | 目前狀態 |
+|---|---|---|
+| Production Admin 角色（`profiles.role = 'admin'`） | 需要；待第一個正式帳號建立後設定 | **TODO，下一步**：第一個正式帳號已存在，尚未設定。這需要在 Production 寫入資料，Claude Code 的權限規則擋下了 Production 查詢，所以由經營者在 Supabase SQL Editor 執行，或另外授權。`protect_profile_system_fields` 只擋 `authenticated` 角色，SQL Editor 可以正常更新 |
+| Admin 查看 Orders／Payments／Refunds 的頁面 | 初期可用 Supabase Dashboard 直接查表，**建議上線後第一批補上** | 上線初期改用每日唯讀 reconciliation（`payment-reconciliation.md`）；頁面列為上線後第一批 |
+| `expire_pending_orders()` 排程 | 逾期訂單會停在 `pending_payment` | **不需要**：ECPay 流程（`create-order-checkout` 的 Checkout Session 分支）只在付款成功時建立 Order，不會產生 `pending_payment`；這個函式只和舊 Oen 的 order-first 流程有關。Checkout Session 過期由 `expires_at` 判斷，放棄付款的 session 由 reconciliation 查詢 B 檢查 |
+| 錯誤追蹤／監控（Sentry 等） | 非阻塞 | 上線後再評估；目前靠 Supabase／Cloudflare log、Healthchecks、GitHub 通知 |
+| 留言／公開內容的 Admin moderation | 未來原則（Phase 5C 前不建置） | 不在目前範圍；`practice_notes` 尚未建置 |
+
+- 2026-10-27 一併修正 `payment-reconciliation.md` 查詢 B：只檢查最近 48 小時內過期且仍為 open 的 session，避免所有放棄付款的 session 每天都被列為異常
+
 ## In Progress
 
 - **新增 3 個 Warm Up Module**（`MW005` 脊椎彎曲熱身、`MW006` 脊椎扭轉熱身、`MW007` 貓牛式熱身）：`.md` 內容（Summary / Description / Learning Outcomes / Tags / Prerequisites）已撰寫，**尚未上傳 Bunny 影片**（`.md` 的 `Primary Video URL` 是空的），**尚未加入 `data/modules.js`**，未 commit。
@@ -1113,6 +1127,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-27（Admin／營運管理盤點：Production Admin 角色是下一步，待經營者執行；Orders 查詢頁列為上線後第一批；`expire_pending_orders` 排程在 ECPay 流程中不需要；修正 reconciliation 查詢 B）
 
 2026-10-27（新增「Waiting on ECPay」彙整：正式特店與 LIVE 金鑰、ReturnURL、退款手續費書面說明、退款期限、一般賣家、IP 鎖定、付款頁有效時間，以及收到回覆後的上線順序）
 
