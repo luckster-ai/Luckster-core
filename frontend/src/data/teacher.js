@@ -5,8 +5,9 @@
 const teacher = {
   name: "Joti Livdeep Kaur",
 
-  description:
-    "從金融業到瑜伽老師，Joti 用十多年的時間，一步步找回屬於自己的力量與平靜。"
+  // W13: phrases only control line breaks (components/Phrases.jsx) --
+  // one line on desktop, one phrase per line on phones.
+  description: ["從金融業到瑜伽老師，", "Joti 用十多年的時間，", "一步步找回屬於自己的力量與平靜。"]
 }
 
 export default teacher

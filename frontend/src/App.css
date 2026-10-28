@@ -12,9 +12,35 @@ body {
   padding: 24px 48px;
 }
 
-.logo {
+/* The logo is the home link: Brand Gold (#D9C6A5, the color
+   docs/brand/brand-guide.md assigns to the logo) with an underline so it
+   reads as clickable -- the same in the :visited state, never the
+   browser's default blue/purple. */
+.logo,
+.logo:link,
+.logo:visited {
   font-size: 28px;
   font-weight: bold;
+  color: #d9c6a5;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+/* Logo + positioning line (member-facing pages, see Header.jsx). The line is
+   plain text, not part of the home link; on narrow screens it wraps as a
+   whole under the logo instead of breaking mid-phrase. */
+.brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 12px;
+}
+
+.brand-tagline {
+  color: #6b5d3a;
+  font-size: 17px;
+  font-weight: normal;
+  white-space: nowrap;
 }
 
 nav {
@@ -27,16 +53,21 @@ nav a {
   text-decoration: none;
 }
 
-.hero {
-  text-align: center;
-  padding: 72px 24px;
+/* Phone-only menu button (see Header.jsx); hidden on desktop. */
+.menu-toggle {
+  display: none;
 }
 
-/* The image now sits BELOW the CTAs (see HeroSection.jsx) so the CTAs
-   land in the first viewport; it gets top margin instead of bottom. */
+.hero {
+  text-align: center;
+  padding: 48px 24px 72px;
+}
+
+/* The image opens the Hero (see HeroSection.jsx); the H1's own top
+   margin spaces the text below it. */
 .hero-image {
   max-width: 640px;
-  margin: 48px auto 0;
+  margin: 0 auto;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -51,8 +82,12 @@ nav a {
   object-position: center;
 }
 
+/* Top margin is generous on purpose: the H1 sits under the image and its
+   line box is shorter than its glyphs (inherited fixed line-height, a
+   separate W13 item), so the glyphs reach above the box. */
 .hero h1 {
   font-size: 56px;
+  margin-top: 56px;
   margin-bottom: 16px;
 }
 
@@ -222,6 +257,39 @@ a.card {
   display: block;
   color: inherit;
   text-decoration: none;
+}
+
+/* W13: see components/Phrases.jsx -- a line only breaks between
+   phrases. On phones, .phrase--mobile-line puts each phrase on its own
+   line (rule in the 手機 media query below). */
+.phrase {
+  display: inline-block;
+}
+
+/* W13: course card descriptions are reading text -- a left-aligned
+   bullet list with a light gold dot and a hanging indent, so wrapped
+   lines align with the text. The card title keeps its centered design. */
+.course-card-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.course-card-points li {
+  position: relative;
+  padding-left: 1em;
+}
+
+.course-card-points li + li {
+  margin-top: 8px;
+}
+
+.course-card-points li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #c9b28c;
 }
 
 footer {
@@ -672,6 +740,7 @@ footer {
   font-weight: normal;
   line-height: 1.6;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .practice-card-meta {
@@ -1809,9 +1878,58 @@ footer {
 
 @media (max-width: 768px) {
 
+  /* Header: brand row + menu button; the nav opens as a plain list
+     under it (Header.jsx toggles .header--menu-open). */
   .header {
+    flex-wrap: wrap;
+    column-gap: 8px;
+    padding: 16px 24px;
+  }
+
+  .brand {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .menu-toggle {
+    display: flex;
     flex-direction: column;
-    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    margin: 0 -10px 0 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  .menu-toggle-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 1px;
+    background: #3a3a3a;
+  }
+
+  .header .site-nav {
+    display: none;
+  }
+
+  .header--menu-open .site-nav {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+    gap: 0;
+    margin-top: 12px;
+    border-top: 1px solid #e8e1d0;
+  }
+
+  .header--menu-open .site-nav a {
+    padding: 14px 0;
+    border-bottom: 1px solid #efe9dc;
+    text-align: left;
   }
 
   nav {
@@ -1819,21 +1937,45 @@ footer {
     justify-content: center;
   }
 
+  /* Mobile first viewport: tighter Hero spacing so more of the photo
+     shows; desktop spacing is unchanged. */
   .hero {
-    padding: 44px 24px;
+    padding: 24px 24px 44px;
   }
 
   .hero-image {
     max-width: 1000px;
-    margin-top: 32px;
   }
 
   .hero h1 {
     font-size: 40px;
+    margin-top: 40px;
+  }
+
+  .hero-title-en {
+    margin-bottom: 16px;
+  }
+
+  .hero-encouragement {
+    margin-top: 12px;
+  }
+
+  .hero-cta {
+    margin-top: 20px;
+  }
+
+  .hero-cta .button {
+    margin: 0;
   }
 
   .hero-mission {
-    font-size: 18px;
+    font-size: 17px;
+    font-weight: normal;
+    line-height: 2;
+  }
+
+  .phrase--mobile-line {
+    display: block;
   }
 
   .hero-message {

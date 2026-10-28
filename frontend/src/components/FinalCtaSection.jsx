@@ -8,6 +8,10 @@ import { Link } from 'react-router-dom'
 // Payment Readiness Implementation Sprint (2026-09): 訂閱會員 now points
 // at /pricing (was /login, same as 免費體驗). 免費體驗 keeps its existing
 // /login behaviour -- unchanged, per Sprint scope.
+//
+// Website Refinement (2026-10): the secondary button now reads 購買方案
+// (was 訂閱會員) so it doesn't suggest an automatic recurring charge;
+// same /pricing link.
 function FinalCtaSection() {
   return (
     <section className="home-final-cta">
@@ -19,7 +23,7 @@ function FinalCtaSection() {
         </Link>
 
         <Link to="/pricing" className="button secondary">
-          訂閱會員
+          購買方案
         </Link>
       </div>
     </section>
