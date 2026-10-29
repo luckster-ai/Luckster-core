@@ -1,56 +1,50 @@
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { formatVideoDuration } from '../utils/formatDuration'
-import { stripMarkdownSection, stripSectionIfEmpty } from '../utils/stripMarkdownSection'
+import { getMarkdownSection } from '../utils/stripMarkdownSection'
 
-function toFoundationOverviewContent(markdown) {
-  let result = markdown.replace(/^#\s+.+\n+/, '')
-  result = stripMarkdownSection(result, '##\\s*Basic Information')
-  result = stripMarkdownSection(result, '##\\s*Summary')
-  result = stripMarkdownSection(result, '##\\s*Lessons')
-  result = stripMarkdownSection(result, '##\\s*Tags')
-  result = stripMarkdownSection(result, '###\\s*Video')
-  result = stripSectionIfEmpty(result, '###\\s*Transcript')
-  result = stripSectionIfEmpty(result, '###\\s*Resources')
-  result = stripSectionIfEmpty(result, '##\\s*Sources')
-  return result
-}
-
+// Multi-lesson Foundation page (基本坐姿 / 練習環境與裝備 / 基本的手印).
+// Top area: Chinese title, one English title, the longer Description
+// (left-aligned), then 課程列表. The short Summary is left out on purpose
+// -- the entry card on /foundations already shows it -- and so is 先備條件,
+// which each video page (LessonDetail.jsx) shows instead. Lesson cards
+// reuse the /foundations card format (FoundationCard.jsx).
 function FoundationOverview({ foundation, markdown }) {
-  const overviewContent = toFoundationOverviewContent(markdown)
+  const description = getMarkdownSection(markdown, 'Description')
 
   return (
     <>
-      <Link to="/foundations" className="practice-player-exit">
+      {/* Phones only -- on desktop the header's 新手必修 link is visible. */}
+      <Link to="/foundations" className="practice-player-exit back-mobile-only">
         ← 返回新手必修列表
       </Link>
 
-      <h1>{foundation.chineseTitle}</h1>
+      <h1 className="foundation-page-title">{foundation.chineseTitle}</h1>
 
       <p className="module-playback-subtitle">{foundation.title}</p>
 
-      <p>{foundation.summary}</p>
+      {description && (
+        <div className="foundation-overview-description">
+          <ReactMarkdown>{description}</ReactMarkdown>
+        </div>
+      )}
 
-      <ReactMarkdown>{overviewContent}</ReactMarkdown>
-
-      <h2>課程列表 Lessons</h2>
+      <h2 className="foundation-overview-lessons-title">課程列表</h2>
 
       <div className="cards">
-        {foundation.lessons.map((lesson, index) => (
+        {foundation.lessons.map((lesson) => (
           <Link
             key={lesson.slug}
             to={`/foundations/${foundation.slug}/${lesson.slug}`}
-            className="card"
+            className="card foundation-card"
           >
-            <p className="module-playback-subtitle">第 {index + 1} 課</p>
-
             <h3>{lesson.chineseTitle}</h3>
 
             <p className="module-playback-subtitle">{lesson.title}</p>
 
-            <p>影片時長：{formatVideoDuration(lesson.duration)}</p>
+            <p className="card-duration">影片時長：{formatVideoDuration(lesson.duration)}</p>
 
-            <p>{lesson.summary}</p>
+            {lesson.summary && <p className="card-description">{lesson.summary}</p>}
           </Link>
         ))}
       </div>

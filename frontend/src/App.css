@@ -461,6 +461,89 @@ footer {
   grid-template-columns: repeat(2, 1fr);
 }
 
+/* Foundation pages: the multi-lesson overview (FoundationOverview.jsx --
+   intro + lesson cards) and the video page (LessonDetail.jsx -- 建議先完成,
+   video, notes). Titles centered; reading text left-aligned. */
+/* Extra room around the title: its glyphs are taller than its line box
+   (inherited fixed line-height, a separate W13 item) and otherwise touch
+   the back link and the English title. */
+.foundation-page .foundation-page-title {
+  margin: 28px 0 32px;
+}
+
+.foundation-overview-description {
+  margin-top: 28px;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.foundation-overview-description p + p {
+  margin-top: 12px;
+}
+
+.foundation-overview-lessons-title {
+  margin: 48px 0 0;
+}
+
+.lesson-prerequisites {
+  margin: 0;
+  color: #6b5d3a;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.lesson-prerequisites a {
+  color: inherit;
+}
+
+/* Foundation back links (LessonDetail.jsx / FoundationOverview.jsx):
+   .back-mobile-only shows on phones only; .back-label-mobile adds the
+   phone wording (返回基本坐姿 → 返回基本坐姿列表). */
+.back-mobile-only,
+.back-label-mobile {
+  display: none;
+}
+
+.foundation-page .module-playback .card-duration {
+  margin-top: 16px;
+}
+
+/* Video notes: the Description and Learning Outcomes as two bullet
+   points (same light gold dot as the homepage course cards). */
+.lesson-notes {
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.lesson-notes > li {
+  position: relative;
+  padding-left: 1.2em;
+}
+
+.lesson-notes > li + li {
+  margin-top: 24px;
+}
+
+.lesson-notes > li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #c9b28c;
+}
+
+.lesson-notes p + p,
+.lesson-notes p + ul {
+  margin-top: 8px;
+}
+
+.lesson-notes ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
 .practice-complete-actions {
   display: flex;
   justify-content: center;
@@ -679,6 +762,31 @@ footer {
   margin-top: 48px;
 }
 
+/* Difficulty badge (初／中／高, see PracticeCard.jsx): a small circle
+   tucked into the top-right corner of the card's image. */
+.practice-card {
+  position: relative;
+}
+
+.practice-card-level {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #faf8f3;
+  border: 1px solid #d9c6a5;
+  color: #6b5d3a;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
 .practice-card-image {
   width: 100%;
   height: 140px;
@@ -743,15 +851,23 @@ footer {
   white-space: nowrap;
 }
 
-.practice-card-meta {
+/* Shared card text for 新手必修 (FoundationCard) and 完整練習
+   (PracticeCard): duration centered under the titles, description
+   left-aligned as reading text with clear space above it. */
+.card-duration {
   color: #8a7b54;
   font-size: 14px;
-  margin: 4px 0;
+  margin: 8px 0 0;
 }
 
-.practice-card-description {
+.card-description {
   font-size: 14px;
-  margin-top: 8px;
+  text-align: left;
+  margin-top: 16px;
+}
+
+.foundation-card .module-playback-subtitle {
+  margin: 4px 0 0;
 }
 
 /* ============================================================
@@ -1999,6 +2115,14 @@ footer {
   .foundation-page,
   .module-page {
     padding: 32px 16px;
+  }
+
+  .foundation-page .back-mobile-only {
+    display: inline-block;
+  }
+
+  .foundation-page .back-label-mobile {
+    display: inline;
   }
 
   .foundation-page .cards {

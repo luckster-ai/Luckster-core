@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import modules from '../data/modules'
 import { calculatePracticeDuration } from '../utils/calculatePracticeDuration'
-import formatDuration from '../utils/formatDuration'
+import { formatVideoDuration } from '../utils/formatDuration'
 import { resolvePracticeModules } from '../utils/resolvePracticeModules'
 import { getModuleThumbnailUrl } from '../utils/moduleThumbnail'
 
@@ -20,13 +20,24 @@ import { getModuleThumbnailUrl } from '../utils/moduleThumbnail'
 // already established for Modules (getModuleThumbnailUrl, from Sprint
 // 1A) against the Practice's first resolved Module -- a real thumbnail
 // from real repository data, not an invented asset.
+// Difficulty as a one-character badge in the card's top-right corner.
+// Values without a label (none, or an unknown one) show no badge.
+const DIFFICULTY_LABELS = { Beginner: '初', Intermediate: '中', Advanced: '高' }
+
 function PracticeCard({ practice, isCustom, resumable }) {
   const totalDuration = calculatePracticeDuration(practice, modules)
   const orderedModules = resolvePracticeModules(practice, modules)
   const thumbnailUrl = orderedModules[0] ? getModuleThumbnailUrl(orderedModules[0]) : null
+  const difficultyLabel = DIFFICULTY_LABELS[practice.difficulty]
 
   return (
     <Link to={`/practices/${practice.slug}`} className="card practice-card">
+      {difficultyLabel && (
+        <span className="practice-card-level" aria-label={`難度：${difficultyLabel}`} title={`難度：${difficultyLabel}`}>
+          {difficultyLabel}
+        </span>
+      )}
+
       <div className="practice-card-image">
         {thumbnailUrl ? (
           <img src={thumbnailUrl} alt={practice.chineseTitle} loading="lazy" />
@@ -40,13 +51,10 @@ function PracticeCard({ practice, isCustom, resumable }) {
 
       <h3>{practice.chineseTitle}</h3>
 
-      <p className="practice-card-meta">
-        {formatDuration(totalDuration)}
-        {practice.difficulty ? ` · ${practice.difficulty}` : ''}
-      </p>
+      <p className="card-duration">影片時長：{formatVideoDuration(totalDuration)}</p>
 
       {practice.description && (
-        <p className="practice-card-description">{practice.description}</p>
+        <p className="card-description">{practice.description}</p>
       )}
     </Link>
   )

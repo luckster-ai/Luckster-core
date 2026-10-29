@@ -1,26 +1,69 @@
 import { useRef } from 'react'
+import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import foundations from '../data/foundations'
 import { formatVideoDuration } from '../utils/formatDuration'
-import { stripMarkdownSection, stripSectionIfEmpty } from '../utils/stripMarkdownSection'
+import { getMarkdownSection } from '../utils/stripMarkdownSection'
 import VideoPlayer from './VideoPlayer'
 import { useLearnerStatus } from '../hooks/useLearnerStatus'
 import { LEARNER_STATUS } from '../utils/learnerStatus'
 
-function toLessonContent(markdown) {
-  let result = markdown.replace(/^#\s+.+\n+/, '')
-  result = stripMarkdownSection(result, '##\\s*Basic Information')
-  result = stripMarkdownSection(result, '##\\s*Summary')
-  result = stripMarkdownSection(result, '##\\s*Tags')
-  result = stripMarkdownSection(result, '###\\s*Video')
-  result = stripSectionIfEmpty(result, '###\\s*Transcript')
-  result = stripSectionIfEmpty(result, '###\\s*Resources')
-  result = stripSectionIfEmpty(result, '##\\s*Sources')
-  return result
+// Foundation video page (single-lesson Foundations and lessons opened
+// from a multi-lesson page). Order: Chinese title → English title →
+// 建議先完成 → video (+ 影片時長 in the card format) → notes. The notes are
+// the markdown's Description and Learning Outcomes as two bullet points,
+// without their English headings; the Summary is left out because the
+// card on the previous page already shows it.
+
+// 建議先完成 (prerequisites) come from the markdown's Prerequisites section (the authored
+// content; lesson.prerequisites in data/foundations.js misses some), as
+// ids like FD001 / FD005-L04 shown by Chinese title and linked. A
+// single-lesson Foundation links to its own page; an id that is also a
+// lesson of a multi-lesson Foundation (e.g. FD008) links to that lesson.
+function resolvePrerequisite(id) {
+  for (const foundation of foundations) {
+    const lesson = foundation.lessons.find((item) => item.id === id)
+    if (foundation.id === id && (foundation.lessons.length === 1 || !lesson)) {
+      return { id, title: foundation.chineseTitle, to: `/foundations/${foundation.slug}` }
+    }
+    if (lesson) {
+      return { id, title: lesson.chineseTitle, to: `/foundations/${foundation.slug}/${lesson.slug}` }
+    }
+  }
+  return null
 }
 
-function LessonDetail({ lesson, markdown }) {
+function getPrerequisiteIds(markdown, lesson) {
+  const ids = getMarkdownSection(markdown, 'Prerequisites').match(/FD\d{3}(?:-L\d{2})?/g)
+  return ids || lesson.prerequisites || []
+}
+
+// Back link above the title. A lesson of a multi-lesson Foundation
+// (`parent`) links back to that page on every device. A single-lesson
+// Foundation page shows 返回新手必修列表 on phones only -- on desktop the
+// header's 新手必修 link is always visible.
+function LessonBackLink({ parent }) {
+  if (parent) {
+    return (
+      <Link to={`/foundations/${parent.slug}`} className="practice-player-exit">
+        ← 返回{parent.chineseTitle}
+        <span className="back-label-mobile">列表</span>
+      </Link>
+    )
+  }
+
+  return (
+    <Link to="/foundations" className="practice-player-exit back-mobile-only">
+      ← 返回新手必修列表
+    </Link>
+  )
+}
+
+function LessonDetail({ lesson, markdown, parent }) {
   const playerRef = useRef(null)
-  const lessonContent = toLessonContent(markdown)
+  const notes = [getMarkdownSection(markdown, 'Description'), getMarkdownSection(markdown, 'Learning Outcomes')]
+    .filter(Boolean)
+  const prerequisites = getPrerequisiteIds(markdown, lesson).map(resolvePrerequisite).filter(Boolean)
   const { isLoggedIn, learnerStatusMap, markCompleted } = useLearnerStatus()
 
   // Phase 3 (Learning Data): 'already_learned' isn't offered as a
@@ -33,9 +76,23 @@ function LessonDetail({ lesson, markdown }) {
 
   return (
     <>
-      <h1>{lesson.chineseTitle}</h1>
+      <LessonBackLink parent={parent} />
+
+      <h1 className="foundation-page-title">{lesson.chineseTitle}</h1>
 
       <p className="module-playback-subtitle">{lesson.title}</p>
+
+      <p className="lesson-prerequisites">
+        建議先完成：
+        {prerequisites.length === 0
+          ? '無'
+          : prerequisites.map((item, index) => (
+              <span key={item.id}>
+                {index > 0 && '、'}
+                <Link to={item.to}>{item.title}</Link>
+              </span>
+            ))}
+      </p>
 
       {lesson.videoReference?.videoId && (
         <div className="module-playback">
@@ -56,11 +113,9 @@ function LessonDetail({ lesson, markdown }) {
             </button>
           </div>
 
-          <p>影片時長：{formatVideoDuration(lesson.duration)}</p>
+          <p className="card-duration">影片時長：{formatVideoDuration(lesson.duration)}</p>
         </div>
       )}
-
-      <p>{lesson.summary}</p>
 
       {isLoggedIn && (
         <p className="learning-status">
@@ -78,7 +133,15 @@ function LessonDetail({ lesson, markdown }) {
         </p>
       )}
 
-      <ReactMarkdown>{lessonContent}</ReactMarkdown>
+      {notes.length > 0 && (
+        <ul className="lesson-notes">
+          {notes.map((note) => (
+            <li key={note}>
+              <ReactMarkdown>{note}</ReactMarkdown>
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   )
 }

@@ -97,7 +97,7 @@ const foundations = [
     title: 'Basic Sitting Postures',
     chineseTitle: '基本坐姿',
     category: 'Asana',
-    summary: '昆達里尼瑜伽常常是坐著的姿勢練習，主要必需讓脊椎挺直，並保持姿勢平衡，再加上頸鎖。',
+    summary: '昆達里尼瑜伽常常是坐著的姿勢練習，主要必須讓脊椎挺直，並保持姿勢平衡，再加上頸鎖。',
     lessons: [
       {
         id: 'FD005-L01',

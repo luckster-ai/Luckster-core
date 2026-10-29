@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import foundations from '../data/foundations'
 import { getMarkdown } from '../utils/foundationContent'
 import LessonDetail from '../components/LessonDetail'
@@ -38,11 +38,7 @@ function LessonPage() {
 
   return (
     <div className="foundation-page">
-      <Link to={`/foundations/${slug}`} className="practice-player-exit">
-        ← 返回 {foundation.chineseTitle}
-      </Link>
-
-      <LessonDetail lesson={lesson} markdown={markdown} />
+      <LessonDetail lesson={lesson} markdown={markdown} parent={foundation} />
     </div>
   )
 }

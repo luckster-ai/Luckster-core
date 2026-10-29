@@ -24,3 +24,12 @@ export function stripSectionIfEmpty(markdown, headingPattern) {
 
   return markdown.replace(section, '')
 }
+
+// Body of a "## Heading" section, up to the next "---" rule or heading
+// ('' when the section is missing).
+export function getMarkdownSection(markdown, heading) {
+  const match = markdown.match(
+    new RegExp(`(?:^|\\n)##\\s*${heading}\\s*\\n([\\s\\S]*?)(?=\\n---|\\n#{1,3}\\s|$)`)
+  )
+  return match ? match[1].trim() : ''
+}
