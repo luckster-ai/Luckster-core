@@ -61,6 +61,7 @@ function AdminPracticeEditPage() {
         chineseTitle: payload.chineseTitle,
         description: payload.description,
         difficulty: payload.difficulty,
+        category: payload.category,
         modules: payload.modules
       })
 

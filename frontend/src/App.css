@@ -744,6 +744,72 @@ footer {
   margin-bottom: 8px;
 }
 
+/* /practice hierarchy: 完整練習 (page H1) → section headings (官方練習 /
+   我的練習) → category blocks → white Practice cards. The section heading
+   is a clear step above the category titles. */
+.practice-hub-section > h2 {
+  margin: 0 0 28px;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+/* 官方練習 categories (PracticeHub.jsx): each category is its own block
+   -- title → one-line description → cards -- in the /about palette:
+   standard = the warm gold of /about's name section, layered as soft
+   light (top left) and depth (bottom right) over a gentle gold base;
+   breath_meditation = /about's deep charcoal as the accent block with
+   light text; short_meditation = a warm stone grey, kept clearly apart
+   from the gold card thumbnails so the white cards stand out. No shadow or border; the white cards stay as they are. */
+.practice-category {
+  margin-top: 32px;
+  padding: 36px 32px 40px;
+  border-radius: 20px;
+  background: #f5f1e9;
+}
+
+.practice-category:first-of-type {
+  margin-top: 0;
+}
+
+.practice-category--standard {
+  background:
+    radial-gradient(ellipse 75% 65% at 18% 0%, rgba(248, 236, 178, 0.9) 0%, rgba(248, 236, 178, 0) 70%),
+    radial-gradient(ellipse 70% 75% at 92% 100%, rgba(186, 163, 112, 0.45) 0%, rgba(186, 163, 112, 0) 70%),
+    linear-gradient(165deg, #efdfa6 0%, #e2cf98 50%, #d5c08e 100%);
+}
+
+.practice-category--breath_meditation {
+  background: radial-gradient(ellipse at 50% 0%, #4a4540 0%, #3a3a3a 70%);
+}
+
+.practice-category--breath_meditation .practice-category-title {
+  color: #faf8f3;
+}
+
+.practice-category--breath_meditation .practice-category-description {
+  color: #d9c6a5;
+}
+
+.practice-category--short_meditation {
+  background: radial-gradient(ellipse at 50% 0%, #ece8e1 0%, #ddd7cd 60%, #cfc8bc 100%);
+}
+
+.practice-category-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.practice-category-description {
+  margin-top: 8px;
+  color: #5c4f30;
+  font-size: 15px;
+}
+
+.practice-category .cards {
+  margin-top: 24px;
+}
+
 .practice-hub-empty {
   max-width: 420px;
   margin: 24px auto 0;
@@ -2145,6 +2211,21 @@ footer {
 
   .practice-hub {
     padding: 48px 16px;
+  }
+
+  .practice-hub-section > h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+  }
+
+  .practice-category {
+    margin-top: 24px;
+    padding: 28px 16px 24px;
+    border-radius: 16px;
+  }
+
+  .practice-category-title {
+    font-size: 19px;
   }
 
   .practice-hub-empty {

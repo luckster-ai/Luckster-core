@@ -6,6 +6,25 @@ import { resolvePracticeModules } from '../utils/resolvePracticeModules'
 import { getResumableSession } from '../state/practiceActivityStore'
 import { evaluateResumableSession } from '../utils/practiceResume'
 import { useAuth } from '../state/useAuth'
+import { PRACTICE_CATEGORIES } from '../utils/practiceCategories'
+
+// 官方練習 grouped by the category the Admin set on each Practice
+// (practices.category), in PRACTICE_CATEGORIES order: title → one-line
+// description → cards, each in its own tinted block (App.css). Empty
+// categories are skipped; Practices without a (known) category come last
+// under 其他官方練習.
+function groupByCategory(practices) {
+  const known = new Set(PRACTICE_CATEGORIES.map((item) => item.value))
+  const groups = PRACTICE_CATEGORIES.map((item) => ({
+    ...item,
+    practices: practices.filter((practice) => practice.category === item.value)
+  }))
+  const uncategorized = practices.filter((practice) => !known.has(practice.category))
+  if (uncategorized.length > 0) {
+    groups.push({ value: 'other', label: '其他官方練習', description: '', practices: uncategorized })
+  }
+  return groups.filter((group) => group.practices.length > 0)
+}
 
 // Sprint 2A: /practice becomes a real Practice Hub with three sections
 // -- 官方練習, 我的練習, 建立新練習 -- per the Practice Hub UX audit's
@@ -51,18 +70,25 @@ function PracticeHub({ officialPractices, customPractices, officialLoading, offi
       <h1>完整練習</h1>
 
       <p className="section-description">
-        選擇一堂官方練習，或找到你先前建立的練習，開始今天的 Kundalini Yoga 練習。
+        選擇一堂官方練習：標準的昆達里尼瑜伽課、呼吸與冥想課或短時間冥想課；也能建立你自己的練習課程組合，開始今天的練習。
       </p>
 
       <div className="practice-hub-section">
         <h2>官方練習</h2>
 
         {hasOfficialPractices ? (
-          <div className="cards">
-            {officialPractices.map((practice) => (
-              <PracticeCard key={practice.id} practice={practice} />
-            ))}
-          </div>
+          groupByCategory(officialPractices).map((group) => (
+            <div key={group.value} className={`practice-category practice-category--${group.value}`}>
+              <h3 className="practice-category-title">{group.label}</h3>
+              {group.description && <p className="practice-category-description">{group.description}</p>}
+
+              <div className="cards">
+                {group.practices.map((practice) => (
+                  <PracticeCard key={practice.id} practice={practice} />
+                ))}
+              </div>
+            </div>
+          ))
         ) : officialLoading ? (
           <p>載入中…</p>
         ) : officialError ? (

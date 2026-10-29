@@ -20,6 +20,7 @@ import PracticeCompositionOverview from './PracticeCompositionOverview'
 import MobileSectionOverview from './MobileSectionOverview'
 import MobileSectionNav from './MobileSectionNav'
 import MobileModulePanel from './MobileModulePanel'
+import { PRACTICE_CATEGORIES } from '../utils/practiceCategories'
 
 // Phase 6C — Admin Official Practice reuses this exact component instead
 // of a second course-composition system. `initialPractice`/`onSave` are
@@ -72,6 +73,7 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
   const [practiceId, setPracticeId] = useState(initialPractice?.id || '')
   const [practiceSlug, setPracticeSlug] = useState(initialPractice?.slug || '')
   const [difficulty, setDifficulty] = useState(initialPractice?.difficulty || 'Beginner')
+  const [category, setCategory] = useState(initialPractice?.category || '')
   const [description, setDescription] = useState(initialPractice?.description || '')
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
@@ -164,6 +166,7 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
         chineseTitle: practiceName.trim(),
         description: description.trim(),
         difficulty,
+        category: category || null,
         modules: assemblePracticeModuleIds(state)
       })
 
@@ -320,6 +323,18 @@ function PracticeBuilder({ initialPractice, onSave, heading, saveLabel }) {
               <option value="Beginner">Beginner</option>
               <option value="Intermediate">Intermediate</option>
               <option value="Advanced">Advanced</option>
+            </select>
+          </label>
+
+          <label className="builder-name-field">
+            練習分類
+            <select value={category} onChange={(event) => setCategory(event.target.value)}>
+              <option value="">未分類</option>
+              {PRACTICE_CATEGORIES.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
             </select>
           </label>
 

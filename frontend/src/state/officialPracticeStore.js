@@ -43,6 +43,7 @@ function fromPracticeRow(row) {
     difficulty: row.difficulty,
     modules: row.modules,
     tags: row.tags,
+    category: row.category ?? null,
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -63,6 +64,7 @@ function toPracticeRow(practice) {
   if ('difficulty' in practice) row.difficulty = practice.difficulty
   if ('modules' in practice) row.modules = practice.modules
   if ('tags' in practice) row.tags = practice.tags
+  if ('category' in practice) row.category = practice.category
   if ('status' in practice) row.status = practice.status
 
   return row
