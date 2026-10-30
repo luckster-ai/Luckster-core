@@ -3092,6 +3092,83 @@ footer {
   margin-top: 40px;
 }
 
+/* Legal text (components/LegalMarkdown.jsx) on the public /legal pages
+   and the Contract Review Gate: one reading width for every block (the
+   opening note no longer insets), one line height and paragraph rhythm
+   for clauses, lists and notes, numbered clauses with a hanging indent,
+   and tables built from spacing and light rules instead of a grid. */
+.legal-content,
+.contract-review-content {
+  line-height: 1.8;
+}
+
+.legal-content :is(p, ul, ol, blockquote, table),
+.contract-review-content :is(p, ul, ol, blockquote, table) {
+  margin: 0 0 14px;
+}
+
+.legal-content :is(ul, ol),
+.contract-review-content :is(ul, ol) {
+  padding-left: 3em;
+}
+
+.legal-content li + li,
+.contract-review-content li + li {
+  margin-top: 4px;
+}
+
+.legal-content h3,
+.contract-review-content h3 {
+  margin: 24px 0 8px;
+}
+
+.legal-content hr,
+.contract-review-content hr {
+  margin: 28px 0;
+  border: 0;
+  border-top: 1px solid #e6dccb;
+}
+
+.legal-content blockquote,
+.contract-review-content blockquote {
+  padding: 14px 0;
+  border-top: 1px solid #e6dccb;
+  border-bottom: 1px solid #e6dccb;
+  color: #5c5240;
+}
+
+.legal-content blockquote p:last-child,
+.contract-review-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* --clause-indent is the width of the clause number ("一、" = 2em). */
+.legal-clause {
+  padding-left: var(--clause-indent);
+  text-indent: calc(-1 * var(--clause-indent));
+}
+
+.legal-content table,
+.contract-review-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.legal-content :is(th, td),
+.contract-review-content :is(th, td) {
+  padding: 10px 16px 10px 0;
+  border-bottom: 1px solid #ece4d6;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-content th,
+.contract-review-content th {
+  border-bottom-color: #d9c6a5;
+  color: #6b5d3a;
+  font-weight: 600;
+}
+
 .footer-legal-nav {
   margin-top: 12px;
   font-size: 0.9em;

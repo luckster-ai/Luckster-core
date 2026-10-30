@@ -1,6 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import LegalMarkdown from '../components/LegalMarkdown'
 import { getLegalDocument, extractContractSection } from '../utils/legalDocuments'
 
 // Payment Readiness Implementation Sprint (2026-09).
@@ -19,14 +18,15 @@ import { getLegalDocument, extractContractSection } from '../utils/legalDocument
 // extractContractSection(), so what's shown is always the same wording
 // as the full contract at /legal/terms.
 //
-// remark-gfm is used here because joti-online-teaching-contract.md /
-// joti-privacy-policy.md contain GFM tables, which plain ReactMarkdown
-// renders as literal "| a | b |" text. ContractReviewPage.jsx has the
-// same latent gap (v1.0.md also has tables) but that's a pre-existing
-// Step 4 issue, out of scope for this Sprint -- left untouched, noted
-// in the wrap-up report instead of fixed here.
+// The markdown is rendered by components/LegalMarkdown.jsx (remark-gfm
+// for the GFM tables, hanging indent for numbered clauses) -- the same
+// component the Contract Review Gate uses.
+// titleFromDocument: the document's own "# " title is the page's h1 (the
+// contract has a full formal title), instead of a second, shorter page
+// title above it.
 const DOC_CONFIG = {
   terms: {
+    titleFromDocument: true,
     title: '會員服務契約',
     subtitle: '本文件為 JOTI 會員服務基本契約全文；會員準備成為正式付費會員時，將完整提供並進入至少 3 日之契約審閱程序。',
     getContent: () => getLegalDocument('joti-online-teaching-contract.md')
@@ -50,24 +50,36 @@ const DOC_CONFIG = {
   }
 }
 
+function splitDocumentTitle(markdown) {
+  const match = markdown?.match(/^# (.+)\r?\n/)
+  return match ? { title: match[1].trim(), body: markdown.slice(match[0].length) } : null
+}
+
 function LegalPage() {
   const { doc } = useParams()
   const config = DOC_CONFIG[doc]
 
   if (!config) return <Navigate to="/legal" replace />
 
-  const content = config.getContent()
+  let title = config.title
+  let content = config.getContent()
+
+  const documentTitle = config.titleFromDocument ? splitDocumentTitle(content) : null
+  if (documentTitle) {
+    title = documentTitle.title
+    content = documentTitle.body
+  }
 
   return (
     <div className="legal-page">
       <Link to="/legal" className="legal-back-link">← 法律與方案資訊</Link>
 
-      <h1>{config.title}</h1>
+      <h1>{title}</h1>
       <p className="subtitle">{config.subtitle}</p>
 
       <div className="legal-content">
         {content ? (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          <LegalMarkdown>{content}</LegalMarkdown>
         ) : (
           <p>目前無法載入內容。</p>
         )}

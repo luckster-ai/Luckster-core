@@ -82,7 +82,7 @@ function PricingPage() {
     <div className="pricing-page">
       <h1>方案與價格</h1>
       <p className="subtitle">
-        免費試用 30 天，準備好之後再決定是否成為正式付費會員——沒有隱藏費用，試用期間不會被收費。
+        免費試用 30 天或 30 小時，再決定是否成為正式付費會員。沒有隱藏費用，試用期間不會被收費。
       </p>
 
       <div className="pricing-plans cards">

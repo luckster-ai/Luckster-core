@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import LegalMarkdown from '../components/LegalMarkdown'
 import { useAuth } from '../state/useAuth'
 import { supabase } from '../lib/supabaseClient'
 import { getContractContent } from '../utils/contractContent'
@@ -32,9 +31,10 @@ import { readTerminationBody } from '../utils/terminationResult'
 // eligibility / requires_reacceptance itself -- every one of those is a
 // server response value, rendered as-is.
 //
-// Legal / Contract Publication Refinement (2026-09): remark-gfm added so
-// GFM tables in the pinned versions/*.md content (e.g. the plan pricing
-// table) render as actual tables, matching the public /legal pages.
+// Legal / Contract Publication Refinement (2026-09): the pinned
+// versions/*.md content renders through components/LegalMarkdown.jsx
+// (GFM tables, numbered-clause hanging indent), same as the public /legal
+// pages.
 //
 // Mobile RWD fix (2026-09): the rendered markdown is wrapped in
 // .contract-review-content so App.css can target its <pre> blocks the
@@ -280,7 +280,7 @@ function ContractReviewPage() {
 
           {content ? (
             <div className="contract-review-content">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+              <LegalMarkdown>{content}</LegalMarkdown>
             </div>
           ) : (
             <p>目前無法載入契約內容（版本：{review.contractVersion}）。</p>
