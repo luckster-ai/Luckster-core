@@ -99,7 +99,7 @@ Server-side Verification（CheckMacValue 驗章＋QueryTradeInfo 回查確認交
 ## 金流服務商（ECPay）使用邊界
 
 - **購買當下付款**：會員於購買時在 ECPay 付款頁完成付款；不實作先綁卡、待日後條件成就（例如 Trial 屆滿）才扣款的流程（見 `payment-legal-spec.md` 第 9-10 節）。
-- 付款頁提供哪些付款方式，依 ECPay 設定與 JOTI 另行之決定，本文件不預先限制。
+- **付款方式（2026-10-30 確認）**：第一階段只開放信用卡一次付清（`ChoosePayment=Credit`）；ATM、WebATM、超商及其他付款方式暫不開放，不得自行擴充。手續費與退款時的手續費處理見 `payment-legal-spec.md` 第 9、11 節。
 - 任何形式的持續性/週期性自動扣款（例如定期定額），一律不得用於正式的續購機制。
 - 歷史：先前曾評估 Oen「先綁卡、之後只扣一次」的端點與參數，該方向已不採用（2026-10-19）。
 
