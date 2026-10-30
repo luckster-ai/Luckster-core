@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import ModuleRenderer from './ModuleRenderer'
 import { useAuth } from '../state/useAuth'
 import { startPracticeSession, completePracticeSession } from '../state/practiceActivityStore'
 
 // initialModuleIndex / initialPositionSeconds / resumeSessionId are set
-// only when PracticePlayerPage decided this is a Resume (Phase 5E) --
+// only when PracticePage decided this is a Resume (Phase 5E) --
 // otherwise they take their defaults and this behaves exactly as before:
 // start at Module 1, no seeded session.
+//
+// Website Refinement: the player is shown directly on the Practice page
+// (no separate /play page and no 開始練習 / 離開練習 step), below the
+// Practice's own title and description. Order: current unit + video →
+// 上一個 / 下一個 → 目前進度 → unit list.
 function PracticePlayer({
   practice,
   modules,
@@ -87,6 +91,11 @@ function PracticePlayer({
     setCurrentIndex((index) => Math.max(index - 1, 0))
   }
 
+  const exitImmersive = () => {
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {})
+    setImmersiveMode(false)
+  }
+
   const restart = () => {
     setResumePending(false)
     setCurrentIndex(0)
@@ -95,17 +104,51 @@ function PracticePlayer({
 
   return (
     <div className={`practice-player${immersiveMode && !isComplete ? ' practice-player--immersive' : ''}`}>
-      <section className="practice-player-header">
-        <Link
-          to={`/practices/${practice.slug}`}
-          className="practice-player-exit"
-        >
-          ✕ 離開練習
-        </Link>
+      {/* Immersive mode (see App.css) covers the whole screen and is
+          otherwise only left by navigating away; this is its way out,
+          shown only while it's on. */}
+      {immersiveMode && !isComplete && (
+        <button type="button" className="practice-player-exit" onClick={exitImmersive}>
+          ✕ 離開全螢幕
+        </button>
+      )}
 
-        <h1>{practice.chineseTitle}</h1>
+      {isComplete ? (
+        <section className="practice-complete">
+          <h2>練習完成</h2>
 
-        <p>{practice.description}</p>
+          <p>你已完成整堂練習。</p>
+
+          <div className="practice-complete-actions">
+            <button onClick={restart}>
+              再練習一次
+            </button>
+          </div>
+        </section>
+      ) : (
+        <section className="practice-player-module">
+          <ModuleRenderer
+            module={modules[currentIndex]}
+            onEnded={goNext}
+            onImmersiveStart={() => setImmersiveMode(true)}
+            onPlaybackStarted={startSession}
+            progressSessionId={sessionId}
+            progressModuleIndex={currentIndex}
+            initialPositionSeconds={
+              resumePending && currentIndex === startIndex ? initialPositionSeconds : 0
+            }
+          />
+        </section>
+      )}
+
+      <section className="practice-player-controls">
+        <button onClick={goPrevious} disabled={currentIndex === 0}>
+          上一個練習單元
+        </button>
+
+        <button onClick={goNext} disabled={isComplete}>
+          下一個練習單元
+        </button>
       </section>
 
       <section className="practice-player-progress">
@@ -134,48 +177,6 @@ function PracticePlayer({
             </li>
           ))}
         </ol>
-      </section>
-
-      {isComplete ? (
-        <section className="practice-complete">
-          <h2>練習完成</h2>
-
-          <p>你已完成整堂練習。</p>
-
-          <div className="practice-complete-actions">
-            <button onClick={restart}>
-              再練習一次
-            </button>
-
-            <Link to={`/practices/${practice.slug}`} className="button">
-              回到課程頁面
-            </Link>
-          </div>
-        </section>
-      ) : (
-        <section className="practice-player-module">
-          <ModuleRenderer
-            module={modules[currentIndex]}
-            onEnded={goNext}
-            onImmersiveStart={() => setImmersiveMode(true)}
-            onPlaybackStarted={startSession}
-            progressSessionId={sessionId}
-            progressModuleIndex={currentIndex}
-            initialPositionSeconds={
-              resumePending && currentIndex === startIndex ? initialPositionSeconds : 0
-            }
-          />
-        </section>
-      )}
-
-      <section className="practice-player-controls">
-        <button onClick={goPrevious} disabled={currentIndex === 0}>
-          上一個練習單元
-        </button>
-
-        <button onClick={goNext} disabled={isComplete}>
-          下一個練習單元
-        </button>
       </section>
     </div>
   )

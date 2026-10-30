@@ -9,7 +9,6 @@ import './App.css'
 
 function App() {
   const location = useLocation()
-  const isPracticePlayback = location.pathname.endsWith('/play')
 
   useLayoutEffect(() => {
     if (location.hash) return
@@ -18,13 +17,13 @@ function App() {
 
   return (
     <div className="app">
-      {!isPracticePlayback && <Header />}
+      <Header />
 
       <main>
         <AppRouter />
       </main>
 
-      {!isPracticePlayback && <Footer />}
+      <Footer />
     </div>
   )
 }

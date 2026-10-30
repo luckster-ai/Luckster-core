@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 
 import HomePage from '../pages/HomePage'
 import AboutPage from '../pages/AboutPage'
@@ -10,7 +10,6 @@ import ModulePage from '../pages/ModulePage'
 import PracticeHubPage from '../pages/PracticeHubPage'
 import PracticeBuilderPage from '../pages/PracticeBuilderPage'
 import PracticePage from '../pages/PracticePage'
-import PracticePlayerPage from '../pages/PracticePlayerPage'
 import LoginPage from '../pages/LoginPage'
 import AccountPage from '../pages/AccountPage'
 import AuthCallbackPage from '../pages/AuthCallbackPage'
@@ -37,6 +36,14 @@ const SUBSCRIBE_ENABLED = import.meta.env.VITE_ENABLE_SUBSCRIBE === 'true'
 // VITE_ENABLE_PURCHASE === 'true' (set on Preview for TEST). Unset --
 // Production until payments launch -- both paths fall through to 404.
 const PURCHASE_ENABLED = import.meta.env.VITE_ENABLE_PURCHASE === 'true'
+
+// Website Refinement: the practice area now opens on the Practice page
+// itself, so an old /practices/:slug/play link (bookmark, history) goes
+// there instead.
+function PracticePlayRedirect() {
+  const { slug } = useParams()
+  return <Navigate to={`/practices/${slug}`} replace />
+}
 
 function AppRouter() {
   return (
@@ -93,7 +100,7 @@ function AppRouter() {
 
       <Route
         path="/practices/:slug/play"
-        element={<PracticePlayerPage />}
+        element={<PracticePlayRedirect />}
       />
 
       <Route

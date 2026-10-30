@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import foundations from '../data/foundations'
 import { formatVideoDuration } from '../utils/formatDuration'
@@ -42,7 +42,20 @@ function getPrerequisiteIds(markdown, lesson) {
 // (`parent`) links back to that page on every device. A single-lesson
 // Foundation page shows 返回新手必修列表 on phones only -- on desktop the
 // header's 新手必修 link is always visible.
+// Opened from a Practice page's 建議先完成 (PracticePage.jsx passes the
+// Practice slug in the link's location state), it shows 返回練習 instead,
+// on every device; other entry points keep the links above.
 function LessonBackLink({ parent }) {
+  const fromPractice = useLocation().state?.fromPractice
+
+  if (fromPractice) {
+    return (
+      <Link to={`/practices/${fromPractice}`} className="practice-player-exit">
+        ← 返回練習
+      </Link>
+    )
+  }
+
   if (parent) {
     return (
       <Link to={`/foundations/${parent.slug}`} className="practice-player-exit">

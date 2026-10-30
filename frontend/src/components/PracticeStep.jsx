@@ -6,16 +6,23 @@ import { formatVideoDuration } from '../utils/formatDuration'
 // Module's own `summary` (data/modules.js), shown in playback order --
 // the same short description ModulePage.jsx renders. Custom Practices get
 // it here too, for free.
+//
+// Layout follows the Foundation course pages: short info (order, titles,
+// 影片時長) centered, the summary left-aligned as reading text.
 function PracticeStep({ module, order }) {
   return (
     <li className="practice-step">
       <span className="practice-step-order">{order}</span>
 
-      <Link to={`/modules/${module.slug}`}>
-        {module.chineseTitle}
-      </Link>
+      <h3 className="practice-step-title">
+        <Link to={`/modules/${module.slug}`}>
+          {module.chineseTitle}
+        </Link>
+      </h3>
 
-      <p>影片時長：{formatVideoDuration(module.duration)}</p>
+      {module.title && <p className="module-playback-subtitle">{module.title}</p>}
+
+      <p className="card-duration">影片時長：{formatVideoDuration(module.duration)}</p>
 
       {module.summary && <p className="practice-step-summary">{module.summary}</p>}
     </li>

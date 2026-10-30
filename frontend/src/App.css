@@ -544,6 +544,96 @@ footer {
   padding-left: 1.2em;
 }
 
+/* Practice detail page (PracticePage.jsx / PracticeStep.jsx): same
+   column, title spacing and text styles as the Foundation pages above --
+   short info centered, reading text left-aligned. 難度 / 影片時長 reuse
+   .card-duration, 建議先完成 reuses .lesson-prerequisites. */
+.practice-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+/* A line-height relative to the font size (the inherited one is a fixed
+   px value), so a long title that wraps doesn't overlap itself. The taller
+   line box replaces part of the margin, keeping a one-line title where
+   it was. */
+.practice-page .practice-page-title {
+  margin: 14px 0 18px;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.practice-page-description {
+  margin-top: 28px;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.practice-page-prerequisites {
+  margin-top: 20px;
+}
+
+.practice-page-actions {
+  margin-top: 32px;
+}
+
+/* The player (PracticePlayer) right under the Practice's intro. It sits
+   inside .practice-page's column, so its own page padding is dropped. */
+.practice-page-player {
+  margin-top: 32px;
+}
+
+.practice-page-player .practice-player {
+  padding: 0;
+}
+
+.practice-sequence-section {
+  margin-top: 56px;
+}
+
+.practice-sequence {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Units are separated by space and a thin line, not by cards. */
+.practice-step {
+  padding: 40px 0;
+  border-top: 1px solid #e6dccb;
+}
+
+.practice-step-order {
+  display: inline-block;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: #f4e7a1;
+  color: #6b5d3a;
+  font-size: 14px;
+  line-height: 28px;
+}
+
+.practice-step-title {
+  margin: 12px 0 0;
+}
+
+.practice-step-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.practice-step .module-playback-subtitle {
+  margin: 4px 0 0;
+}
+
+.practice-step-summary {
+  margin-top: 16px;
+  text-align: left;
+  line-height: 1.8;
+}
+
 .practice-complete-actions {
   display: flex;
   justify-content: center;
@@ -2179,11 +2269,13 @@ footer {
   }
 
   .foundation-page,
-  .module-page {
+  .module-page,
+  .practice-page {
     padding: 32px 16px;
   }
 
-  .foundation-page .back-mobile-only {
+  .foundation-page .back-mobile-only,
+  .practice-page .back-mobile-only {
     display: inline-block;
   }
 
