@@ -2885,6 +2885,156 @@ footer {
   margin: 16px 0 0;
 }
 
+/* Login / sign-up / forgot-password form (LoginPage.jsx). Scoped to
+   .login-page so the other .auth-page pages are unchanged. Hierarchy:
+   white bordered Google button, gold 登入 / 註冊 (primary), 註冊會員 as
+   the same-size secondary button. Compact spacing so the form needs
+   little scrolling; the site footer below is the same as on every page. */
+.login-page {
+  padding: 20px 24px 24px;
+  max-width: 400px;
+}
+
+/* Smaller than the site h1 so the whole form fits one screen; the
+   line-height is relative (the inherited one is a fixed px value, so the
+   glyphs would overflow it). */
+.login-page h1 {
+  margin: 0 0 16px;
+  font-size: 40px;
+  line-height: 1.2;
+}
+
+.login-page .login-intro {
+  margin: 0 0 16px;
+  color: #6b6b6b;
+  line-height: 1.6;
+}
+
+.login-page .login-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 9px 24px;
+  border: 1px solid #dadce0;
+  border-radius: 10px;
+  background: #fff;
+  color: #3c4043;
+  font: inherit;
+  font-weight: 600;
+}
+
+.login-page .login-google:hover {
+  background: #f8f8f8;
+}
+
+.login-google-icon {
+  flex: none;
+}
+
+.login-page .auth-field {
+  margin: 16px 0 0;
+}
+
+.login-page .auth-field label {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.login-page .auth-field label + .login-password,
+.login-page .login-password + label {
+  margin-top: 12px;
+}
+
+.login-page .auth-field input {
+  margin-top: 6px;
+  padding: 10px 12px;
+}
+
+/* 密碼 label with 忘記密碼？ on the same row. */
+.login-page .login-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+/* width / margin: the phone-wide button rule would otherwise stretch
+   this link across the row and squeeze the label. */
+.login-page .login-label-row .link-button {
+  flex: none;
+  width: auto;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Eye toggle inside the field's right edge; 44px tap target. The input
+   gets matching right padding so text never runs under it. */
+.login-page .login-password-field {
+  position: relative;
+}
+
+.login-page .login-password-field input {
+  padding-right: 48px;
+}
+
+.login-page .login-password-toggle {
+  position: absolute;
+  top: 6px;
+  right: 2px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8a7b54;
+}
+
+.login-page .login-cta {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 16px 0 0;
+  padding: 10px 24px;
+  text-align: center;
+}
+
+.login-page .login-message {
+  margin: 12px 0 0;
+}
+
+.login-page .login-signup {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e6dccb;
+}
+
+.login-page .login-signup p {
+  color: #6b6b6b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.login-page .login-signup .login-cta {
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    padding: 16px 16px 20px;
+  }
+
+  .login-page h1 {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+}
+
 .auth-consent {
   display: flex;
   align-items: center;
@@ -3182,6 +3332,50 @@ footer {
 
 .footer-business p {
   margin: 4px 0;
+}
+
+/* Contact links in the brand gold, never the browser's blue / purple.
+   Each "label：value" stays on one line; on phones email and phone get
+   a line each (the ／ separator is hidden). */
+.footer-business a,
+.footer-business a:visited {
+  color: #8a7b54;
+}
+
+.footer-business a:hover {
+  color: #6b5d3a;
+}
+
+.footer-contact {
+  white-space: nowrap;
+}
+
+/* Lowest level of the footer: smaller and lighter than the contact
+   lines above it. */
+.footer-copyright {
+  margin-top: 16px;
+  font-size: 0.8em;
+  font-weight: normal;
+  color: #a39a87;
+}
+
+@media (max-width: 768px) {
+  .footer-contact {
+    display: block;
+  }
+
+  .footer-contact-separator {
+    display: none;
+  }
+
+  /* The four policy links as two equal, centered columns (2 × 2), not a
+     wrapping row that leaves one link on a line of its own. */
+  .footer-legal-nav {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 16px;
+    text-align: center;
+  }
 }
 
 /* ============================================================

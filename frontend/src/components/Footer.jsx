@@ -46,13 +46,17 @@ function Footer() {
         <p>{business.operatorName}（{business.operatorType}）</p>
         <p>{business.operatorAddress}</p>
         <p>
-          客服信箱：<a href={`mailto:${business.supportEmail}`}>{business.supportEmail}</a>
-          {' ／ '}
-          客服電話：{business.supportPhone}
+          <span className="footer-contact">
+            客服信箱：<a href={`mailto:${business.supportEmail}`}>{business.supportEmail}</a>
+          </span>
+          <span className="footer-contact-separator">{' ／ '}</span>
+          <span className="footer-contact">
+            客服電話：<a href={`tel:${business.supportPhone}`}>{business.supportPhone}</a>
+          </span>
         </p>
       </div>
 
-      <p>© JOTI Kundalini Yoga</p>
+      <p className="footer-copyright">© JOTI Kundalini Yoga</p>
     </footer>
   )
 }

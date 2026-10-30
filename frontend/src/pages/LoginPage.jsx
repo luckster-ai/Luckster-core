@@ -23,6 +23,29 @@ const MODES = {
   forgot: { title: '忘記密碼', submit: '寄送重設密碼信' }
 }
 
+// Google's "G" mark, inline (no external image), for the Google button.
+function GoogleIcon() {
+  return (
+    <svg className="login-google-icon" viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  )
+}
+
+// Eye / eye-off icons for the password field's show/hide toggle.
+function EyeIcon({ open }) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+      {!open && <path d="M4 4l16 16" />}
+    </svg>
+  )
+}
+
 function LoginPage() {
   const {
     isConfigured,
@@ -44,6 +67,8 @@ function LoginPage() {
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState(null)
   const [canResendConfirmation, setCanResendConfirmation] = useState(false)
+  // Show/hide for the password field(s); input type only, values unchanged.
+  const [showPassword, setShowPassword] = useState(false)
 
   if (loading) return null
   if (user) return <Navigate to="/account" replace />
@@ -180,20 +205,17 @@ function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-page login-page">
       <h1>{MODES[mode].title}</h1>
 
+      {/* No intro line for 登入 / 註冊: the Google button and the Email
+          form already say how. */}
       {mode === 'forgot' ? (
-        <p>輸入註冊時使用的 Email，我們會寄送重設密碼的連結給你。</p>
+        <p className="login-intro">輸入註冊時使用的 Email，我們會寄送重設密碼的連結給你。</p>
       ) : (
         <>
-          <p>
-            {mode === 'signup'
-              ? '使用 Google 或 Email 建立 JOTI 會員帳號。'
-              : '使用 Google 或 Email 與密碼登入 JOTI。'}
-          </p>
-
-          <button type="button" className="button" onClick={handleGoogle}>
+          <button type="button" className="login-google" onClick={handleGoogle}>
+            <GoogleIcon />
             使用 Google {mode === 'signup' ? '註冊' : '登入'}
           </button>
         </>
@@ -213,25 +235,46 @@ function LoginPage() {
         </label>
 
         {mode !== 'forgot' && (
-          <label>
-            密碼
-            <input
-              type="password"
-              required
-              minLength={mode === 'signup' ? MIN_PASSWORD_LENGTH : undefined}
-              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder={mode === 'signup' ? `至少 ${MIN_PASSWORD_LENGTH} 個字元` : undefined}
-            />
-          </label>
+          <div className="login-password">
+            <div className="login-label-row">
+              <label htmlFor="login-password">密碼</label>
+              {mode === 'signin' && (
+                <button type="button" className="link-button" onClick={() => switchMode('forgot')}>
+                  忘記密碼？
+                </button>
+              )}
+            </div>
+
+            <div className="login-password-field">
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                minLength={mode === 'signup' ? MIN_PASSWORD_LENGTH : undefined}
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder={mode === 'signup' ? `至少 ${MIN_PASSWORD_LENGTH} 個字元` : undefined}
+              />
+
+              <button
+                type="button"
+                className="login-password-toggle"
+                onClick={() => setShowPassword((shown) => !shown)}
+                aria-label={showPassword ? '隱藏密碼' : '顯示密碼'}
+                aria-pressed={showPassword}
+              >
+                <EyeIcon open={!showPassword} />
+              </button>
+            </div>
+          </div>
         )}
 
         {mode === 'signup' && (
           <label>
             確認密碼
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               autoComplete="new-password"
               value={confirmPassword}
@@ -240,12 +283,12 @@ function LoginPage() {
           </label>
         )}
 
-        <button type="submit" className="button secondary" disabled={submitting}>
+        <button type="submit" className="button login-cta" disabled={submitting}>
           {submitting ? '處理中...' : MODES[mode].submit}
         </button>
       </form>
 
-      {errorMessage && <p>{errorMessage}</p>}
+      {errorMessage && <p className="login-message">{errorMessage}</p>}
       {canResendConfirmation && (
         <button type="button" className="button secondary" onClick={handleResendConfirmation}>
           重新寄送驗證信
@@ -254,17 +297,12 @@ function LoginPage() {
 
       {mode === 'signin' && (
         <>
-          <p>
-            <button type="button" className="link-button" onClick={() => switchMode('forgot')}>
-              忘記密碼？
-            </button>
-          </p>
-          <p>
-            還沒有帳號？{' '}
-            <button type="button" className="link-button" onClick={() => switchMode('signup')}>
+          <div className="login-signup">
+            <p>還沒有帳號？使用 Google 登入會自動建立帳號。</p>
+            <button type="button" className="button secondary login-cta" onClick={() => switchMode('signup')}>
               註冊會員
             </button>
-          </p>
+          </div>
         </>
       )}
       {mode === 'signup' && (
