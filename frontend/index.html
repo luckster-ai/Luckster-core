@@ -2,8 +2,18 @@
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- PWA / App Icon. The icon files in public/icons/ are generated from
+         the master in docs/brand/app-icon/ (MASTER_FILE in
+         scripts/generate-app-icons.mjs) by that script; replacing the icon
+         only means re-running it, these tags stay the same. -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#faf8f3" />
+    <meta name="apple-mobile-web-app-title" content="JOTI Yoga" />
     <title>JOTI Kundalini ABC Yoga</title>
     <meta
       name="description"
