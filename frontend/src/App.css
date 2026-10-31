@@ -1934,7 +1934,7 @@ footer {
   .overview-sticky {
     display: block;
     position: sticky;
-    top: 0;
+    top: var(--header-height, 0px);
     z-index: 5;
     background: white;
     border-bottom: 1px solid #e4dcc8;
@@ -2167,14 +2167,45 @@ footer {
 
 /* 手機 */
 
-@media (max-width: 768px) {
+/* 手機與平板 Header（≤900px）。The menu button replaces the inline nav up to
+   900px, not 768px: between 769px and ~890px the inline nav no longer fit
+   and its labels wrapped. Tablets now get the phone Header unchanged.
+
+   The Header also stays at the top while scrolling (desktop does not), with
+   the page background behind it so content does not show through.
+   --header-height is the closed Header (16px top padding + 44px menu
+   button + 3px bottom padding); sticky elements below it and anchor jumps
+   use it. The small bottom padding keeps the Header compact while the logo
+   and menu button keep their size and position.
+   z-index stays under the immersive practice player (1000/1001). */
+@media (max-width: 900px) {
+  :root {
+    --header-height: 63px;
+  }
+
+  html {
+    scroll-padding-top: var(--header-height);
+  }
 
   /* Header: brand row + menu button; the nav opens as a plain list
      under it (Header.jsx toggles .header--menu-open). */
   .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     flex-wrap: wrap;
     column-gap: 8px;
-    padding: 16px 24px;
+    padding: 16px 24px 3px;
+    background: #faf8f3;
+  }
+
+  /* An open menu taller than the screen (landscape phones) scrolls
+     inside the Header instead of running off the bottom. */
+  .header--menu-open {
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    box-sizing: border-box;
   }
 
   .brand {
@@ -2222,6 +2253,9 @@ footer {
     border-bottom: 1px solid #efe9dc;
     text-align: left;
   }
+}
+
+@media (max-width: 768px) {
 
   nav {
     flex-wrap: wrap;

@@ -1109,7 +1109,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 | 8 | 「關於 JOTI」人物圖片改成經營者本人 | 內容（需要照片素材） | TODO |
 | 9 | 「關於 JOTI」手機畫面，有底色的圖片出現細邊 | 視覺 bug | **完成（2026-10-27）**：原因是 `#root` 左右 1px 範本邊框，1126px 以下移除 |
 | 10 | JOTI App Icon（加入手機主畫面後像正式 App 入口） | 視覺＋設定 | TODO。現況（2026-10-27）：`frontend/public/favicon.svg` 仍是 Vite 範本的預設圖示（紫色閃電，不是 JOTI 品牌）；`icons.svg` 也是範本遺留、程式沒有引用；**沒有** web app manifest、`apple-touch-icon`、各尺寸 PNG icon、`theme-color`，也沒有 service worker。`docs/brand/brand-guide.md` 有品牌色（暖白、香檳金、柔光淡黃、深灰），但 repo 裡沒有 Logo 圖檔 |
-| 11 | Header 導覽與頁面標題一致性（2026-10-31 新增） | 視覺／UI | **完成（2026-10-31，經營者已確認，已 commit，未合併 `main`）**：Header 順序改為「關於 JOTI → 新手必修［免費］→ 完整練習 → 付費會員 → 其他」（原「方案」改為「付費會員」），「免費」沿用既有 `free-badge`（導覽列內略縮小、緊貼文字）；`/foundations` 標題改為和 `/practice` 同一套頁面標題（h1、上方留白、標題與說明間距），標題旁「免費」與 Header 同樣式；`/pricing` 標題「方案與價格」改為「付費會員」，副標題文字不變、改為只在標點後換行（修正「費」單獨一行），上方留白對齊 `/practice`；`/about` 不變。**TODO**：769–889px 寬（平板）導覽列擠不下，項目文字會折成兩行（有 Admin 時 769–889px、一般會員約 769–819px、未登入約 769–799px；有 Admin 的 769px 原本就會折行，這次文字變長與標籤讓範圍變大），可考慮導覽項目不折行或在此寬度縮小間距 |
+| 11 | Header 導覽與頁面標題一致性（2026-10-31 新增） | 視覺／UI | **完成（2026-10-31，經營者已確認，已 commit，未合併 `main`）**：Header 順序改為「關於 JOTI → 新手必修［免費］→ 完整練習 → 付費會員 → 其他」（原「方案」改為「付費會員」），「免費」沿用既有 `free-badge`（導覽列內略縮小、緊貼文字）；`/foundations` 標題改為和 `/practice` 同一套頁面標題（h1、上方留白、標題與說明間距），標題旁「免費」與 Header 同樣式；`/pricing` 標題「方案與價格」改為「付費會員」，副標題文字不變、改為只在標點後換行（修正「費」單獨一行），上方留白對齊 `/practice`；`/about` 不變。**平板與手機 Header（2026-10-31，經營者已確認，已 commit，未合併 `main`）**：原記錄的 769–889px 導覽列折行已解決——漢堡選單切換點從 768px 提高到 900px，平板沿用手機 Header；900px 以下 Header 捲動時固定在上方（不透明底色 `#faf8f3`、`z-index: 100`，低於全螢幕練習的 1000／1001；選單比畫面高時在 Header 內捲動），桌面版不固定、不變；Header 下方 padding 從 16px 縮為 3px（高度 76→63px，Logo、標語、漢堡按鈕大小和上方位置不變）；`--header-height: 63px` 供首頁錨點（`scroll-padding-top`）和自建練習頁手機 `.overview-sticky` 使用。**TODO**（原本就有，這輪未處理）：(1) 直接開啟 `/#about` 時，首頁內容在跳轉後才載入、版面變長，第一次跳轉停在區塊上方（網站內目前沒有連到 `#about` 的連結）；(2) 自建練習頁手機的 `.overview-sticky` 外層容器和它同高，實際上沒有固定效果。**Future**：PWA（manifest、正式 App Icon、App 模式實測）依 2026-10-31 評估的順序另行進行，見第 10 項 |
 
 ## In Progress
 
@@ -1170,6 +1170,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-31（網站優化第 11 項：平板 Header 改用漢堡選單（900px 以下）、手機／平板 Sticky Header、Header 下方留白縮小完成並 commit，未合併 `main`；原 769–889px 導覽列折行 TODO 已解決）
 
 2026-10-31（網站優化第 11 項：Header 導覽順序與「付費會員」、新手必修免費標籤、`/foundations`／`/pricing` 頁面標題一致性完成並 commit，未合併 `main`；平板寬度導覽列折行列為 TODO）
 
