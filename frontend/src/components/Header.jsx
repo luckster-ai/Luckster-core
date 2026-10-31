@@ -48,10 +48,12 @@ function Header() {
           if (event.target.closest('a')) setMenu({ open: false, pathname })
         }}
       >
-        <Link to="/foundations">新手必修</Link>
-        <Link to="/practice">完整練習</Link>
-        <Link to="/pricing">方案</Link>
         <Link to="/about">關於 JOTI</Link>
+        <Link to="/foundations">
+          新手必修<span className="free-badge">免費</span>
+        </Link>
+        <Link to="/practice">完整練習</Link>
+        <Link to="/pricing">付費會員</Link>
         {isAdmin && <Link to="/admin/practices">Admin</Link>}
         <Link to={user ? '/account' : '/login'}>{user ? '我的帳號' : '登入'}</Link>
       </nav>

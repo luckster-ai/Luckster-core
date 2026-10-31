@@ -53,6 +53,23 @@ nav a {
   text-decoration: none;
 }
 
+/* The same 免費 badge as the homepage course card, slightly tighter so the
+   nav row keeps its height and sits close to its label (one nav item).
+   The /foundations page title uses the identical badge. */
+.site-nav .free-badge,
+.foundations h1 .free-badge {
+  margin-left: 4px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+/* In the h1 the badge keeps the Header's body font, not the heading's
+   font and letter-spacing. */
+.foundations h1 .free-badge {
+  font-family: Arial, sans-serif;
+  letter-spacing: normal;
+}
+
 /* Phone-only menu button (see Header.jsx); hidden on desktop. */
 .menu-toggle {
   display: none;
@@ -817,7 +834,9 @@ footer {
    Hub's own section/empty-state layout.
    ============================================================ */
 
-.practice-hub {
+/* /foundations shares the /practice page-title spacing. */
+.practice-hub,
+.foundations {
   padding: 80px 24px;
   text-align: center;
 }
@@ -2301,7 +2320,8 @@ footer {
     box-sizing: border-box;
   }
 
-  .practice-hub {
+  .practice-hub,
+  .foundations {
     padding: 48px 16px;
   }
 
@@ -3163,8 +3183,16 @@ footer {
 .pricing-page {
   max-width: 760px;
   margin: 0 auto;
-  padding: 64px 24px;
+  padding: 80px 24px;
   text-align: left;
+}
+
+/* Phones: same top spacing as /practice; side gutters unchanged. */
+@media (max-width: 768px) {
+  .pricing-page {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
 }
 
 .pricing-page h1 {

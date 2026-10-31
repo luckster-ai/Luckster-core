@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../state/useAuth'
 import pricing from '../data/pricing'
+import Phrases from '../components/Phrases'
 import { canOfferPurchase, getContractAcceptanceState } from '../utils/purchaseEligibility'
 
 // Payment Readiness Implementation Sprint (2026-09).
@@ -80,9 +81,10 @@ function PricingPage() {
 
   return (
     <div className="pricing-page">
-      <h1>方案與價格</h1>
+      <h1>付費會員</h1>
+      {/* Phrases: lines break between phrases, never leaving 費 alone. */}
       <p className="subtitle">
-        免費試用 30 天或 30 小時，再決定是否成為正式付費會員。沒有隱藏費用，試用期間不會被收費。
+        <Phrases text={['免費試用 30 天或 30 小時，', '再決定是否成為正式付費會員。', '沒有隱藏費用，', '試用期間不會被收費。']} />
       </p>
 
       <div className="pricing-plans cards">

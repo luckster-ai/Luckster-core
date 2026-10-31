@@ -1109,6 +1109,7 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 | 8 | 「關於 JOTI」人物圖片改成經營者本人 | 內容（需要照片素材） | TODO |
 | 9 | 「關於 JOTI」手機畫面，有底色的圖片出現細邊 | 視覺 bug | **完成（2026-10-27）**：原因是 `#root` 左右 1px 範本邊框，1126px 以下移除 |
 | 10 | JOTI App Icon（加入手機主畫面後像正式 App 入口） | 視覺＋設定 | TODO。現況（2026-10-27）：`frontend/public/favicon.svg` 仍是 Vite 範本的預設圖示（紫色閃電，不是 JOTI 品牌）；`icons.svg` 也是範本遺留、程式沒有引用；**沒有** web app manifest、`apple-touch-icon`、各尺寸 PNG icon、`theme-color`，也沒有 service worker。`docs/brand/brand-guide.md` 有品牌色（暖白、香檳金、柔光淡黃、深灰），但 repo 裡沒有 Logo 圖檔 |
+| 11 | Header 導覽與頁面標題一致性（2026-10-31 新增） | 視覺／UI | **完成（2026-10-31，經營者已確認，已 commit，未合併 `main`）**：Header 順序改為「關於 JOTI → 新手必修［免費］→ 完整練習 → 付費會員 → 其他」（原「方案」改為「付費會員」），「免費」沿用既有 `free-badge`（導覽列內略縮小、緊貼文字）；`/foundations` 標題改為和 `/practice` 同一套頁面標題（h1、上方留白、標題與說明間距），標題旁「免費」與 Header 同樣式；`/pricing` 標題「方案與價格」改為「付費會員」，副標題文字不變、改為只在標點後換行（修正「費」單獨一行），上方留白對齊 `/practice`；`/about` 不變。**TODO**：769–889px 寬（平板）導覽列擠不下，項目文字會折成兩行（有 Admin 時 769–889px、一般會員約 769–819px、未登入約 769–799px；有 Admin 的 769px 原本就會折行，這次文字變長與標籤讓範圍變大），可考慮導覽項目不折行或在此寬度縮小間距 |
 
 ## In Progress
 
@@ -1169,6 +1170,8 @@ v1 正式使用 → 發生需要修改契約的情況 → v1.1
 ---
 
 ## Last Updated
+
+2026-10-31（網站優化第 11 項：Header 導覽順序與「付費會員」、新手必修免費標籤、`/foundations`／`/pricing` 頁面標題一致性完成並 commit，未合併 `main`；平板寬度導覽列折行列為 TODO）
 
 2026-10-30（Production 部署與官方練習同步：`refine/w13-home` 以 fast-forward 合併 `main` 並部署至 `1ec2a3f`（Cloudflare Pages `joti`；含 W13 首頁、新手必修／練習卡片、官方練習分類、單堂練習頁整合、契約文字與排版、登入頁與 Footer、退款規則與付款方式文件）；部署前 Production 已套用 `schema_practice_category.sql`；smoke test 正常（主要頁面、`/legal/terms`、`/legal/refund`、`/pricing`、`/practices/…/play` 轉回練習頁；bundle 只連 Production Supabase、購買仍關閉；登入表單因瀏覽器已登入未實際檢視）；Production 官方練習同步為 P001–P005（P001、P004 保留原 slug、P003 改呼吸與冥想課、P005 發布），`/practice` 分類與主要練習頁唯讀確認正常）
 
